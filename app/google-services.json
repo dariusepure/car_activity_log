@@ -12,7 +12,20 @@
           "package_name": "com.dariusepure.caractivitylog"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1050502217992-25petclu4rbg8rsofkdova5ikkoh5e1c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dariusepure.caractivitylog",
+            "certificate_hash": "c10c6df2fb85fc2373f01da647f4f40ccb3f685c"
+          }
+        },
+        {
+          "client_id": "1050502217992-8au5hrcl0uuu4odfm9bftfll39q6cffs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDOrjBmSwJ1EP3BtDo6RXgVM8VwScNpi-Q"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1050502217992-8au5hrcl0uuu4odfm9bftfll39q6cffs.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

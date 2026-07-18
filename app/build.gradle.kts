@@ -12,7 +12,6 @@ val webClientId: String = localProperties.getProperty("WEB_CLIENT_ID", "")
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
@@ -107,12 +106,12 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
 
-// Rezolvare conflict metadate compilator Kotlin cu Hilt / KSP
+// Rezolvare conflict metadate compilator Kotlin cu Hilt / KSP și forțare versiune Kotlin consistentă
 configurations.all {
     resolutionStrategy {
         eachDependency {
-            if (requested.group == "org.jetbrains.kotlin" && requested.name == "kotlin-metadata-jvm") {
-                useVersion("2.1.0")
+            if (requested.group == "org.jetbrains.kotlin") {
+                useVersion("2.4.10")
             }
         }
     }

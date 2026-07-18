@@ -2,10 +2,10 @@ package com.dariusepure.caractivitylog.domain
 
 import java.util.Date
 
-data class Deck(
+data class Car(
     val id: String = "",
-    val title: String = "",
+    val name: String = "",
     val createdAt: Date = Date(),
     val updatedAt: Date = Date(),
-    val noCards: Int = 0
+    val activityCount: Int = 0
 )

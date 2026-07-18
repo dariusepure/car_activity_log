@@ -1,4 +1,4 @@
-package com.dariusepure.caractivitylog.data.decks
+package com.dariusepure.caractivitylog.data.cars
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -7,14 +7,14 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import com.dariusepure.caractivitylog.domain.Deck
+import com.dariusepure.caractivitylog.domain.Car
 import javax.inject.Inject
 
-class DeckRepository @Inject constructor(
+class CarRepository @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val firestore: FirebaseFirestore
 ) {
-    val decks: Flow<List<Deck>> = callbackFlow {
+    val cars: Flow<List<Car>> = callbackFlow {
         val uid = firebaseAuth.currentUser?.uid ?: run {
             trySend(emptyList())
             close()
@@ -23,7 +23,7 @@ class DeckRepository @Inject constructor(
 
         val listener = firestore.collection("users")
             .document(uid)
-            .collection("decks")
+            .collection("cars")
             .orderBy("updatedAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshots, exception ->
                 if (exception != null) {
@@ -32,7 +32,7 @@ class DeckRepository @Inject constructor(
                 }
 
                 val results = snapshots
-                    ?.toObjects(FirestoreDeck::class.java)
+                    ?.toObjects(FirestoreCar::class.java)
                     ?.map { it.fromFirebase() } ?: emptyList()
 
                 trySend(results)
@@ -41,15 +41,15 @@ class DeckRepository @Inject constructor(
         awaitClose { listener.remove() }
     }
 
-    suspend fun createDeck(deck: Deck) {
+    suspend fun createCar(car: Car) {
         val uid = firebaseAuth.currentUser?.uid ?: return
-        val firestoreDeck = deck.toFirebase()
+        val firestoreCar = car.toFirebase()
 
         val reference = firestore.collection("users")
             .document(uid)
-            .collection("decks")
+            .collection("cars")
             .document()
 
-        reference.set(firestoreDeck).await()
+        reference.set(firestoreCar).await()
     }
 }
