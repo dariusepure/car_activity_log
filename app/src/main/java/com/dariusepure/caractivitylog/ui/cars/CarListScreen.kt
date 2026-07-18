@@ -78,12 +78,14 @@ fun CarCard(
 @Composable
 fun CarListScreen(
     onCarClick: (String) -> Unit,
+    onAddCarClick: () -> Unit,
     viewModel: CarListViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     InnerCarListScreen(
         onCarClick,
+        onAddCarClick,
         state
     )
 }
@@ -92,6 +94,7 @@ fun CarListScreen(
 @Composable
 private fun InnerCarListScreen(
     onCarClick: (String) -> Unit,
+    onAddCarClick: () -> Unit,
     state: CarListUiState,
     modifier: Modifier = Modifier,
 ) {
@@ -100,7 +103,7 @@ private fun InnerCarListScreen(
         topBar = { TopAppBar(title = { Text("Your cars") }) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = { /* TODO: Implement add car */ },
+                onClick = onAddCarClick,
                 icon = { Icon(Icons.Filled.Add, contentDescription = null) },
                 text = { Text("Add car") },
             )
