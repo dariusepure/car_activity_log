@@ -15,12 +15,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -29,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,6 +46,8 @@ import com.dariusepure.caractivitylog.ui.common.toRelativeString
 fun CarCard(
     car: Car,
     onClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -49,26 +55,49 @@ fun CarCard(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = car.name.ifBlank { "Unnamed car" },
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Spacer(Modifier.height(6.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "${car.activityCount} " + if (car.activityCount == 1) "activity" else "activities",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = car.name.ifBlank { "Unnamed car" },
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
-                Spacer(Modifier.width(6.dp))
-                Text("\u00B7", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    text = car.updatedAt.toRelativeString(),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                Spacer(Modifier.height(6.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "${car.activityCount} " + if (car.activityCount == 1) "activity" else "activities",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text("\u00B7", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = car.updatedAt.toRelativeString(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            
+            IconButton(onClick = onEditClick) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit car",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+            
+            IconButton(onClick = onDeleteClick) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete car",
+                    tint = Color.Red
                 )
             }
         }
@@ -79,6 +108,7 @@ fun CarCard(
 fun CarListScreen(
     onCarClick: (String) -> Unit,
     onAddCarClick: () -> Unit,
+    onEditCarClick: (String) -> Unit,
     viewModel: CarListViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
 ) {
@@ -86,6 +116,8 @@ fun CarListScreen(
     InnerCarListScreen(
         onCarClick,
         onAddCarClick,
+        onEditCarClick,
+        onDeleteCar = { carId -> viewModel.onDeleteCar(carId) },
         state
     )
 }
@@ -95,6 +127,8 @@ fun CarListScreen(
 private fun InnerCarListScreen(
     onCarClick: (String) -> Unit,
     onAddCarClick: () -> Unit,
+    onEditCarClick: (String) -> Unit,
+    onDeleteCar: (String) -> Unit,
     state: CarListUiState,
     modifier: Modifier = Modifier,
 ) {
@@ -123,7 +157,12 @@ private fun InnerCarListScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     items(state.cars, key = { it.id }) { car ->
-                        CarCard(car = car, onClick = { onCarClick(car.id) })
+                        CarCard(
+                            car = car,
+                            onClick = { onCarClick(car.id) },
+                            onEditClick = { onEditCarClick(car.id) },
+                            onDeleteClick = { onDeleteCar(car.id) }
+                        )
                     }
                 }
                 is CarListUiState.Error -> ErrorState(

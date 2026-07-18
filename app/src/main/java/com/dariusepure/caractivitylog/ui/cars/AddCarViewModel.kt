@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.dariusepure.caractivitylog.data.cars.CarRepository
 import com.dariusepure.caractivitylog.domain.Car
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
@@ -19,7 +21,30 @@ class AddCarViewModel @Inject constructor(
     private val _state = MutableStateFlow<AddCarState>(AddCarState.Idle)
     val state = _state.asStateFlow()
 
-    fun onAddCar(
+    // 1. Am adăugat BUFFERED pentru ca UI-ul să poată prinde evenimentul fără blocaje
+    private val _navigationEvent = Channel<Unit>(Channel.BUFFERED)
+    val navigationEvent = _navigationEvent.receiveAsFlow()
+
+    private var currentCarId: String? = null
+
+    fun loadCar(carId: String) {
+        currentCarId = carId
+        viewModelScope.launch {
+            _state.value = AddCarState.Pending
+            try {
+                val car = carRepository.getCar(carId)
+                if (car != null) {
+                    _state.value = AddCarState.Idle
+                }
+            } catch (e: Exception) {
+                _state.value = AddCarState.Error(e.localizedMessage ?: "Failed to load car")
+            }
+        }
+    }
+
+    suspend fun getCarData(carId: String): Car? = carRepository.getCar(carId)
+
+    fun onAddOrUpdateCar(
         name: String,
         make: String,
         model: String,
@@ -37,7 +62,8 @@ class AddCarViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = AddCarState.Pending
             try {
-                val newCar = Car(
+                val car = Car(
+                    id = currentCarId ?: "",
                     name = name,
                     make = make,
                     model = model,
@@ -46,18 +72,22 @@ class AddCarViewModel @Inject constructor(
                     engineSize = engineSize,
                     fuelType = fuelType,
                     color = color,
-                    createdAt = Date(),
                     updatedAt = Date()
                 )
-                carRepository.createCar(newCar)
+                carRepository.createCar(car)
                 _state.value = AddCarState.Success
+
+                // 2. Folosim trySend() care trimite instant semnalul de back și deblochează ecranul
+                _navigationEvent.trySend(Unit)
+
             } catch (e: Exception) {
-                _state.value = AddCarState.Error(e.localizedMessage ?: "Failed to add car")
+                _state.value = AddCarState.Error(e.localizedMessage ?: "Failed to save car")
             }
         }
     }
 
     fun resetState() {
         _state.value = AddCarState.Idle
+        currentCarId = null
     }
 }

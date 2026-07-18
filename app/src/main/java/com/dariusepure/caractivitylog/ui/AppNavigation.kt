@@ -1,5 +1,6 @@
 package com.dariusepure.caractivitylog.ui
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -16,6 +17,9 @@ sealed class Screen(val route: String) {
     data object SignUp : Screen("signup")
     data object CarList : Screen("carlist")
     data object AddCar : Screen("addcar")
+    data object EditCar : Screen("editcar/{carId}") {
+        fun createRoute(carId: String) = "editcar/$carId"
+    }
 }
 
 @Composable
@@ -60,12 +64,27 @@ fun AppNavigation(
                 },
                 onAddCarClick = {
                     navController.navigate(Screen.AddCar.route)
+                },
+                onEditCarClick = { carId ->
+                    navController.navigate(Screen.EditCar.createRoute(carId))
                 }
             )
         }
         composable(Screen.AddCar.route) {
             AddCarScreen(
-                onCarAdded = {
+                onCarSaved = {
+                    navController.popBackStack()
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(Screen.EditCar.route) { backStackEntry ->
+            val carId = backStackEntry.arguments?.getString("carId") ?: return@composable
+            AddCarScreen(
+                carId = carId,
+                onCarSaved = {
                     navController.popBackStack()
                 },
                 onBack = {

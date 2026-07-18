@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import com.dariusepure.caractivitylog.domain.Car
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
 class CarRepository @Inject constructor(
@@ -42,14 +43,49 @@ class CarRepository @Inject constructor(
     }
 
     suspend fun createCar(car: Car) {
-        val uid = firebaseAuth.currentUser?.uid ?: return
+        // 1. Schimbăm return-ul silențios cu o eroare vizibilă în caz că nu există user logat
+        val uid = firebaseAuth.currentUser?.uid
+            ?: throw Exception("Eroare: Utilizatorul nu este logat pe Firebase!")
+
         val firestoreCar = car.toFirebase()
 
-        val reference = firestore.collection("users")
+        val reference = if (car.id.isEmpty()) {
+            firestore.collection("users")
+                .document(uid)
+                .collection("cars")
+                .document()
+        } else {
+            firestore.collection("users")
+                .document(uid)
+                .collection("cars")
+                .document(car.id)
+        }
+
+        // 2. Înăsprim regulile: Dacă Firebase nu răspunde în 5 secunde, tăiem firul și aruncăm eroare
+        withTimeout(5000L) {
+            reference.set(firestoreCar).await()
+        }
+    }
+
+    suspend fun getCar(carId: String): Car? {
+        val uid = firebaseAuth.currentUser?.uid ?: return null
+        return firestore.collection("users")
             .document(uid)
             .collection("cars")
-            .document()
+            .document(carId)
+            .get()
+            .await()
+            .toObject(FirestoreCar::class.java)
+            ?.fromFirebase()
+    }
 
-        reference.set(firestoreCar).await()
+    suspend fun deleteCar(carId: String) {
+        val uid = firebaseAuth.currentUser?.uid ?: return
+        firestore.collection("users")
+            .document(uid)
+            .collection("cars")
+            .document(carId)
+            .delete()
+            .await()
     }
 }

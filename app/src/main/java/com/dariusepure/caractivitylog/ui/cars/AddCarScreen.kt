@@ -36,16 +36,21 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddCarScreen(
-    onCarAdded: () -> Unit,
+    carId: String? = null,
+    onCarSaved: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AddCarViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    
+    val scope = rememberCoroutineScope()
+
     var name by remember { mutableStateOf("") }
     var make by remember { mutableStateOf("") }
     var model by remember { mutableStateOf("") }
@@ -55,10 +60,26 @@ fun AddCarScreen(
     var fuelType by remember { mutableStateOf("") }
     var color by remember { mutableStateOf("") }
 
-    LaunchedEffect(state) {
-        if (state is AddCarState.Success) {
-            viewModel.resetState()
-            onCarAdded()
+    LaunchedEffect(carId) {
+        if (carId != null) {
+            viewModel.loadCar(carId)
+            val car = viewModel.getCarData(carId)
+            if (car != null) {
+                name = car.name
+                make = car.make
+                model = car.model
+                vin = car.vin
+                year = car.year.takeIf { it != 0 }?.toString() ?: ""
+                engineSize = car.engineSize
+                fuelType = car.fuelType
+                color = car.color
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvent.collect {
+            onCarSaved()
         }
     }
 
@@ -66,7 +87,7 @@ fun AddCarScreen(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text("Add New Car") },
+                title = { Text(if (carId == null) "Add New Car" else "Edit Car") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -188,8 +209,8 @@ fun AddCarScreen(
             Spacer(Modifier.height(24.dp))
 
             Button(
-                onClick = { 
-                    viewModel.onAddCar(
+                onClick = {
+                    viewModel.onAddOrUpdateCar(
                         name = name,
                         make = make,
                         model = model,
@@ -198,7 +219,7 @@ fun AddCarScreen(
                         engineSize = engineSize,
                         fuelType = fuelType,
                         color = color
-                    ) 
+                    )
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = name.isNotBlank() && state !is AddCarState.Pending
@@ -210,7 +231,7 @@ fun AddCarScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text("Save Car")
+                    Text(if (carId == null) "Save Car" else "Update Car")
                 }
             }
         }
