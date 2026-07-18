@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1050502217992",
+    "project_id": "car-activity-log",
+    "storage_bucket": "car-activity-log.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1050502217992:android:a0e3c2aac85c6d6fd8ecbd",
+        "android_client_info": {
+          "package_name": "com.dariusepure.caractivitylog"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOrjBmSwJ1EP3BtDo6RXgVM8VwScNpi-Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
