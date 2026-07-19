@@ -12,6 +12,7 @@ import com.dariusepure.caractivitylog.ui.auth.SignUpScreen
 import com.dariusepure.caractivitylog.ui.cars.AddCarScreen
 import com.dariusepure.caractivitylog.ui.cars.CarDetailsScreen
 import com.dariusepure.caractivitylog.ui.cars.CarListScreen
+import com.dariusepure.caractivitylog.ui.cars.MileageHistoryScreen
 
 sealed class Screen(val route: String) {
     data object SignIn : Screen("signin")
@@ -19,6 +20,9 @@ sealed class Screen(val route: String) {
     data object CarList : Screen("carlist")
     data object CarDetails : Screen("cardetails/{carId}") {
         fun createRoute(carId: String) = "cardetails/$carId"
+    }
+    data object MileageHistory : Screen("mileagehistory/{carId}") {
+        fun createRoute(carId: String) = "mileagehistory/$carId"
     }
     data object AddCar : Screen("addcar")
     data object EditCar : Screen("editcar/{carId}") {
@@ -77,6 +81,16 @@ fun AppNavigation(
         composable(Screen.CarDetails.route) { backStackEntry ->
             val carId = backStackEntry.arguments?.getString("carId") ?: return@composable
             CarDetailsScreen(
+                carId = carId,
+                onBack = { navController.popBackStack() },
+                onMileageClick = { 
+                    navController.navigate(Screen.MileageHistory.createRoute(carId))
+                }
+            )
+        }
+        composable(Screen.MileageHistory.route) { backStackEntry ->
+            val carId = backStackEntry.arguments?.getString("carId") ?: return@composable
+            MileageHistoryScreen(
                 carId = carId,
                 onBack = { navController.popBackStack() }
             )

@@ -1,5 +1,9 @@
 package com.dariusepure.caractivitylog.ui.cars
 
+import android.app.DatePickerDialog
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,8 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -45,13 +49,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import com.dariusepure.caractivitylog.domain.MileageLog
-import com.dariusepure.caractivitylog.ui.common.LoadingState
 import com.dariusepure.caractivitylog.ui.common.ErrorState
-import android.app.DatePickerDialog
+import com.dariusepure.caractivitylog.ui.common.LoadingState
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -62,12 +62,11 @@ import java.util.Locale
 fun CarDetailsScreen(
     carId: String,
     onBack: () -> Unit,
+    onMileageClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: CarDetailsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    var showAddMileageDialog by remember { mutableStateOf(false) }
-    var editingMileageLog by remember { mutableStateOf<MileageLog?>(null) }
 
     val pickMedia = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
@@ -77,33 +76,6 @@ fun CarDetailsScreen(
 
     LaunchedEffect(carId) {
         viewModel.loadCarData(carId)
-    }
-
-    if (showAddMileageDialog || editingMileageLog != null) {
-        val existingLogs = (state as? CarDetailsUiState.Success)?.mileageLogs ?: emptyList()
-        val car = (state as? CarDetailsUiState.Success)?.car
-        val country = europeanCountries.find { it.code == car?.plateCountry }
-        val unitLabel = if (country?.usesMiles == true) "mi" else "km"
-
-        AddMileageDialog(
-            existingLog = editingMileageLog,
-            existingLogs = existingLogs,
-            unit = unitLabel,
-            onDismiss = { 
-                showAddMileageDialog = false
-                editingMileageLog = null
-            },
-            onConfirm = { km, date ->
-                val logToEdit = editingMileageLog
-                if (logToEdit != null) {
-                    viewModel.updateMileage(carId, logToEdit.copy(km = km, date = date))
-                } else {
-                    viewModel.addMileage(carId, km, date)
-                }
-                showAddMileageDialog = false
-                editingMileageLog = null
-            }
-        )
     }
 
     Scaffold(
@@ -119,64 +91,52 @@ fun CarDetailsScreen(
             )
         },
         floatingActionButton = {
-            Column(horizontalAlignment = Alignment.End) {
-                FloatingActionButton(
-                    onClick = { showAddMileageDialog = true },
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Mileage")
-                }
-                Spacer(Modifier.height(16.dp))
-                FloatingActionButton(onClick = {
-                    pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                }) {
-                    Icon(Icons.Default.AddAPhoto, contentDescription = "Add Photo")
-                }
+            FloatingActionButton(onClick = {
+                pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            }) {
+                Icon(Icons.Default.AddAPhoto, contentDescription = "Add Photo")
             }
         }
     ) { padding ->
         when (val s = state) {
             CarDetailsUiState.Loading -> LoadingState()
             is CarDetailsUiState.Error -> ErrorState(message = s.message, onRetry = { viewModel.loadCarData(carId) })
-                is CarDetailsUiState.Success -> {
-                    val car = s.car
-                    val country = europeanCountries.find { it.code == car.plateCountry }
-                    val unitLabel = if (country?.usesMiles == true) "mi" else "km"
+            is CarDetailsUiState.Success -> {
+                val car = s.car
+                val hpValue: Int
+                val kwValue: Int
+                
+                if (car.powerUnit.lowercase() == "kw") {
+                    kwValue = car.power
+                    hpValue = (car.power * 1.34102).toInt()
+                } else {
+                    hpValue = car.power
+                    kwValue = (car.power / 1.34102).toInt()
+                }
 
-                    val hpValue: Int
-                    val kwValue: Int
-                    
-                    if (car.powerUnit.lowercase() == "kw") {
-                        kwValue = car.power
-                        hpValue = (car.power * 1.34102).toInt()
-                    } else {
-                        hpValue = car.power
-                        kwValue = (car.power / 1.34102).toInt()
-                    }
+                val flag = europeanCountries.find { it.code == car.plateCountry }?.flag ?: "🏳️"
 
-                    val flag = europeanCountries.find { it.code == car.plateCountry }?.flag ?: "🏳️"
-
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding)
-                            .padding(horizontal = 16.dp)
-                    ) {
-                        item {
-                            Spacer(Modifier.height(16.dp))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = flag,
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    modifier = Modifier.padding(end = 8.dp)
-                                )
-                                Text(
-                                    text = car.name,
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(16.dp))
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(horizontal = 16.dp)
+                ) {
+                    item {
+                        Spacer(Modifier.height(16.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = flag,
+                                style = MaterialTheme.typography.headlineMedium,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text(
+                                text = car.name,
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
                         
                         SpecificationCard(
                             specifications = listOf(
@@ -191,35 +151,33 @@ fun CarDetailsScreen(
                             )
                         )
                         Spacer(Modifier.height(24.dp))
-                        Text(
-                            text = "Mileage History",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(Modifier.height(8.dp))
-                    }
-
-                    if (s.mileageLogs.isEmpty()) {
-                        item {
-                            Text(
-                                text = "No mileage logs yet.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(vertical = 8.dp)
+                        
+                        Card(
+                            onClick = onMileageClick,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
                             )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null)
+                                Spacer(Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "Mileage History",
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    Text(
+                                        text = "View and manage records",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                            }
                         }
-                    } else {
-                        items(s.mileageLogs) { log ->
-                            MileageItem(
-                                log = log,
-                                unit = unitLabel,
-                                onEditClick = { editingMileageLog = log },
-                                onDeleteClick = { viewModel.deleteMileage(carId, log.id) }
-                            )
-                            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
-                        }
-                    }
-                    
-                    item {
+                        
                         Spacer(Modifier.height(80.dp)) // Space for FAB
                     }
                 }
@@ -296,7 +254,7 @@ fun AddMileageDialog(
             val newCalendar = Calendar.getInstance()
             newCalendar.set(year, month, dayOfMonth)
             selectedDate = newCalendar.time
-            errorMessage = null // Reset error on date change
+            errorMessage = null
         },
         calendar.get(Calendar.YEAR),
         calendar.get(Calendar.MONTH),
@@ -360,21 +318,18 @@ fun AddMileageDialog(
                 onClick = {
                     val kmInt = km.toIntOrNull() ?: 0
                     if (kmInt > 0) {
-                        // Verificare anti-fraudă (km dați înapoi)
                         val conflict = existingLogs.find { log ->
                             if (log.id == existingLog?.id) return@find false
-                            
                             val kmBackwards = selectedDate.after(log.date) && kmInt < log.km
                             val dateBackwards = selectedDate.before(log.date) && kmInt > log.km
-                            
                             kmBackwards || dateBackwards
                         }
 
                         if (conflict != null) {
                             errorMessage = if (selectedDate.after(conflict.date)) {
-                                "Cannot be less than ${conflict.km} km (recorded on ${dateFormat.format(conflict.date)})"
+                                "Cannot be less than ${conflict.km} $unit (recorded on ${dateFormat.format(conflict.date)})"
                             } else {
-                                "Cannot be more than ${conflict.km} km (recorded on ${dateFormat.format(conflict.date)})"
+                                "Cannot be more than ${conflict.km} $unit (recorded on ${dateFormat.format(conflict.date)})"
                             }
                         } else {
                             onConfirm(kmInt, selectedDate)
