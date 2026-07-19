@@ -53,5 +53,15 @@ val europeanCountries = listOf(
     Country("Switzerland", "CH", "🇨🇭", plateRegex = "^[A-Z]{2}\\d{1,6}$", plateHint = "ZH123456"),
     Country("Ukraine", "UA", "🇺🇦", plateRegex = "^[A-Z]{2}\\d{4}[A-Z]{2}$", plateHint = "AA1234AA"),
     Country("United Kingdom", "GB", "🇬🇧", plateRegex = "^[A-Z]{2}\\d{2}[A-Z]{3}$", plateHint = "AB12ABC", usesMiles = true),
-    Country("Vatican City", "VA", "🇻🇦", plateRegex = "^SCV\\d{1,5}$", plateHint = "SCV1")
+    Country("Vatican City", "VA", "🇻🇦", plateRegex = "^SCV\\d{1,5}$", plateHint = "SCV1"),
+    // Non-European
+    Country("Japan", "JP", "🇯🇵"),
+    Country("USA", "US", "🇺🇸", usesMiles = true),
+    Country("South Korea", "KR", "🇰🇷"),
+    Country("China", "CN", "🇨🇳"),
+    Country("India", "IN", "🇮🇳"),
+    Country("Mexico", "MX", "🇲🇽"),
+    Country("Brazil", "BR", "🇧🇷"),
+    Country("Canada", "CA", "🇨🇦"),
+    Country("Australia", "AU", "🇦🇺")
 ).sortedBy { it.name }

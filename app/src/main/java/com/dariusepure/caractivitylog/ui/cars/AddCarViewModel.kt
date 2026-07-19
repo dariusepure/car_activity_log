@@ -77,7 +77,14 @@ class AddCarViewModel @Inject constructor(
         drivetrain: String,
         gearboxType: String,
         vehicleType: String,
-        manufacturingCountry: String
+        manufacturingCountry: String,
+        topSpeed: String,
+        weight: String,
+        numberOfSeats: String,
+        numberOfCylinders: String,
+        valvesPerCylinder: String,
+        numberOfDoors: String,
+        bootSpace: String
     ) {
         if (make.isBlank() || model.isBlank()) {
             _state.value = AddCarState.Error("Make and Model are required")
@@ -137,6 +144,13 @@ class AddCarViewModel @Inject constructor(
                     gearboxType = gearboxType,
                     vehicleType = vehicleType,
                     manufacturingCountry = manufacturingCountry,
+                    topSpeed = topSpeed.toIntOrNull() ?: 0,
+                    weight = weight.toIntOrNull() ?: 0,
+                    numberOfSeats = numberOfSeats.toIntOrNull() ?: 0,
+                    numberOfCylinders = numberOfCylinders.toIntOrNull() ?: 0,
+                    valvesPerCylinder = valvesPerCylinder.toIntOrNull() ?: 0,
+                    numberOfDoors = numberOfDoors.toIntOrNull() ?: 0,
+                    bootSpace = bootSpace.toIntOrNull() ?: 0,
                     updatedAt = Date()
                 )
 

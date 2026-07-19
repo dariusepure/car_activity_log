@@ -62,6 +62,10 @@ fun TechnicalSheetScreen(
             is CarDetailsUiState.Success -> {
                 val car = s.car
                 val powerText = CarFormatters.formatPower(car)
+                val totalValves = car.numberOfCylinders * car.valvesPerCylinder
+                val valvesText = if (totalValves > 0) {
+                    "$totalValves (${car.valvesPerCylinder} per cylinder)"
+                } else "-"
 
                 Column(
                     modifier = Modifier
@@ -96,6 +100,9 @@ fun TechnicalSheetScreen(
                             specifications = listOf(
                                 "Power" to powerText,
                                 "Torque" to "${car.torque} Nm",
+                                "Top Speed" to if (car.topSpeed > 0) "${car.topSpeed} km/h" else "-",
+                                "Cylinders" to if (car.numberOfCylinders > 0) car.numberOfCylinders.toString() else "-",
+                                "Valves" to valvesText,
                                 "Engine Code" to car.engineCode,
                                 "Engine Layout" to car.engineLayout,
                                 "Pollution Standard" to car.emissionStandard,
@@ -112,6 +119,10 @@ fun TechnicalSheetScreen(
                         SpecificationCard(
                             specifications = listOf(
                                 "Dimensions" to CarFormatters.formatDimensions(car),
+                                "Weight" to if (car.weight > 0) "${car.weight} kg" else "-",
+                                "Seats" to if (car.numberOfSeats > 0) car.numberOfSeats.toString() else "-",
+                                "Doors" to if (car.numberOfDoors > 0) car.numberOfDoors.toString() else "-",
+                                "Boot Space" to if (car.bootSpace > 0) "${car.bootSpace} L" else "-",
                                 "Mfg. Country" to car.manufacturingCountry
                             )
                         )

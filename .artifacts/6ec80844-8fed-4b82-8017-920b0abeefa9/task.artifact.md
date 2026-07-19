@@ -1,0 +1,6 @@
+- [x] `[x]` Update `Car.kt` domain model
+- [x] `[x]` Update `FirestoreCar.kt` data model and mappers
+- [x] `[x]` Update `AddCarViewModel.kt` to handle new fields
+- [x] `[x]` Update `AddCarScreen.kt` with new inputs
+- [x] `[x]` Update `TechnicalSheetScreen.kt` to display new fields and calculated valves
+- [x] `[x]` Verify changes

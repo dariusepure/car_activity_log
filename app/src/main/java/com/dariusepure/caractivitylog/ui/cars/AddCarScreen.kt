@@ -71,17 +71,26 @@ fun AddCarScreen(
     var engineSize by remember { mutableStateOf("") }
     var fuelType by remember { mutableStateOf("Petrol") }
     var color by remember { mutableStateOf("") }
+    var customColor by remember { mutableStateOf("") }
     var power by remember { mutableStateOf("") }
     var powerUnit by remember { mutableStateOf("hp") }
     var torque by remember { mutableStateOf("") }
     var engineCode by remember { mutableStateOf("") }
     var engineLayout by remember { mutableStateOf("") }
     var emissionStandard by remember { mutableStateOf("") }
+    var topSpeed by remember { mutableStateOf("") }
+    var numberOfCylinders by remember { mutableStateOf("") }
+    var valvesPerCylinder by remember { mutableStateOf("") }
+
     var length by remember { mutableStateOf("") }
     var width by remember { mutableStateOf("") }
     var height by remember { mutableStateOf("") }
     var wheelbase by remember { mutableStateOf("") }
     var trackWidth by remember { mutableStateOf("") }
+    var weight by remember { mutableStateOf("") }
+    var numberOfSeats by remember { mutableStateOf("") }
+    var numberOfDoors by remember { mutableStateOf("") }
+    var bootSpace by remember { mutableStateOf("") }
     var fuelTankCapacity by remember { mutableStateOf("") }
     var drivetrain by remember { mutableStateOf("") }
     var gearboxType by remember { mutableStateOf("") }
@@ -112,14 +121,15 @@ fun AddCarScreen(
     var colorExpanded by remember { mutableStateOf(false) }
     val carColors = listOf(
         "White", "Black", "Silver", "Grey", "Blue", "Red", "Brown", 
-        "Green", "Orange", "Beige", "Yellow", "Gold", "Purple", "Pink"
-    ).sorted()
+        "Green", "Orange", "Beige", "Yellow", "Gold", "Purple", "Pink", "Custom"
+    )
 
     var powerUnitExpanded by remember { mutableStateOf(false) }
     val powerUnits = listOf("hp", "kw")
 
     val handleBack = {
         val finalMake = viewModel.getEffectiveMake(make, customMake)
+        val finalColor = if (color == "Custom") customColor else color
         if (carId != null && finalMake.isNotBlank() && model.isNotBlank() && (vin.isEmpty() || vin.length == 17)) {
             viewModel.onAddOrUpdateCar(
                 name = name,
@@ -130,7 +140,7 @@ fun AddCarScreen(
                 year = year,
                 engineSize = engineSize,
                 fuelType = fuelType,
-                color = color,
+                color = finalColor,
                 power = power,
                 powerUnit = powerUnit,
                 torque = torque,
@@ -146,7 +156,14 @@ fun AddCarScreen(
                 drivetrain = drivetrain,
                 gearboxType = gearboxType,
                 vehicleType = vehicleType,
-                manufacturingCountry = manufacturingCountry
+                manufacturingCountry = manufacturingCountry,
+                topSpeed = topSpeed,
+                weight = weight,
+                numberOfSeats = numberOfSeats,
+                numberOfCylinders = numberOfCylinders,
+                valvesPerCylinder = valvesPerCylinder,
+                numberOfDoors = numberOfDoors,
+                bootSpace = bootSpace
             )
         } else {
             onBack()
@@ -172,18 +189,31 @@ fun AddCarScreen(
                 year = car.year.takeIf { it != 0 }?.toString() ?: ""
                 engineSize = car.engineSize
                 fuelType = car.fuelType.ifBlank { "Petrol" }
-                color = car.color
+                
+                val isStandardColor = carColors.contains(car.color) && car.color != "Custom"
+                color = if (isStandardColor) car.color else if (car.color.isNotBlank()) "Custom" else ""
+                customColor = if (isStandardColor) "" else car.color
+
                 power = car.power.takeIf { it != 0 }?.toString() ?: ""
                 powerUnit = car.powerUnit.ifBlank { "hp" }
                 torque = car.torque.takeIf { it != 0 }?.toString() ?: ""
                 engineCode = car.engineCode
                 engineLayout = car.engineLayout
                 emissionStandard = car.emissionStandard
+                topSpeed = car.topSpeed.takeIf { it != 0 }?.toString() ?: ""
+                numberOfCylinders = car.numberOfCylinders.takeIf { it != 0 }?.toString() ?: ""
+                valvesPerCylinder = car.valvesPerCylinder.takeIf { it != 0 }?.toString() ?: ""
+                
                 length = car.length.takeIf { it != 0 }?.toString() ?: ""
                 width = car.width.takeIf { it != 0 }?.toString() ?: ""
                 height = car.height.takeIf { it != 0 }?.toString() ?: ""
                 wheelbase = car.wheelbase.takeIf { it != 0 }?.toString() ?: ""
                 trackWidth = car.trackWidth.takeIf { it != 0 }?.toString() ?: ""
+                weight = car.weight.takeIf { it != 0 }?.toString() ?: ""
+                numberOfSeats = car.numberOfSeats.takeIf { it != 0 }?.toString() ?: ""
+                numberOfDoors = car.numberOfDoors.takeIf { it != 0 }?.toString() ?: ""
+                bootSpace = car.bootSpace.takeIf { it != 0 }?.toString() ?: ""
+                
                 fuelTankCapacity = car.fuelTankCapacity.takeIf { it != 0.0 }?.toString() ?: ""
                 drivetrain = car.drivetrain
                 gearboxType = car.gearboxType
@@ -387,11 +417,24 @@ fun AddCarScreen(
                                 text = { Text(colorOption) },
                                 onClick = {
                                     color = colorOption
+                                    if (colorOption != "Custom") customColor = ""
                                     colorExpanded = false
                                 }
                             )
                         }
                     }
+                }
+
+                if (color == "Custom") {
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = customColor,
+                        onValueChange = { customColor = it },
+                        label = { Text("Color Name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        enabled = state !is AddCarState.Pending
+                    )
                 }
 
                 Spacer(Modifier.height(8.dp))
@@ -672,6 +715,40 @@ fun AddCarScreen(
 
                 Spacer(Modifier.height(8.dp))
 
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = numberOfCylinders,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) numberOfCylinders = it },
+                        label = { Text("Cylinders") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedTextField(
+                        value = valvesPerCylinder,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) valvesPerCylinder = it },
+                        label = { Text("Valves/Cyl") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedTextField(
+                        value = topSpeed,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) topSpeed = it },
+                        label = { Text("Top Speed") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = fuelType,
@@ -825,6 +902,54 @@ fun AddCarScreen(
 
                 Spacer(Modifier.height(8.dp))
 
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = weight,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) weight = it },
+                        label = { Text("Weight (kg)") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedTextField(
+                        value = numberOfSeats,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) numberOfSeats = it },
+                        label = { Text("Seats") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = numberOfDoors,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) numberOfDoors = it },
+                        label = { Text("Doors") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedTextField(
+                        value = bootSpace,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) bootSpace = it },
+                        label = { Text("Boot (L)") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = drivetrain,
@@ -867,6 +992,7 @@ fun AddCarScreen(
             Button(
                 onClick = {
                     val finalMake = viewModel.getEffectiveMake(make, customMake)
+                    val finalColor = if (color == "Custom") customColor else color
                     viewModel.onAddOrUpdateCar(
                         name = name,
                         plateCountry = selectedCountry.code,
@@ -876,7 +1002,7 @@ fun AddCarScreen(
                         year = year,
                         engineSize = engineSize,
                         fuelType = fuelType,
-                        color = color,
+                        color = finalColor,
                         power = power,
                         powerUnit = powerUnit,
                         torque = torque,
@@ -892,7 +1018,14 @@ fun AddCarScreen(
                         drivetrain = drivetrain,
                         gearboxType = gearboxType,
                         vehicleType = vehicleType,
-                        manufacturingCountry = manufacturingCountry
+                        manufacturingCountry = manufacturingCountry,
+                        topSpeed = topSpeed,
+                        weight = weight,
+                        numberOfSeats = numberOfSeats,
+                        numberOfCylinders = numberOfCylinders,
+                        valvesPerCylinder = valvesPerCylinder,
+                        numberOfDoors = numberOfDoors,
+                        bootSpace = bootSpace
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
