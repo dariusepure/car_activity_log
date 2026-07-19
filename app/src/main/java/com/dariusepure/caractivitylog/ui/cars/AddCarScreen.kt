@@ -76,6 +76,7 @@ fun AddCarScreen(
     var torque by remember { mutableStateOf("") }
     var engineCode by remember { mutableStateOf("") }
     var engineLayout by remember { mutableStateOf("") }
+    var emissionStandard by remember { mutableStateOf("") }
     var length by remember { mutableStateOf("") }
     var width by remember { mutableStateOf("") }
     var height by remember { mutableStateOf("") }
@@ -83,6 +84,7 @@ fun AddCarScreen(
     var trackWidth by remember { mutableStateOf("") }
     var fuelTankCapacity by remember { mutableStateOf("") }
     var drivetrain by remember { mutableStateOf("") }
+    var gearboxType by remember { mutableStateOf("") }
     var vehicleType by remember { mutableStateOf("") }
     var manufacturingCountry by remember { mutableStateOf("") }
 
@@ -96,10 +98,14 @@ fun AddCarScreen(
     var makeExpanded by remember { mutableStateOf(false) }
     var fuelTypeExpanded by remember { mutableStateOf(false) }
     var engineLayoutExpanded by remember { mutableStateOf(false) }
+    var emissionStandardExpanded by remember { mutableStateOf(false) }
     var drivetrainExpanded by remember { mutableStateOf(false) }
+    var gearboxTypeExpanded by remember { mutableStateOf(false) }
     var vehicleTypeExpanded by remember { mutableStateOf(false) }
     val fuelTypes = listOf("Petrol", "Diesel", "Electric", "Hybrid", "LPG")
     val engineLayouts = listOf("Transverse", "Longitudinal")
+    val emissionStandards = listOf("Non-Euro", "Euro 1", "Euro 2", "Euro 3", "Euro 4", "Euro 5", "Euro 6")
+    val gearboxTypes = listOf("Manual", "Automatic")
     val drivetrainOptions = listOf("FWD", "RWD", "AWD", "4WD")
     val vehicleTypes = listOf("Saloon", "Estate", "Hatchback", "MPV", "SUV", "Coupe", "Convertible", "Van", "Pickup")
 
@@ -130,6 +136,7 @@ fun AddCarScreen(
                 torque = torque,
                 engineCode = engineCode,
                 engineLayout = engineLayout,
+                emissionStandard = emissionStandard,
                 length = length,
                 width = width,
                 height = height,
@@ -137,6 +144,7 @@ fun AddCarScreen(
                 trackWidth = trackWidth,
                 fuelTankCapacity = fuelTankCapacity,
                 drivetrain = drivetrain,
+                gearboxType = gearboxType,
                 vehicleType = vehicleType,
                 manufacturingCountry = manufacturingCountry
             )
@@ -170,6 +178,7 @@ fun AddCarScreen(
                 torque = car.torque.takeIf { it != 0 }?.toString() ?: ""
                 engineCode = car.engineCode
                 engineLayout = car.engineLayout
+                emissionStandard = car.emissionStandard
                 length = car.length.takeIf { it != 0 }?.toString() ?: ""
                 width = car.width.takeIf { it != 0 }?.toString() ?: ""
                 height = car.height.takeIf { it != 0 }?.toString() ?: ""
@@ -177,6 +186,7 @@ fun AddCarScreen(
                 trackWidth = car.trackWidth.takeIf { it != 0 }?.toString() ?: ""
                 fuelTankCapacity = car.fuelTankCapacity.takeIf { it != 0.0 }?.toString() ?: ""
                 drivetrain = car.drivetrain
+                gearboxType = car.gearboxType
                 vehicleType = car.vehicleType
                 manufacturingCountry = car.manufacturingCountry
             }
@@ -307,30 +317,6 @@ fun AddCarScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     enabled = state !is AddCarState.Pending
                 )
-
-                Spacer(Modifier.height(8.dp))
-
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    OutlinedTextField(
-                        value = wheelbase,
-                        onValueChange = { if (it.all { char -> char.isDigit() }) wheelbase = it },
-                        label = { Text("Wheelbase") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        enabled = state !is AddCarState.Pending
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    OutlinedTextField(
-                        value = trackWidth,
-                        onValueChange = { if (it.all { char -> char.isDigit() }) trackWidth = it },
-                        label = { Text("Track Width") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        enabled = state !is AddCarState.Pending
-                    )
-                }
 
                 Spacer(Modifier.height(8.dp))
 
@@ -599,30 +585,6 @@ fun AddCarScreen(
 
                 Spacer(Modifier.height(8.dp))
 
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    OutlinedTextField(
-                        value = wheelbase,
-                        onValueChange = { if (it.all { char -> char.isDigit() }) wheelbase = it },
-                        label = { Text("Wheelbase") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        enabled = state !is AddCarState.Pending
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    OutlinedTextField(
-                        value = trackWidth,
-                        onValueChange = { if (it.all { char -> char.isDigit() }) trackWidth = it },
-                        label = { Text("Track Width") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        enabled = state !is AddCarState.Pending
-                    )
-                }
-
-                Spacer(Modifier.height(8.dp))
-
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = engineLayout,
@@ -661,6 +623,44 @@ fun AddCarScreen(
 
                 Spacer(Modifier.height(8.dp))
 
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = emissionStandard,
+                        onValueChange = { },
+                        readOnly = true,
+                        label = { Text("Emission Standard") },
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                "dropdown",
+                                Modifier.clickable { emissionStandardExpanded = true })
+                        }
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { emissionStandardExpanded = true }
+                    )
+                    DropdownMenu(
+                        expanded = emissionStandardExpanded,
+                        onDismissRequest = { emissionStandardExpanded = false },
+                        modifier = Modifier.fillMaxWidth(0.9f)
+                    ) {
+                        emissionStandards.forEach { standard ->
+                            DropdownMenuItem(
+                                text = { Text(standard) },
+                                onClick = {
+                                    emissionStandard = standard
+                                    emissionStandardExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
                 OutlinedTextField(
                     value = engineSize,
                     onValueChange = { engineSize = it },
@@ -669,30 +669,6 @@ fun AddCarScreen(
                     singleLine = true,
                     enabled = state !is AddCarState.Pending
                 )
-
-                Spacer(Modifier.height(8.dp))
-
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    OutlinedTextField(
-                        value = wheelbase,
-                        onValueChange = { if (it.all { char -> char.isDigit() }) wheelbase = it },
-                        label = { Text("Wheelbase") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        enabled = state !is AddCarState.Pending
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    OutlinedTextField(
-                        value = trackWidth,
-                        onValueChange = { if (it.all { char -> char.isDigit() }) trackWidth = it },
-                        label = { Text("Track Width") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        enabled = state !is AddCarState.Pending
-                    )
-                }
 
                 Spacer(Modifier.height(8.dp))
 
@@ -726,6 +702,44 @@ fun AddCarScreen(
                                 onClick = {
                                     fuelType = type
                                     fuelTypeExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = gearboxType,
+                        onValueChange = { },
+                        readOnly = true,
+                        label = { Text("Gearbox Type") },
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                "dropdown",
+                                Modifier.clickable { gearboxTypeExpanded = true })
+                        }
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { gearboxTypeExpanded = true }
+                    )
+                    DropdownMenu(
+                        expanded = gearboxTypeExpanded,
+                        onDismissRequest = { gearboxTypeExpanded = false },
+                        modifier = Modifier.fillMaxWidth(0.9f)
+                    ) {
+                        gearboxTypes.forEach { type ->
+                            DropdownMenuItem(
+                                text = { Text(type) },
+                                onClick = {
+                                    gearboxType = type
+                                    gearboxTypeExpanded = false
                                 }
                             )
                         }
@@ -778,6 +792,30 @@ fun AddCarScreen(
                         value = height,
                         onValueChange = { if (it.all { char -> char.isDigit() }) height = it },
                         label = { Text("Height") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = wheelbase,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) wheelbase = it },
+                        label = { Text("Wheelbase") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedTextField(
+                        value = trackWidth,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) trackWidth = it },
+                        label = { Text("Track Width") },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -844,6 +882,7 @@ fun AddCarScreen(
                         torque = torque,
                         engineCode = engineCode,
                         engineLayout = engineLayout,
+                        emissionStandard = emissionStandard,
                         length = length,
                         width = width,
                         height = height,
@@ -851,6 +890,7 @@ fun AddCarScreen(
                         trackWidth = trackWidth,
                         fuelTankCapacity = fuelTankCapacity,
                         drivetrain = drivetrain,
+                        gearboxType = gearboxType,
                         vehicleType = vehicleType,
                         manufacturingCountry = manufacturingCountry
                     )

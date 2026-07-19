@@ -67,6 +67,7 @@ class AddCarViewModel @Inject constructor(
         torque: String,
         engineCode: String,
         engineLayout: String,
+        emissionStandard: String,
         length: String,
         width: String,
         height: String,
@@ -74,6 +75,7 @@ class AddCarViewModel @Inject constructor(
         trackWidth: String,
         fuelTankCapacity: String,
         drivetrain: String,
+        gearboxType: String,
         vehicleType: String,
         manufacturingCountry: String
     ) {
@@ -124,6 +126,7 @@ class AddCarViewModel @Inject constructor(
                     torque = torque.toIntOrNull() ?: 0,
                     engineCode = engineCode,
                     engineLayout = engineLayout,
+                    emissionStandard = emissionStandard,
                     length = length.toIntOrNull() ?: 0,
                     width = width.toIntOrNull() ?: 0,
                     height = height.toIntOrNull() ?: 0,
@@ -131,6 +134,7 @@ class AddCarViewModel @Inject constructor(
                     trackWidth = trackWidth.toIntOrNull() ?: 0,
                     fuelTankCapacity = fuelTankCapacity.toDoubleOrNull() ?: 0.0,
                     drivetrain = drivetrain,
+                    gearboxType = gearboxType,
                     vehicleType = vehicleType,
                     manufacturingCountry = manufacturingCountry,
                     updatedAt = Date()

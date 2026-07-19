@@ -63,6 +63,7 @@ import com.dariusepure.caractivitylog.domain.InspectionDurationUnit
 import com.dariusepure.caractivitylog.domain.VehicleInspection
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material.icons.filled.Description
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dariusepure.caractivitylog.domain.MileageLog
@@ -83,6 +84,7 @@ fun CarDetailsScreen(
     onBack: () -> Unit,
     onMileageClick: () -> Unit,
     onInspectionClick: () -> Unit,
+    onTechnicalSheetClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: CarDetailsViewModel = hiltViewModel()
 ) {
@@ -117,7 +119,6 @@ fun CarDetailsScreen(
             is CarDetailsUiState.Error -> ErrorState(message = s.message, onRetry = { viewModel.loadCarData(carId) })
             is CarDetailsUiState.Success -> {
                 val car = s.car
-                val powerText = CarFormatters.formatPower(car)
 
                 LazyColumn(
                     modifier = Modifier
@@ -180,29 +181,35 @@ fun CarDetailsScreen(
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
                         
-                        SpecificationCard(
-                            specifications = listOf(
-                                "Make" to car.make,
-                                "Model" to car.model,
-                                "Type" to car.vehicleType,
-                                "Mfg. Country" to car.manufacturingCountry,
-                                "Year" to car.year.toString(),
-                                "Power" to powerText,
-                                "Torque" to "${car.torque} Nm",
-                                "Engine Code" to car.engineCode,
-                                "Engine Layout" to car.engineLayout,
-                                "Engine Size" to if (car.engineSize.isNotBlank()) "${car.engineSize} cc" else "-",
-                                "Fuel" to car.fuelType,
-                                "Fuel Tank" to if (car.fuelTankCapacity > 0) "${car.fuelTankCapacity} L" else "-",
-                                "Drivetrain" to car.drivetrain,
-                                "Color" to car.color,
-                                "Dimensions" to CarFormatters.formatDimensions(car),
-                                "VIN" to car.vin
+                        Card(
+                            onClick = onTechnicalSheetClick,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
                             )
-                        )
-                        Spacer(Modifier.height(24.dp))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.Description, contentDescription = null)
+                                Spacer(Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "Technical Sheet",
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    Text(
+                                        text = "View full specifications",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.height(12.dp))
                         
                         Card(
                             onClick = onMileageClick,

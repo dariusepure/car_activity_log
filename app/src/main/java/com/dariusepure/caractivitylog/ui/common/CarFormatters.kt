@@ -54,7 +54,7 @@ object CarFormatters {
             dims.add("${car.length} x ${car.width} x ${car.height} mm")
         }
         if (car.wheelbase > 0) dims.add("Wheelbase: ${car.wheelbase} mm")
-        if (car.trackWidth > 0) dims.add("Track: ${car.trackWidth} mm")
+        if (car.trackWidth > 0) dims.add("Track Width: ${car.trackWidth} mm")
         
         return if (dims.isEmpty()) "-" else dims.joinToString("\n")
     }
