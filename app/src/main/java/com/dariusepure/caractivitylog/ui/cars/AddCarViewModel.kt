@@ -3,6 +3,7 @@ package com.dariusepure.caractivitylog.ui.cars
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dariusepure.caractivitylog.data.cars.CarRepository
+import com.dariusepure.caractivitylog.data.auth.AuthRepository
 import com.dariusepure.caractivitylog.domain.Car
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -18,7 +19,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddCarViewModel @Inject constructor(
-    private val carRepository: CarRepository
+    private val carRepository: CarRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<AddCarState>(AddCarState.Idle)
@@ -27,6 +29,9 @@ class AddCarViewModel @Inject constructor(
     // 1. Am adăugat BUFFERED pentru ca UI-ul să poată prinde evenimentul fără blocaje
     private val _navigationEvent = Channel<Unit>(Channel.BUFFERED)
     val navigationEvent = _navigationEvent.receiveAsFlow()
+
+    private val _logoutEvent = Channel<Unit>(Channel.BUFFERED)
+    val logoutEvent = _logoutEvent.receiveAsFlow()
 
     private var currentCarId: String? = null
 
@@ -131,6 +136,17 @@ class AddCarViewModel @Inject constructor(
 
             } catch (e: Exception) {
                 _state.value = AddCarState.Error(e.localizedMessage ?: "Failed to save car")
+            }
+        }
+    }
+
+    fun signOut() {
+        viewModelScope.launch {
+            try {
+                authRepository.signOut()
+                _logoutEvent.trySend(Unit)
+            } catch (e: Exception) {
+                _state.value = AddCarState.Error(e.localizedMessage ?: "Failed to sign out")
             }
         }
     }

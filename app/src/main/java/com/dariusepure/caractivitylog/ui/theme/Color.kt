@@ -2,54 +2,44 @@ package com.dariusepure.caractivitylog.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Light Theme Colors (Pure White Background, Black Text)
-val PrimaryLight = Color(0xFF0061A4)
+// --- Tema "Dark Garage" (Sport / Agresiv) ---
+
+// Fundal și Suprafete
+val GarageMidnight = Color(0xFF121212)
+val GarageCard = Color(0xFF2A2A2A)
+
+// Accente Sport
+val RacingRed = Color(0xFFFF3B30)
+val CyberGreen = Color(0xFF00E676)
+val EditBlue = Color(0xFF2196F3)
+
+// Text
+val GarageWhite = Color(0xFFFFFFFF)
+val GarageGreyText = Color(0xFFB0B0B0)
+
+// Mapare pentru Dark Theme
+val PrimaryDark = CyberGreen // Save button will be Green Neon
+val OnPrimaryDark = GarageMidnight
+val PrimaryContainerDark = Color(0xFF00331A)
+val OnPrimaryContainerDark = GarageWhite
+
+val SecondaryDark = EditBlue // Edit button / Secondary actions will be Blue
+val OnSecondaryDark = GarageWhite
+val SecondaryContainerDark = Color(0xFF002244)
+val OnSecondaryContainerDark = GarageWhite
+
+val BackgroundDark = GarageMidnight
+val OnBackgroundDark = GarageWhite
+val SurfaceDark = GarageCard
+val OnSurfaceDark = GarageWhite
+
+val ErrorDark = RacingRed
+val OnErrorDark = GarageWhite
+
+// Mapare pentru Light Theme (Păstrăm un stil curat dar adaptat)
+val PrimaryLight = Color(0xFFD32F2F) // Un roșu mai închis pentru contrast pe alb
 val OnPrimaryLight = Color(0xFFFFFFFF)
-val PrimaryContainerLight = Color(0xFFD1E4FF)
-val OnPrimaryContainerLight = Color(0xFF001D36)
-
-val SecondaryLight = Color(0xFF535F70)
-val OnSecondaryLight = Color(0xFFFFFFFF)
-val SecondaryContainerLight = Color(0xFFD7E3F7)
-val OnSecondaryContainerLight = Color(0xFF101C2B)
-
-val TertiaryLight = Color(0xFF6B5778)
-val OnTertiaryLight = Color(0xFFFFFFFF)
-val TertiaryContainerLight = Color(0xFFF2DAFF)
-val OnTertiaryContainerLight = Color(0xFF251431)
-
-val ErrorLight = Color(0xFFBA1A1A)
-val OnErrorLight = Color(0xFFFFFFFF)
-val ErrorContainerLight = Color(0xFFFFDAD6)
-val OnErrorContainerLight = Color(0xFF410002)
-
-val BackgroundLight = Color(0xFFFFFFFF) // Pure White
-val OnBackgroundLight = Color(0xFF000000) // Pure Black
-val SurfaceLight = Color(0xFFFFFFFF)
-val OnSurfaceLight = Color(0xFF000000)
-
-// Dark Theme Colors (Pure Black Background, White Text)
-val PrimaryDark = Color(0xFF9ECAFF)
-val OnPrimaryDark = Color(0xFF003258)
-val PrimaryContainerDark = Color(0xFF00497D)
-val OnPrimaryContainerDark = Color(0xFFD1E4FF)
-
-val SecondaryDark = Color(0xFFBBC7DB)
-val OnSecondaryDark = Color(0xFF253140)
-val SecondaryContainerDark = Color(0xFF3B4858)
-val OnSecondaryContainerDark = Color(0xFFD7E3F7)
-
-val TertiaryDark = Color(0xFFD6BEE4)
-val OnTertiaryDark = Color(0xFF3B2947)
-val TertiaryContainerDark = Color(0xFF523F5F)
-val OnTertiaryContainerDark = Color(0xFFF2DAFF)
-
-val ErrorDark = Color(0xFFFFB4AB)
-val OnErrorDark = Color(0xFF690005)
-val ErrorContainerDark = Color(0xFF93000A)
-val OnErrorContainerDark = Color(0xFFFFDAD6)
-
-val BackgroundDark = Color(0xFF000000) // Pure Black
-val OnBackgroundDark = Color(0xFFFFFFFF) // Pure White
-val SurfaceDark = Color(0xFF000000)
-val OnSurfaceDark = Color(0xFFFFFFFF)
+val BackgroundLight = Color(0xFFFFFFFF)
+val OnBackgroundLight = Color(0xFF121212)
+val SurfaceLight = Color(0xFFF5F5F5)
+val OnSurfaceLight = Color(0xFF121212)

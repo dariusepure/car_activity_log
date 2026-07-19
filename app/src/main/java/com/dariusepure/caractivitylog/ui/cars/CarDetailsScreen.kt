@@ -219,7 +219,7 @@ fun MileageItem(
             Icon(
                 imageVector = Icons.Default.Edit,
                 contentDescription = "Edit mileage",
-                tint = MaterialTheme.colorScheme.primary
+                tint = androidx.compose.ui.graphics.Color(0xFF2196F3) // Force Blue for Edit
             )
         }
         

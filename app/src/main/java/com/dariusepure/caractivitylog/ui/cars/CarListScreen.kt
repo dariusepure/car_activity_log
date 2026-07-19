@@ -105,7 +105,7 @@ fun CarCard(
                 Icon(
                     imageVector = Icons.Default.Edit,
                     contentDescription = "Edit car",
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = Color(0xFF2196F3) // Force Blue for Edit
                 )
             }
             
