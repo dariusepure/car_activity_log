@@ -8,24 +8,25 @@ import androidx.compose.ui.graphics.Color
 val GarageMidnight = Color(0xFF000000)
 val GarageCard = Color(0xFF1A1A1A)
 
-// Accente Sport
-val RacingRed = Color(0xFFFF3B30)
-val CyberGreen = Color(0xFF00E676)
-val EditBlue = Color(0xFF2196F3)
+// Accente Albastre
+val BlueLight = Color(0xFF2196F3) // Albastru deschis pentru Light Mode
+val BlueDark = Color(0xFF1565C0)  // Albastru mai închis pentru Dark Mode
+val BlueSky = Color(0xFFE3F2FD)   // Container deschis
+val BlueDeep = Color(0xFF0D47A1)  // Container închis
 
 // Text
 val GarageWhite = Color(0xFFFFFFFF)
 val GarageGreyText = Color(0xFFB0B0B0)
 
 // Mapare pentru Dark Theme
-val PrimaryDark = CyberGreen // Save button will be Green Neon
-val OnPrimaryDark = GarageMidnight
-val PrimaryContainerDark = Color(0xFF00331A)
+val PrimaryDark = BlueDark
+val OnPrimaryDark = GarageWhite
+val PrimaryContainerDark = Color(0xFF0A192F)
 val OnPrimaryContainerDark = GarageWhite
 
-val SecondaryDark = EditBlue // Edit button / Secondary actions will be Blue
+val SecondaryDark = Color(0xFF64B5F6)
 val OnSecondaryDark = GarageWhite
-val SecondaryContainerDark = Color(0xFF002244)
+val SecondaryContainerDark = Color(0xFF0D47A1)
 val OnSecondaryContainerDark = GarageWhite
 
 val BackgroundDark = GarageMidnight
@@ -33,13 +34,16 @@ val OnBackgroundDark = GarageWhite
 val SurfaceDark = GarageCard
 val OnSurfaceDark = GarageWhite
 
-val ErrorDark = RacingRed
+val ErrorDark = Color(0xFFFF3B30) // Red for error
 val OnErrorDark = GarageWhite
 
-// Mapare pentru Light Theme (Păstrăm un stil curat dar adaptat)
-val PrimaryLight = Color(0xFFD32F2F) // Un roșu mai închis pentru contrast pe alb
+// Mapare pentru Light Theme
+val PrimaryLight = BlueLight
 val OnPrimaryLight = Color(0xFFFFFFFF)
+val PrimaryContainerLight = BlueSky
+val OnPrimaryContainerLight = BlueDark
+
 val BackgroundLight = Color(0xFFFFFFFF)
-val OnBackgroundLight = Color(0xFF121212)
-val SurfaceLight = Color(0xFFF5F5F5)
-val OnSurfaceLight = Color(0xFF121212)
+val OnBackgroundLight = Color(0xFF000000)
+val SurfaceLight = Color(0xFFF5F9FF)
+val OnSurfaceLight = Color(0xFF000000)
