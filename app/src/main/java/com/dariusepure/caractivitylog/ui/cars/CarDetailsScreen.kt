@@ -144,7 +144,9 @@ fun CarDetailsScreen(
                                 "Model" to car.model,
                                 "Year" to car.year.toString(),
                                 "Power" to "$hpValue hp / $kwValue kw",
-                                "Engine" to car.engineSize,
+                                "Torque" to "${car.torque} Nm",
+                                "Engine Code" to car.engineCode,
+                                "Engine Size" to car.engineSize,
                                 "Fuel" to car.fuelType,
                                 "Color" to car.color,
                                 "VIN" to car.vin

@@ -58,7 +58,9 @@ class AddCarViewModel @Inject constructor(
         fuelType: String,
         color: String,
         power: String,
-        powerUnit: String
+        powerUnit: String,
+        torque: String,
+        engineCode: String
     ) {
         if (name.isBlank()) {
             _state.value = AddCarState.Error("License plate cannot be empty")
@@ -103,6 +105,8 @@ class AddCarViewModel @Inject constructor(
                     color = color,
                     power = finalPower,
                     powerUnit = powerUnit,
+                    torque = torque.toIntOrNull() ?: 0,
+                    engineCode = engineCode,
                     updatedAt = Date()
                 )
 

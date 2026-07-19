@@ -10,9 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -41,14 +39,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.sizeIn
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,6 +67,8 @@ fun AddCarScreen(
     var color by remember { mutableStateOf("") }
     var power by remember { mutableStateOf("") }
     var powerUnit by remember { mutableStateOf("hp") }
+    var torque by remember { mutableStateOf("") }
+    var engineCode by remember { mutableStateOf("") }
 
     var countryExpanded by remember { mutableStateOf(false) }
     var fuelTypeExpanded by remember { mutableStateOf(false) }
@@ -82,7 +79,6 @@ fun AddCarScreen(
 
     val handleBack = {
         if (carId != null && name.isNotBlank() && (vin.isEmpty() || vin.length == 17)) {
-            // Auto-save logic for existing cars
             viewModel.onAddOrUpdateCar(
                 name = name,
                 plateCountry = selectedCountry.code,
@@ -94,14 +90,15 @@ fun AddCarScreen(
                 fuelType = fuelType,
                 color = color,
                 power = power,
-                powerUnit = powerUnit
+                powerUnit = powerUnit,
+                torque = torque,
+                engineCode = engineCode
             )
         } else {
             onBack()
         }
     }
 
-    // Handle system back button
     BackHandler(onBack = handleBack)
 
     LaunchedEffect(carId) {
@@ -120,6 +117,8 @@ fun AddCarScreen(
                 color = car.color
                 power = car.power.takeIf { it != 0 }?.toString() ?: ""
                 powerUnit = car.powerUnit.ifBlank { "hp" }
+                torque = car.torque.takeIf { it != 0 }?.toString() ?: ""
+                engineCode = car.engineCode
             }
         }
     }
@@ -180,7 +179,6 @@ fun AddCarScreen(
                             Icon(Icons.Default.ArrowDropDown, null, Modifier.clickable { countryExpanded = true })
                         }
                     )
-                    // Overlay to capture clicks
                     Box(modifier = Modifier.matchParentSize().clickable { countryExpanded = true })
                     
                     DropdownMenu(
@@ -300,7 +298,6 @@ fun AddCarScreen(
                         },
                         modifier = Modifier.clickable { powerUnitExpanded = true }
                     )
-                    // Overlay
                     Box(modifier = Modifier.matchParentSize().clickable { powerUnitExpanded = true })
 
                     DropdownMenu(
@@ -319,6 +316,29 @@ fun AddCarScreen(
                     }
                 }
             }
+
+            Spacer(Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = torque,
+                onValueChange = { if (it.all { char -> char.isDigit() }) torque = it },
+                label = { Text("Torque (Nm)") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                enabled = state !is AddCarState.Pending
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = engineCode,
+                onValueChange = { engineCode = it.uppercase() },
+                label = { Text("Engine Code (e.g. B47)") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                enabled = state !is AddCarState.Pending
+            )
 
             Spacer(Modifier.height(8.dp))
 
@@ -347,7 +367,6 @@ fun AddCarScreen(
                             Modifier.clickable { fuelTypeExpanded = true })
                     }
                 )
-                // Transparent click layer
                 Box(
                     modifier = Modifier
                         .matchParentSize()
@@ -396,7 +415,9 @@ fun AddCarScreen(
                         fuelType = fuelType,
                         color = color,
                         power = power,
-                        powerUnit = powerUnit
+                        powerUnit = powerUnit,
+                        torque = torque,
+                        engineCode = engineCode
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),

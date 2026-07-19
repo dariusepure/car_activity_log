@@ -15,6 +15,8 @@ data class Car(
     val color: String = "",
     val power: Int = 0,
     val powerUnit: String = "hp",
+    val torque: Int = 0,
+    val engineCode: String = "",
     val createdAt: Date = Date(),
     val updatedAt: Date = Date(),
     val activityCount: Int = 0
