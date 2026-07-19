@@ -251,14 +251,23 @@ fun AddCarScreen(
 
             OutlinedTextField(
                 value = vin,
-                onValueChange = { if (it.length <= 17) vin = it.uppercase() },
+                onValueChange = { input ->
+                    val filtered = input.uppercase().filter { it.isLetterOrDigit() && it !in listOf('I', 'O', 'Q') }
+                    if (filtered.length <= 17) vin = filtered
+                },
                 label = { Text("VIN (Optional - 17 characters)") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = state !is AddCarState.Pending,
                 supportingText = {
-                    if (vin.isNotEmpty()) {
-                        Text("${vin.length}/17")
+                    Column {
+                        if (vin.isNotEmpty()) {
+                            Text("${vin.length}/17")
+                            if (vin.length < 17) {
+                                Text("Remaining: ${17 - vin.length} characters", color = MaterialTheme.colorScheme.secondary)
+                            }
+                        }
+                        Text("Letters I, O, Q are not allowed in VINs", style = MaterialTheme.typography.bodySmall)
                     }
                 },
                 isError = vin.isNotEmpty() && vin.length != 17
