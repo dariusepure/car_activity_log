@@ -70,18 +70,20 @@ class AddCarViewModel @Inject constructor(
         width: String,
         height: String,
         fuelTankCapacity: String,
-        drivetrain: String
+        drivetrain: String,
+        vehicleType: String
     ) {
         if (make.isBlank() || model.isBlank()) {
             _state.value = AddCarState.Error("Make and Model are required")
             return
         }
 
-        // Romanian License Plate Validation
-        if (plateCountry == "RO") {
-            val roPlateRegex = Regex("^(B|AB|AR|AG|BC|BH|BN|BT|BV|BR|BZ|CS|CL|CJ|CT|CV|DB|DJ|GL|GR|GJ|HR|HD|IL|IS|IF|MM|MH|MS|NT|OT|PH|SM|SJ|SB|SV|TR|TM|TL|VS|VL|VN)\\s?\\d{2,3}\\s?[A-PR-Z]{3}$", RegexOption.IGNORE_CASE)
-            if (!name.replace(" ", "").matches(roPlateRegex)) {
-                _state.value = AddCarState.Error("Invalid Romanian license plate format (ex: B 123 ABC or CJ 12 ABC)")
+        // License Plate Validation based on selected country
+        val country = europeanCountries.find { it.code == plateCountry }
+        if (name.isNotBlank() && country?.plateRegex != null) {
+            val regex = Regex(country.plateRegex, RegexOption.IGNORE_CASE)
+            if (!name.replace(" ", "").replace("-", "").matches(regex)) {
+                _state.value = AddCarState.Error("Invalid ${country.name} license plate format (ex: ${country.plateHint})")
                 return
             }
         }
@@ -122,6 +124,7 @@ class AddCarViewModel @Inject constructor(
                     height = height.toIntOrNull() ?: 0,
                     fuelTankCapacity = fuelTankCapacity.toDoubleOrNull() ?: 0.0,
                     drivetrain = drivetrain,
+                    vehicleType = vehicleType,
                     updatedAt = Date()
                 )
 

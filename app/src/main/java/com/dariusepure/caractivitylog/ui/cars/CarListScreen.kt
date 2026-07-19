@@ -54,8 +54,6 @@ fun CarCard(
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val flag = europeanCountries.find { it.code == car.plateCountry }?.flag ?: ""
-
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
@@ -69,35 +67,33 @@ fun CarCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (flag.isNotEmpty()) {
-                        Text(
-                            text = flag,
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.padding(end = 8.dp)
-                        )
-                    }
                     Text(
-                        text = car.name.ifBlank { "Unnamed car" },
+                        text = "${car.make} ${car.model}".trim().ifBlank { car.name.ifBlank { "Unnamed car" } },
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
-                Spacer(Modifier.height(6.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Spacer(Modifier.height(4.dp))
+                
+                val details = mutableListOf<String>()
+                if (car.year != 0) details.add(car.year.toString())
+                if (car.power != 0) details.add("${car.power} hp")
+                if (car.engineSize.isNotBlank()) details.add("${car.engineSize} cc")
+                
+                if (details.isNotEmpty()) {
                     Text(
-                        text = "${car.activityCount} " + if (car.activityCount == 1) "activity" else "activities",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text("\u00B7", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        text = car.updatedAt.toRelativeString(),
+                        text = details.joinToString(" \u00B7 "),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+                
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "Last update: ${car.updatedAt.toRelativeString()}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             
             IconButton(onClick = onEditClick) {

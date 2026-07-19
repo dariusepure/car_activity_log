@@ -114,8 +114,6 @@ fun CarDetailsScreen(
                     kwValue = (car.power / 1.34102).toInt()
                 }
 
-                val flag = europeanCountries.find { it.code == car.plateCountry }?.flag ?: "🏳️"
-
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -126,12 +124,7 @@ fun CarDetailsScreen(
                         Spacer(Modifier.height(16.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = flag,
-                                style = MaterialTheme.typography.headlineMedium,
-                                modifier = Modifier.padding(end = 8.dp)
-                            )
-                            Text(
-                                text = car.name,
+                                text = "${car.make} ${car.model}".trim().ifBlank { car.name.ifBlank { "Unnamed car" } },
                                 style = MaterialTheme.typography.headlineMedium,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -142,11 +135,12 @@ fun CarDetailsScreen(
                             specifications = listOf(
                                 "Make" to car.make,
                                 "Model" to car.model,
+                                "Type" to car.vehicleType,
                                 "Year" to car.year.toString(),
                                 "Power" to "$hpValue hp / $kwValue kw",
                                 "Torque" to "${car.torque} Nm",
                                 "Engine Code" to car.engineCode,
-                                "Engine Size" to car.engineSize,
+                                "Engine Size" to if (car.engineSize.isNotBlank()) "${car.engineSize} cc" else "-",
                                 "Fuel" to car.fuelType,
                                 "Fuel Tank" to if (car.fuelTankCapacity > 0) "${car.fuelTankCapacity} L" else "-",
                                 "Drivetrain" to car.drivetrain,

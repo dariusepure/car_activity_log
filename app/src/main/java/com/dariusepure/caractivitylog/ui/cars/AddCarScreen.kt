@@ -75,13 +75,16 @@ fun AddCarScreen(
     var height by remember { mutableStateOf("") }
     var fuelTankCapacity by remember { mutableStateOf("") }
     var drivetrain by remember { mutableStateOf("") }
+    var vehicleType by remember { mutableStateOf("") }
 
     var countryExpanded by remember { mutableStateOf(false) }
     var makeExpanded by remember { mutableStateOf(false) }
     var fuelTypeExpanded by remember { mutableStateOf(false) }
     var drivetrainExpanded by remember { mutableStateOf(false) }
+    var vehicleTypeExpanded by remember { mutableStateOf(false) }
     val fuelTypes = listOf("Petrol", "Diesel", "Electric", "Hybrid", "LPG")
     val drivetrainOptions = listOf("FWD", "RWD", "AWD", "4WD")
+    val vehicleTypes = listOf("Saloon", "Estate", "Hatchback", "MPV", "SUV", "Coupe", "Convertible", "Van", "Pickup")
 
     var colorExpanded by remember { mutableStateOf(false) }
     val carColors = listOf(
@@ -112,7 +115,8 @@ fun AddCarScreen(
                 width = width,
                 height = height,
                 fuelTankCapacity = fuelTankCapacity,
-                drivetrain = drivetrain
+                drivetrain = drivetrain,
+                vehicleType = vehicleType
             )
         } else {
             onBack()
@@ -144,6 +148,7 @@ fun AddCarScreen(
                 height = car.height.takeIf { it != 0 }?.toString() ?: ""
                 fuelTankCapacity = car.fuelTankCapacity.takeIf { it != 0.0 }?.toString() ?: ""
                 drivetrain = car.drivetrain
+                vehicleType = car.vehicleType
             }
         }
     }
@@ -195,7 +200,7 @@ fun AddCarScreen(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(modifier = Modifier.width(90.dp)) {
                     OutlinedTextField(
-                        value = selectedCountry.flag,
+                        value = selectedCountry.code,
                         onValueChange = { },
                         readOnly = true,
                         label = { Text("Country") },
@@ -213,7 +218,7 @@ fun AddCarScreen(
                     ) {
                         europeanCountries.forEach { country ->
                             DropdownMenuItem(
-                                text = { Text("${country.flag} ${country.name}") },
+                                text = { Text(country.name) },
                                 onClick = {
                                     selectedCountry = country
                                     countryExpanded = false
@@ -226,10 +231,15 @@ fun AddCarScreen(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it.uppercase() },
-                    label = { Text("License Plate") },
+                    label = { Text("License Plate (Optional)") },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
-                    enabled = state !is AddCarState.Pending
+                    enabled = state !is AddCarState.Pending,
+                    supportingText = {
+                        selectedCountry.plateHint?.let { hint ->
+                            Text("Ex: $hint", style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
                 )
             }
 
@@ -437,7 +447,7 @@ fun AddCarScreen(
             OutlinedTextField(
                 value = engineSize,
                 onValueChange = { engineSize = it },
-                label = { Text("Engine Size") },
+                label = { Text("Engine Size (cc)") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = state !is AddCarState.Pending
@@ -454,6 +464,44 @@ fun AddCarScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 enabled = state !is AddCarState.Pending
             )
+
+            Spacer(Modifier.height(8.dp))
+
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = vehicleType,
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text("Vehicle Type") },
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        Icon(
+                            Icons.Default.ArrowDropDown,
+                            "dropdown",
+                            Modifier.clickable { vehicleTypeExpanded = true })
+                    }
+                )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable { vehicleTypeExpanded = true }
+                )
+                DropdownMenu(
+                    expanded = vehicleTypeExpanded,
+                    onDismissRequest = { vehicleTypeExpanded = false },
+                    modifier = Modifier.fillMaxWidth(0.9f).sizeIn(maxHeight = 300.dp)
+                ) {
+                    vehicleTypes.forEach { type ->
+                        DropdownMenuItem(
+                            text = { Text(type) },
+                            onClick = {
+                                vehicleType = type
+                                vehicleTypeExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             Spacer(Modifier.height(8.dp))
 
@@ -591,7 +639,8 @@ fun AddCarScreen(
                         width = width,
                         height = height,
                         fuelTankCapacity = fuelTankCapacity,
-                        drivetrain = drivetrain
+                        drivetrain = drivetrain,
+                        vehicleType = vehicleType
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),

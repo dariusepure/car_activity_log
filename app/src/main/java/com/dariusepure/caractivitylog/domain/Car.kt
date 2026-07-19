@@ -22,6 +22,7 @@ data class Car(
     val height: Int = 0,
     val fuelTankCapacity: Double = 0.0,
     val drivetrain: String = "",
+    val vehicleType: String = "",
     val createdAt: Date = Date(),
     val updatedAt: Date = Date(),
     val activityCount: Int = 0

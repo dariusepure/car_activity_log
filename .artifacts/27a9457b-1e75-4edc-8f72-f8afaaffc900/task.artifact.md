@@ -1,6 +1,0 @@
-- `[x]` Update `Car.kt` (Domain) with fuel tank and drivetrain
-- `[x]` Update `FirestoreCar.kt` (Data) with fuel tank and drivetrain
-- `[x]` Update `AddCarViewModel.kt` to handle new fields
-- `[x]` Update `AddCarScreen.kt` with new inputs and drivetrain selector
-- `[x]` Update `CarDetailsScreen.kt` to display new specs
-- `[x]` Verify build and persistence
