@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.dariusepure.caractivitylog.ui.common.CarFormatters
 import com.dariusepure.caractivitylog.ui.common.LoadingState
 import com.dariusepure.caractivitylog.ui.common.ErrorState
 import java.text.SimpleDateFormat
@@ -91,7 +92,6 @@ fun InspectionHistoryScreen(
             is CarDetailsUiState.Error -> ErrorState(message = s.message, onRetry = { viewModel.loadCarData(carId) })
             is CarDetailsUiState.Success -> {
                 val car = s.car
-                val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
 
                 LazyColumn(
                     modifier = Modifier
@@ -120,8 +120,7 @@ fun InspectionHistoryScreen(
                     } else {
                         items(s.inspections) { inspection ->
                             InspectionItem(
-                                inspection = inspection,
-                                dateFormat = dateFormat
+                                inspection = inspection
                             )
                             HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
                         }
@@ -134,9 +133,10 @@ fun InspectionHistoryScreen(
 
 @Composable
 fun InspectionItem(
-    inspection: com.dariusepure.caractivitylog.domain.VehicleInspection,
-    dateFormat: SimpleDateFormat
+    inspection: com.dariusepure.caractivitylog.domain.VehicleInspection
 ) {
+    val isExpired = CarFormatters.isInspectionExpired(inspection)
+    
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -145,12 +145,12 @@ fun InspectionItem(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Valid until: ${dateFormat.format(inspection.expiryDate)}",
+                text = CarFormatters.getInspectionExpiryText(inspection),
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (inspection.expiryDate.before(Date())) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+                color = if (isExpired) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "Inspection date: ${dateFormat.format(inspection.date)} \u00B7 ${inspection.mileage.toInt()} km",
+                text = "Inspection date: ${CarFormatters.formatDate(inspection.date)} \u00B7 ${inspection.mileage.toInt()} km",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

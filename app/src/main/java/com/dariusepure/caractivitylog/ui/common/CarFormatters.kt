@@ -1,0 +1,58 @@
+package com.dariusepure.caractivitylog.ui.common
+
+import com.dariusepure.caractivitylog.domain.Car
+import com.dariusepure.caractivitylog.domain.VehicleInspection
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import kotlin.math.roundToInt
+
+object CarFormatters {
+    private val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+
+    fun formatPower(car: Car): String {
+        val hpValue: Int
+        val kwValue: Int
+        
+        if (car.powerUnit.lowercase() == "kw") {
+            kwValue = car.power
+            hpValue = (car.power * 1.35962).roundToInt()
+        } else {
+            hpValue = car.power
+            kwValue = (car.power / 1.35962).roundToInt()
+        }
+        
+        return "$hpValue hp / $kwValue kw"
+    }
+
+    fun getCarSummary(car: Car): String {
+        val details = mutableListOf<String>()
+        if (car.year != 0) details.add(car.year.toString())
+        if (car.power != 0) {
+            val hp = if (car.powerUnit.lowercase() == "hp") car.power else (car.power * 1.35962).roundToInt()
+            details.add("$hp hp")
+        }
+        if (car.engineSize.isNotBlank()) details.add("${car.engineSize} cc")
+        
+        return details.joinToString(" \u00B7 ")
+    }
+
+    fun formatDate(date: Date): String = dateFormat.format(date)
+
+    fun getInspectionExpiryText(inspection: VehicleInspection?): String {
+        if (inspection == null) return "No inspection recorded"
+        return "Valid until ${formatDate(inspection.expiryDate)}"
+    }
+
+    fun isInspectionExpired(inspection: VehicleInspection?): Boolean {
+        return inspection?.expiryDate?.before(Date()) ?: false
+    }
+
+    fun formatDimensions(car: Car): String {
+        return if (car.length > 0 || car.width > 0 || car.height > 0) {
+            "${car.length} x ${car.width} x ${car.height} mm"
+        } else {
+            "-"
+        }
+    }
+}

@@ -170,4 +170,8 @@ class AddCarViewModel @Inject constructor(
         _state.value = AddCarState.Idle
         currentCarId = null
     }
+
+    fun getEffectiveMake(make: String, customMake: String): String {
+        return if (make == "Other") customMake else make
+    }
 }

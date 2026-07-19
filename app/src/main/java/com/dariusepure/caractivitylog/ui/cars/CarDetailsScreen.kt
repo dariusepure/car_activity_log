@@ -66,12 +66,15 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dariusepure.caractivitylog.domain.MileageLog
+import com.dariusepure.caractivitylog.ui.common.CarFormatters
 import com.dariusepure.caractivitylog.ui.common.ErrorState
+import com.dariusepure.caractivitylog.ui.common.SpecificationCard
 import com.dariusepure.caractivitylog.ui.common.LoadingState
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,16 +117,7 @@ fun CarDetailsScreen(
             is CarDetailsUiState.Error -> ErrorState(message = s.message, onRetry = { viewModel.loadCarData(carId) })
             is CarDetailsUiState.Success -> {
                 val car = s.car
-                val hpValue: Int
-                val kwValue: Int
-                
-                if (car.powerUnit.lowercase() == "kw") {
-                    kwValue = car.power
-                    hpValue = (car.power * 1.34102).toInt()
-                } else {
-                    hpValue = car.power
-                    kwValue = (car.power / 1.34102).toInt()
-                }
+                val powerText = CarFormatters.formatPower(car)
 
                 LazyColumn(
                     modifier = Modifier
@@ -195,7 +189,7 @@ fun CarDetailsScreen(
                                 "Type" to car.vehicleType,
                                 "Mfg. Country" to car.manufacturingCountry,
                                 "Year" to car.year.toString(),
-                                "Power" to "$hpValue hp / $kwValue kw",
+                                "Power" to powerText,
                                 "Torque" to "${car.torque} Nm",
                                 "Engine Code" to car.engineCode,
                                 "Engine Size" to if (car.engineSize.isNotBlank()) "${car.engineSize} cc" else "-",
@@ -203,11 +197,7 @@ fun CarDetailsScreen(
                                 "Fuel Tank" to if (car.fuelTankCapacity > 0) "${car.fuelTankCapacity} L" else "-",
                                 "Drivetrain" to car.drivetrain,
                                 "Color" to car.color,
-                                "Dimensions" to if (car.length > 0 || car.width > 0 || car.height > 0) {
-                                    "${car.length} x ${car.width} x ${car.height} mm"
-                                } else {
-                                    "-"
-                                },
+                                "Dimensions" to CarFormatters.formatDimensions(car),
                                 "VIN" to car.vin
                             )
                         )
@@ -242,7 +232,7 @@ fun CarDetailsScreen(
                         Spacer(Modifier.height(12.dp))
 
                         val latestInspection = s.inspections.maxByOrNull { it.date }
-                        val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+                        val isExpired = CarFormatters.isInspectionExpired(latestInspection)
 
                         Card(
                             onClick = onInspectionClick,
@@ -263,13 +253,9 @@ fun CarDetailsScreen(
                                         style = MaterialTheme.typography.titleMedium
                                     )
                                     Text(
-                                        text = if (latestInspection != null) {
-                                            "Valid until ${dateFormat.format(latestInspection.expiryDate)}"
-                                        } else {
-                                            "No inspection recorded"
-                                        },
+                                        text = CarFormatters.getInspectionExpiryText(latestInspection),
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = if (latestInspection?.expiryDate?.before(Date()) == true) {
+                                        color = if (isExpired) {
                                             MaterialTheme.colorScheme.error
                                         } else {
                                             MaterialTheme.colorScheme.onSurfaceVariant
@@ -283,51 +269,6 @@ fun CarDetailsScreen(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun MileageItem(
-    log: MileageLog,
-    unit: String,
-    onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit
-) {
-    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "${log.km.toInt()} $unit",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = dateFormat.format(log.date),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        
-        IconButton(onClick = onEditClick) {
-            Icon(
-                imageVector = Icons.Default.Edit,
-                contentDescription = "Edit mileage",
-                tint = androidx.compose.ui.graphics.Color(0xFF2196F3) // Force Blue for Edit
-            )
-        }
-        
-        IconButton(onClick = onDeleteClick) {
-            Icon(
-                imageVector = Icons.Default.Delete,
-                contentDescription = "Delete mileage",
-                tint = androidx.compose.ui.graphics.Color.Red
-            )
         }
     }
 }
@@ -589,39 +530,4 @@ fun AddInspectionDialog(
             }
         }
     )
-}
-
-@Composable
-fun SpecificationCard(specifications: List<Pair<String, String>>) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            specifications.forEachIndexed { index, (label, value) ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.labelLarge,
-                        modifier = Modifier.weight(1f),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = value.ifBlank { "-" },
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                if (index < specifications.size - 1) {
-                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
-                }
-            }
-        }
-    }
 }

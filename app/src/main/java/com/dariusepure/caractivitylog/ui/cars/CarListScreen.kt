@@ -29,6 +29,7 @@ import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.outlined.DirectionsCar
+import com.dariusepure.caractivitylog.ui.common.CarFormatters
 import com.dariusepure.caractivitylog.ui.theme.ThemeViewModel
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -130,14 +131,10 @@ fun CarCard(
                 }
                 Spacer(Modifier.height(4.dp))
                 
-                val details = mutableListOf<String>()
-                if (car.year != 0) details.add(car.year.toString())
-                if (car.power != 0) details.add("${car.power} hp")
-                if (car.engineSize.isNotBlank()) details.add("${car.engineSize} cc")
-                
-                if (details.isNotEmpty()) {
+                val summary = CarFormatters.getCarSummary(car)
+                if (summary.isNotEmpty()) {
                     Text(
-                        text = details.joinToString(" \u00B7 "),
+                        text = summary,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

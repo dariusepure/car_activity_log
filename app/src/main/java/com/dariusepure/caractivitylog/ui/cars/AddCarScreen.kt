@@ -99,7 +99,7 @@ fun AddCarScreen(
     val powerUnits = listOf("hp", "kw")
 
     val handleBack = {
-        val finalMake = if (make == "Other") customMake else make
+        val finalMake = viewModel.getEffectiveMake(make, customMake)
         if (carId != null && finalMake.isNotBlank() && model.isNotBlank() && (vin.isEmpty() || vin.length == 17)) {
             viewModel.onAddOrUpdateCar(
                 name = name,
@@ -137,12 +137,11 @@ fun AddCarScreen(
             if (car != null) {
                 name = car.name
                 selectedCountry = europeanCountries.find { it.code == car.plateCountry } ?: europeanCountries[0]
-                if (carBrands.contains(car.make) && car.make != "Other") {
-                    make = car.make
-                } else {
-                    make = "Other"
-                    customMake = car.make
-                }
+                
+                val isStandardBrand = carBrands.contains(car.make) && car.make != "Other"
+                make = if (isStandardBrand) car.make else "Other"
+                customMake = if (isStandardBrand) "" else car.make
+                
                 model = car.model
                 vin = car.vin
                 year = car.year.takeIf { it != 0 }?.toString() ?: ""
@@ -678,7 +677,7 @@ fun AddCarScreen(
 
             Button(
                 onClick = {
-                    val finalMake = if (make == "Other") customMake else make
+                    val finalMake = viewModel.getEffectiveMake(make, customMake)
                     viewModel.onAddOrUpdateCar(
                         name = name,
                         plateCountry = selectedCountry.code,
@@ -703,7 +702,7 @@ fun AddCarScreen(
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = (if (make == "Other") customMake.isNotBlank() else make.isNotBlank()) && 
+                enabled = viewModel.getEffectiveMake(make, customMake).isNotBlank() && 
                          model.isNotBlank() && state !is AddCarState.Pending
             ) {
                 if (state is AddCarState.Pending) {
