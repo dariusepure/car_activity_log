@@ -1,0 +1,6 @@
+- `[x]` Update `ThemeViewModel.kt` for persistence
+- `[x]` Update `Color.kt` for true black
+- `[x]` Update `Theme.kt` for system bar visibility
+- `[x]` Update `MainActivity.kt` to observe theme globally
+- `[x]` Update `CarListScreen.kt` to use shared ThemeViewModel
+- `[x]` Verify build and theme persistence

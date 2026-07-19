@@ -14,14 +14,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.outlined.DirectionsCar
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.ViewModelStoreOwner
 import com.dariusepure.caractivitylog.ui.theme.ThemeViewModel
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -125,8 +124,9 @@ fun CarListScreen(
     onCarClick: (String) -> Unit,
     onAddCarClick: () -> Unit,
     onEditCarClick: (String) -> Unit,
+    onLogout: () -> Unit,
     viewModel: CarListViewModel = hiltViewModel(),
-    themeViewModel: ThemeViewModel = hiltViewModel(viewModelStoreOwner = LocalContext.current as ViewModelStoreOwner),
+    themeViewModel: ThemeViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -139,6 +139,10 @@ fun CarListScreen(
         onAddCarClick = onAddCarClick,
         onEditCarClick = onEditCarClick,
         onDeleteCar = { carId -> viewModel.onDeleteCar(carId) },
+        onLogoutClick = {
+            viewModel.signOut()
+            onLogout()
+        },
         onThemeToggle = { themeViewModel.toggleTheme(currentDark) },
         isDark = currentDark,
         state = state
@@ -152,6 +156,7 @@ private fun InnerCarListScreen(
     onAddCarClick: () -> Unit,
     onEditCarClick: (String) -> Unit,
     onDeleteCar: (String) -> Unit,
+    onLogoutClick: () -> Unit,
     onThemeToggle: () -> Unit,
     isDark: Boolean,
     state: CarListUiState,
@@ -167,6 +172,12 @@ private fun InnerCarListScreen(
                         Icon(
                             imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
                             contentDescription = "Toggle Theme"
+                        )
+                    }
+                    IconButton(onClick = onLogoutClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = "Log out"
                         )
                     }
                 }

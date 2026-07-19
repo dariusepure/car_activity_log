@@ -5,8 +5,8 @@ import androidx.compose.ui.graphics.Color
 // --- Tema "Dark Garage" (Sport / Agresiv) ---
 
 // Fundal și Suprafete
-val GarageMidnight = Color(0xFF121212)
-val GarageCard = Color(0xFF2A2A2A)
+val GarageMidnight = Color(0xFF000000)
+val GarageCard = Color(0xFF1A1A1A)
 
 // Accente Sport
 val RacingRed = Color(0xFFFF3B30)

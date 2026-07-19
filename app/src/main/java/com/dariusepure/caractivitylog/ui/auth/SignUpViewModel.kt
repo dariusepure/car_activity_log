@@ -20,9 +20,14 @@ class SignUpViewModel @Inject constructor(
 
     val signedIn = authRepository.signedIn
 
-    fun onSignUp(email: String, password: String) {
+    fun onSignUp(email: String, password: String, confirmPassword: String) {
         if (email.isBlank() || password.isBlank()) {
             _state.value = SignUpState.Error("Email and password cannot be empty")
+            return
+        }
+
+        if (password != confirmPassword) {
+            _state.value = SignUpState.Error("Passwords do not match")
             return
         }
 

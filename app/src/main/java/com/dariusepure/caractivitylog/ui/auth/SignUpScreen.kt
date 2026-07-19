@@ -129,18 +129,14 @@ fun SignUpScreen(
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                isError = password.isNotEmpty() && confirmPassword.isNotEmpty() && password != confirmPassword
             )
 
             Button(
                 onClick = {
-                    if (password == confirmPassword) {
-                        viewModel.onSignUp(email, password)
-                    } else {
-                        // Handle mismatch locally if you want, or let VM do it
-                        viewModel.onSignUp(email, "mismatch") // This is a bit hacky, better to have a dedicated error
-                    }
+                    viewModel.onSignUp(email, password, confirmPassword)
                 },
-                enabled = !submitting,
+                enabled = !submitting && email.isNotBlank() && password.isNotBlank() && confirmPassword.isNotBlank(),
                 modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
             ) {
                 if (submitting) {

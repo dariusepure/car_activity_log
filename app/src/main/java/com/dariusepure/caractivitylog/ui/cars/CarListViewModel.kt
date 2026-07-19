@@ -2,7 +2,7 @@ package com.dariusepure.caractivitylog.ui.cars
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dariusepure.caractivitylog.data.auth.AuthRepository // Import pentru deconectare
+import com.dariusepure.caractivitylog.data.auth.AuthRepository
 import com.dariusepure.caractivitylog.data.cars.CarRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,7 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class CarListViewModel @Inject constructor(
     private val carRepository: CarRepository,
-    private val authRepository: AuthRepository // Am adăugat AuthRepository aici
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     val state: StateFlow<CarListUiState> = carRepository.cars
@@ -43,7 +43,6 @@ class CarListViewModel @Inject constructor(
         }
     }
 
-    // Funcția nouă care deconectează utilizatorul din Firebase
     fun signOut() {
         viewModelScope.launch {
             try {

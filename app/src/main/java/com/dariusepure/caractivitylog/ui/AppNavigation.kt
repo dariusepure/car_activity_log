@@ -14,6 +14,9 @@ import com.dariusepure.caractivitylog.ui.cars.CarDetailsScreen
 import com.dariusepure.caractivitylog.ui.cars.CarListScreen
 import com.dariusepure.caractivitylog.ui.cars.MileageHistoryScreen
 
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.dariusepure.caractivitylog.ui.theme.ThemeViewModel
+
 sealed class Screen(val route: String) {
     data object SignIn : Screen("signin")
     data object SignUp : Screen("signup")
@@ -34,7 +37,8 @@ sealed class Screen(val route: String) {
 fun AppNavigation(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    startDestination: String = Screen.SignIn.route
+    startDestination: String = Screen.CarList.route,
+    themeViewModel: ThemeViewModel = hiltViewModel()
 ) {
     NavHost(
         navController = navController,
@@ -75,7 +79,13 @@ fun AppNavigation(
                 },
                 onEditCarClick = { carId ->
                     navController.navigate(Screen.EditCar.createRoute(carId))
-                }
+                },
+                onLogout = {
+                    navController.navigate(Screen.SignIn.route) {
+                        popUpTo(navController.graph.id) { inclusive = true }
+                    }
+                },
+                themeViewModel = themeViewModel
             )
         }
         composable(Screen.CarDetails.route) { backStackEntry ->
