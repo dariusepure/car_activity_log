@@ -17,7 +17,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.outlined.DirectionsCar
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModelStoreOwner
+import com.dariusepure.caractivitylog.ui.theme.ThemeViewModel
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -110,15 +115,22 @@ fun CarListScreen(
     onAddCarClick: () -> Unit,
     onEditCarClick: (String) -> Unit,
     viewModel: CarListViewModel = hiltViewModel(),
+    themeViewModel: ThemeViewModel = hiltViewModel(viewModelStoreOwner = LocalContext.current as ViewModelStoreOwner),
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle()
+    val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val currentDark = isDarkMode ?: systemDark
+
     InnerCarListScreen(
-        onCarClick,
-        onAddCarClick,
-        onEditCarClick,
+        onCarClick = onCarClick,
+        onAddCarClick = onAddCarClick,
+        onEditCarClick = onEditCarClick,
         onDeleteCar = { carId -> viewModel.onDeleteCar(carId) },
-        state
+        onThemeToggle = { themeViewModel.toggleTheme(currentDark) },
+        isDark = currentDark,
+        state = state
     )
 }
 
@@ -129,12 +141,26 @@ private fun InnerCarListScreen(
     onAddCarClick: () -> Unit,
     onEditCarClick: (String) -> Unit,
     onDeleteCar: (String) -> Unit,
+    onThemeToggle: () -> Unit,
+    isDark: Boolean,
     state: CarListUiState,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = { TopAppBar(title = { Text("Your cars") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Your cars") },
+                actions = {
+                    IconButton(onClick = onThemeToggle) {
+                        Icon(
+                            imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
+                            contentDescription = "Toggle Theme"
+                        )
+                    }
+                }
+            )
+        },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = onAddCarClick,
