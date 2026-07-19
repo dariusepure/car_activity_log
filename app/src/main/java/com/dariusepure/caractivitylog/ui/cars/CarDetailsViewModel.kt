@@ -48,7 +48,7 @@ class CarDetailsViewModel @Inject constructor(
         }
     }
 
-    fun addMileage(carId: String, km: Int, date: Date) {
+    fun addMileage(carId: String, km: Double, date: Date) {
         viewModelScope.launch {
             try {
                 carRepository.addMileageLog(carId, MileageLog(km = km, date = date))

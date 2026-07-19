@@ -6,7 +6,7 @@ import com.dariusepure.caractivitylog.domain.MileageLog
 
 data class FirestoreMileageLog(
     @DocumentId val id: String = "",
-    val km: Int = 0,
+    val km: Double = 0.0,
     val date: Timestamp = Timestamp.now()
 )
 

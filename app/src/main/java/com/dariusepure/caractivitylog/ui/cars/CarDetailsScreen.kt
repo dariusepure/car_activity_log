@@ -202,7 +202,7 @@ fun MileageItem(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "${log.km} $unit",
+                text = "${log.km.toInt()} $unit",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -237,9 +237,9 @@ fun AddMileageDialog(
     existingLogs: List<MileageLog> = emptyList(),
     unit: String = "km",
     onDismiss: () -> Unit,
-    onConfirm: (Int, Date) -> Unit
+    onConfirm: (Double, Date) -> Unit
 ) {
-    var km by remember { mutableStateOf(existingLog?.km?.toString() ?: "") }
+    var km by remember { mutableStateOf(existingLog?.km?.toInt()?.toString() ?: "") }
     var selectedDate by remember { mutableStateOf(existingLog?.date ?: Date()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
@@ -318,21 +318,22 @@ fun AddMileageDialog(
                 onClick = {
                     val kmInt = km.toIntOrNull() ?: 0
                     if (kmInt > 0) {
+                        val kmDouble = kmInt.toDouble()
                         val conflict = existingLogs.find { log ->
                             if (log.id == existingLog?.id) return@find false
-                            val kmBackwards = selectedDate.after(log.date) && kmInt < log.km
-                            val dateBackwards = selectedDate.before(log.date) && kmInt > log.km
+                            val kmBackwards = selectedDate.after(log.date) && kmDouble < log.km
+                            val dateBackwards = selectedDate.before(log.date) && kmDouble > log.km
                             kmBackwards || dateBackwards
                         }
 
                         if (conflict != null) {
                             errorMessage = if (selectedDate.after(conflict.date)) {
-                                "Cannot be less than ${conflict.km} $unit (recorded on ${dateFormat.format(conflict.date)})"
+                                "Cannot be less than ${conflict.km.toInt()} $unit (recorded on ${dateFormat.format(conflict.date)})"
                             } else {
-                                "Cannot be more than ${conflict.km} $unit (recorded on ${dateFormat.format(conflict.date)})"
+                                "Cannot be more than ${conflict.km.toInt()} $unit (recorded on ${dateFormat.format(conflict.date)})"
                             }
                         } else {
-                            onConfirm(kmInt, selectedDate)
+                            onConfirm(kmDouble, selectedDate)
                         }
                     }
                 },

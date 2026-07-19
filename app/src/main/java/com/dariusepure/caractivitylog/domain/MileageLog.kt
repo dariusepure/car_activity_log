@@ -4,6 +4,6 @@ import java.util.Date
 
 data class MileageLog(
     val id: String = "",
-    val km: Int = 0,
+    val km: Double = 0.0,
     val date: Date = Date()
 )

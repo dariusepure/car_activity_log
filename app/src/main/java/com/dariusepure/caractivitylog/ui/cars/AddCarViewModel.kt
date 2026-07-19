@@ -111,9 +111,9 @@ class AddCarViewModel @Inject constructor(
                     val logs = carRepository.getMileageLogs(currentCarId!!).take(1).first()
                     logs.forEach { log ->
                         val convertedKm = if (newCountry.usesMiles) {
-                            (log.km / 1.60934).toInt() // KM to Miles
+                            log.km / 1.609344 // KM to Miles
                         } else {
-                            (log.km * 1.60934).toInt() // Miles to KM
+                            log.km * 1.609344 // Miles to KM
                         }
                         carRepository.updateMileageLog(currentCarId!!, log.copy(km = convertedKm))
                     }
