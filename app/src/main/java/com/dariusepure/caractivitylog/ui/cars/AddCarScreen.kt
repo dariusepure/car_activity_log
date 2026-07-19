@@ -39,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -69,10 +70,18 @@ fun AddCarScreen(
     var powerUnit by remember { mutableStateOf("hp") }
     var torque by remember { mutableStateOf("") }
     var engineCode by remember { mutableStateOf("") }
+    var length by remember { mutableStateOf("") }
+    var width by remember { mutableStateOf("") }
+    var height by remember { mutableStateOf("") }
+    var fuelTankCapacity by remember { mutableStateOf("") }
+    var drivetrain by remember { mutableStateOf("") }
 
     var countryExpanded by remember { mutableStateOf(false) }
+    var makeExpanded by remember { mutableStateOf(false) }
     var fuelTypeExpanded by remember { mutableStateOf(false) }
+    var drivetrainExpanded by remember { mutableStateOf(false) }
     val fuelTypes = listOf("Petrol", "Diesel", "Electric", "Hybrid", "LPG")
+    val drivetrainOptions = listOf("FWD", "RWD", "AWD", "4WD")
 
     var colorExpanded by remember { mutableStateOf(false) }
     val carColors = listOf(
@@ -84,7 +93,7 @@ fun AddCarScreen(
     val powerUnits = listOf("hp", "kw")
 
     val handleBack = {
-        if (carId != null && name.isNotBlank() && (vin.isEmpty() || vin.length == 17)) {
+        if (carId != null && make.isNotBlank() && model.isNotBlank() && (vin.isEmpty() || vin.length == 17)) {
             viewModel.onAddOrUpdateCar(
                 name = name,
                 plateCountry = selectedCountry.code,
@@ -98,7 +107,12 @@ fun AddCarScreen(
                 power = power,
                 powerUnit = powerUnit,
                 torque = torque,
-                engineCode = engineCode
+                engineCode = engineCode,
+                length = length,
+                width = width,
+                height = height,
+                fuelTankCapacity = fuelTankCapacity,
+                drivetrain = drivetrain
             )
         } else {
             onBack()
@@ -125,6 +139,11 @@ fun AddCarScreen(
                 powerUnit = car.powerUnit.ifBlank { "hp" }
                 torque = car.torque.takeIf { it != 0 }?.toString() ?: ""
                 engineCode = car.engineCode
+                length = car.length.takeIf { it != 0 }?.toString() ?: ""
+                width = car.width.takeIf { it != 0 }?.toString() ?: ""
+                height = car.height.takeIf { it != 0 }?.toString() ?: ""
+                fuelTankCapacity = car.fuelTankCapacity.takeIf { it != 0.0 }?.toString() ?: ""
+                drivetrain = car.drivetrain
             }
         }
     }
@@ -216,24 +235,53 @@ fun AddCarScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            OutlinedTextField(
-                value = make,
-                onValueChange = { make = it },
-                label = { Text("Make") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = state !is AddCarState.Pending
-            )
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = make,
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text("Make *") },
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        Icon(
+                            Icons.Default.ArrowDropDown,
+                            "dropdown",
+                            Modifier.clickable { makeExpanded = true })
+                    },
+                    isError = state !is AddCarState.Pending && make.isBlank()
+                )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable { makeExpanded = true }
+                )
+                DropdownMenu(
+                    expanded = makeExpanded,
+                    onDismissRequest = { makeExpanded = false },
+                    modifier = Modifier.fillMaxWidth(0.9f).sizeIn(maxHeight = 300.dp)
+                ) {
+                    carBrands.forEach { brand ->
+                        DropdownMenuItem(
+                            text = { Text(brand) },
+                            onClick = {
+                                make = brand
+                                makeExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             Spacer(Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = model,
                 onValueChange = { model = it },
-                label = { Text("Model") },
+                label = { Text("Model *") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                enabled = state !is AddCarState.Pending
+                enabled = state !is AddCarState.Pending,
+                isError = state !is AddCarState.Pending && model.isBlank()
             )
 
             Spacer(Modifier.height(8.dp))
@@ -343,6 +391,47 @@ fun AddCarScreen(
                 enabled = state !is AddCarState.Pending
             )
 
+            Spacer(Modifier.height(16.dp))
+            Text(
+                "Dimensions (mm)",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Start
+            )
+            Spacer(Modifier.height(8.dp))
+
+            Row(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = length,
+                    onValueChange = { if (it.all { char -> char.isDigit() }) length = it },
+                    label = { Text("Length") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    enabled = state !is AddCarState.Pending
+                )
+                Spacer(Modifier.width(8.dp))
+                OutlinedTextField(
+                    value = width,
+                    onValueChange = { if (it.all { char -> char.isDigit() }) width = it },
+                    label = { Text("Width") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    enabled = state !is AddCarState.Pending
+                )
+                Spacer(Modifier.width(8.dp))
+                OutlinedTextField(
+                    value = height,
+                    onValueChange = { if (it.all { char -> char.isDigit() }) height = it },
+                    label = { Text("Height") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    enabled = state !is AddCarState.Pending
+                )
+            }
+
             Spacer(Modifier.height(8.dp))
 
             OutlinedTextField(
@@ -351,6 +440,18 @@ fun AddCarScreen(
                 label = { Text("Engine Size") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
+                enabled = state !is AddCarState.Pending
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = fuelTankCapacity,
+                onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) fuelTankCapacity = it },
+                label = { Text("Fuel Tank Capacity (L)") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 enabled = state !is AddCarState.Pending
             )
 
@@ -386,6 +487,44 @@ fun AddCarScreen(
                             onClick = {
                                 fuelType = type
                                 fuelTypeExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = drivetrain,
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text("Drivetrain") },
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        Icon(
+                            Icons.Default.ArrowDropDown,
+                            "dropdown",
+                            Modifier.clickable { drivetrainExpanded = true })
+                    }
+                )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable { drivetrainExpanded = true }
+                )
+                DropdownMenu(
+                    expanded = drivetrainExpanded,
+                    onDismissRequest = { drivetrainExpanded = false },
+                    modifier = Modifier.fillMaxWidth(0.9f)
+                ) {
+                    drivetrainOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                drivetrain = option
+                                drivetrainExpanded = false
                             }
                         )
                     }
@@ -447,11 +586,16 @@ fun AddCarScreen(
                         power = power,
                         powerUnit = powerUnit,
                         torque = torque,
-                        engineCode = engineCode
+                        engineCode = engineCode,
+                        length = length,
+                        width = width,
+                        height = height,
+                        fuelTankCapacity = fuelTankCapacity,
+                        drivetrain = drivetrain
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = name.isNotBlank() && state !is AddCarState.Pending
+                enabled = make.isNotBlank() && model.isNotBlank() && state !is AddCarState.Pending
             ) {
                 if (state is AddCarState.Pending) {
                     CircularProgressIndicator(

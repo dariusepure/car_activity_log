@@ -1,35 +1,34 @@
-# Reparare Dark Mode și Optimizare Vizibilitate
+# Adăugare Câmpuri: Capacitate Rezervor și Tracțiune
 
-Utilizatorul dorește ca Dark Mode să funcționeze corect, cu un fundal complet negru și text alb, asigurându-se în același timp că elementele de sistem (ora, bateria) rămân vizibile. De asemenea, toggle-ul (soare/lună) trebuie să controleze tema la nivelul întregii aplicații.
+Utilizatorul dorește extinderea specificațiilor mașinii cu două câmpuri noi:
+1.  **Capacitate Rezervor**: Volumul de combustibil în litri.
+2.  **Tracțiune (Drivetrain)**: Tipul de tracțiune (FWD, RWD, AWD, 4WD), selectabil dintr-o listă.
 
 ## Proposed Changes
 
-### [Theme & Styling]
+### [Domain & Data]
 
-#### [MODIFY] [Color.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/ui/theme/Color.kt)
-- Schimbarea `GarageMidnight` la `Color.Black` (`0xFF000000`) pentru un fundal "true black" în Dark Mode.
-- Asigurarea că `GarageWhite` este folosit consecvent pentru text.
+#### [MODIFY] [Car.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/domain/Car.kt)
+- Adăugarea câmpurilor: `fuelTankCapacity` (Int/Double) și `drivetrain` (String).
 
-#### [MODIFY] [Theme.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/ui/theme/Theme.kt)
-- Adăugarea logicii `SideEffect` pentru a configura culorile barelor de sistem (status bar, navigation bar).
-- Asigurarea vizibilității orei și bateriei prin setarea corectă a `appearanceLightStatusBars`.
+#### [MODIFY] [FirestoreCar.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/data/cars/FirestoreCar.kt)
+- Adăugarea noilor câmpuri și actualizarea metodelor de conversie pentru Firebase.
 
-### [Theme Management]
+### [UI Logic]
 
-#### [MODIFY] [ThemeViewModel.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/ui/theme/ThemeViewModel.kt)
-- Adăugarea persistenței setării de temă folosind `SharedPreferences`.
+#### [MODIFY] [AddCarViewModel.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/AddCarViewModel.kt)
+- Actualizarea funcției `onAddOrUpdateCar` pentru a procesa noile date.
 
-#### [MODIFY] [MainActivity.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/MainActivity.kt)
-- Injectarea `ThemeViewModel` și observarea stării `isDarkMode`.
-- Aplicarea temei global și utilizarea `enableEdgeToEdge()`.
+#### [MODIFY] [AddCarScreen.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/AddCarScreen.kt)
+- Adăugarea unui câmp numeric pentru `Fuel Tank Capacity`.
+- Adăugarea unui selector (Dropdown) pentru `Drivetrain` cu opțiunile: **FWD** (Front-Wheel Drive), **RWD** (Rear-Wheel Drive), **AWD** (All-Wheel Drive), **4WD** (Four-Wheel Drive).
 
-#### [MODIFY] [CarListScreen.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/CarListScreen.kt)
-- Utilizarea `ThemeViewModel` la nivel de activitate pentru a asigura sincronizarea toggle-ului.
+#### [MODIFY] [CarDetailsScreen.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/CarDetailsScreen.kt)
+- Afișarea noilor specificații în ecranul de detalii.
 
 ## Verification Plan
 
 ### Manual Verification
-- Comutarea între Dark și Light mode folosind butonul din `CarListScreen`.
-- Verificarea fundalului (trebuie să fie negru complet în Dark Mode).
-- Verificarea vizibilității ceasului și bateriei în ambele moduri.
-- Repornirea aplicației pentru a verifica dacă setarea se păstrează.
+- Verificarea salvării corecte a noilor câmpuri.
+- Verificarea afișării acestora în ecranul de detalii.
+- Verificarea persistenței după repornirea aplicației.

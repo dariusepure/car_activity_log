@@ -148,7 +148,14 @@ fun CarDetailsScreen(
                                 "Engine Code" to car.engineCode,
                                 "Engine Size" to car.engineSize,
                                 "Fuel" to car.fuelType,
+                                "Fuel Tank" to if (car.fuelTankCapacity > 0) "${car.fuelTankCapacity} L" else "-",
+                                "Drivetrain" to car.drivetrain,
                                 "Color" to car.color,
+                                "Dimensions" to if (car.length > 0 || car.width > 0 || car.height > 0) {
+                                    "${car.length} x ${car.width} x ${car.height} mm"
+                                } else {
+                                    "-"
+                                },
                                 "VIN" to car.vin
                             )
                         )

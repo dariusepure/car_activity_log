@@ -17,6 +17,11 @@ data class Car(
     val powerUnit: String = "hp",
     val torque: Int = 0,
     val engineCode: String = "",
+    val length: Int = 0,
+    val width: Int = 0,
+    val height: Int = 0,
+    val fuelTankCapacity: Double = 0.0,
+    val drivetrain: String = "",
     val createdAt: Date = Date(),
     val updatedAt: Date = Date(),
     val activityCount: Int = 0

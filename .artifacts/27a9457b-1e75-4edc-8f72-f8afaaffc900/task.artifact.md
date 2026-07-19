@@ -1,6 +1,6 @@
-- `[x]` Update `ThemeViewModel.kt` for persistence
-- `[x]` Update `Color.kt` for true black
-- `[x]` Update `Theme.kt` for system bar visibility
-- `[x]` Update `MainActivity.kt` to observe theme globally
-- `[x]` Update `CarListScreen.kt` to use shared ThemeViewModel
-- `[x]` Verify build and theme persistence
+- `[x]` Update `Car.kt` (Domain) with fuel tank and drivetrain
+- `[x]` Update `FirestoreCar.kt` (Data) with fuel tank and drivetrain
+- `[x]` Update `AddCarViewModel.kt` to handle new fields
+- `[x]` Update `AddCarScreen.kt` with new inputs and drivetrain selector
+- `[x]` Update `CarDetailsScreen.kt` to display new specs
+- `[x]` Verify build and persistence
