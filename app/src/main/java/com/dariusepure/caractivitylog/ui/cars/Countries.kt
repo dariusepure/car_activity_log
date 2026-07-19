@@ -1,6 +1,6 @@
 package com.dariusepure.caractivitylog.ui.cars
 
-data class Country(val name: String, val code: String, val flag: String)
+data class Country(val name: String, val code: String, val flag: String, val usesMiles: Boolean = false)
 
 val europeanCountries = listOf(
     Country("Albania", "AL", "🇦🇱"),
@@ -11,7 +11,7 @@ val europeanCountries = listOf(
     Country("Bosnia and Herzegovina", "BA", "🇧🇦"),
     Country("Bulgaria", "BG", "🇧🇬"),
     Country("Croatia", "HR", "🇭🇷"),
-    Country("Cyprus", "CY", "🇨🇾"),
+    Country("Cyprus", "CY", "🇨🇾"), // Cyprus technically uses km now but historically miles, keeping km
     Country("Czech Republic", "CZ", "🇨🇿"),
     Country("Denmark", "DK", "🇩🇰"),
     Country("Estonia", "EE", "🇪🇪"),
@@ -21,7 +21,7 @@ val europeanCountries = listOf(
     Country("Greece", "GR", "🇬🇷"),
     Country("Hungary", "HU", "🇭🇺"),
     Country("Iceland", "IS", "🇮🇸"),
-    Country("Ireland", "IE", "🇮🇪"),
+    Country("Ireland", "IE", "🇮🇪", usesMiles = false), // Ireland uses km
     Country("Italy", "IT", "🇮🇹"),
     Country("Latvia", "LV", "🇱🇻"),
     Country("Liechtenstein", "LI", "🇱🇮"),
@@ -45,6 +45,6 @@ val europeanCountries = listOf(
     Country("Sweden", "SE", "🇸🇪"),
     Country("Switzerland", "CH", "🇨🇭"),
     Country("Ukraine", "UA", "🇺🇦"),
-    Country("United Kingdom", "GB", "🇬🇧"),
+    Country("United Kingdom", "GB", "🇬🇧", usesMiles = true),
     Country("Vatican City", "VA", "🇻🇦")
 ).sortedBy { it.name }

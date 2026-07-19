@@ -81,10 +81,14 @@ fun CarDetailsScreen(
 
     if (showAddMileageDialog || editingMileageLog != null) {
         val existingLogs = (state as? CarDetailsUiState.Success)?.mileageLogs ?: emptyList()
-        
+        val car = (state as? CarDetailsUiState.Success)?.car
+        val country = europeanCountries.find { it.code == car?.plateCountry }
+        val unitLabel = if (country?.usesMiles == true) "mi" else "km"
+
         AddMileageDialog(
             existingLog = editingMileageLog,
             existingLogs = existingLogs,
+            unit = unitLabel,
             onDismiss = { 
                 showAddMileageDialog = false
                 editingMileageLog = null
@@ -136,6 +140,9 @@ fun CarDetailsScreen(
             is CarDetailsUiState.Error -> ErrorState(message = s.message, onRetry = { viewModel.loadCarData(carId) })
                 is CarDetailsUiState.Success -> {
                     val car = s.car
+                    val country = europeanCountries.find { it.code == car.plateCountry }
+                    val unitLabel = if (country?.usesMiles == true) "mi" else "km"
+
                     val hpValue: Int
                     val kwValue: Int
                     
@@ -204,6 +211,7 @@ fun CarDetailsScreen(
                         items(s.mileageLogs) { log ->
                             MileageItem(
                                 log = log,
+                                unit = unitLabel,
                                 onEditClick = { editingMileageLog = log },
                                 onDeleteClick = { viewModel.deleteMileage(carId, log.id) }
                             )
@@ -223,6 +231,7 @@ fun CarDetailsScreen(
 @Composable
 fun MileageItem(
     log: MileageLog,
+    unit: String,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
@@ -235,7 +244,7 @@ fun MileageItem(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "${log.km} km",
+                text = "${log.km} $unit",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -268,6 +277,7 @@ fun MileageItem(
 fun AddMileageDialog(
     existingLog: MileageLog? = null,
     existingLogs: List<MileageLog> = emptyList(),
+    unit: String = "km",
     onDismiss: () -> Unit,
     onConfirm: (Int, Date) -> Unit
 ) {
@@ -306,7 +316,7 @@ fun AddMileageDialog(
                             errorMessage = null
                         }
                     },
-                    label = { Text("Kilometers") },
+                    label = { Text("Distance ($unit)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
                     isError = errorMessage != null

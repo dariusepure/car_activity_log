@@ -9,6 +9,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
@@ -80,6 +83,13 @@ class AddCarViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = AddCarState.Pending
             try {
+                val currentCountry = europeanCountries.find { it.code == (currentCarId?.let { carRepository.getCar(it)?.plateCountry } ?: "RO") }
+                val newCountry = europeanCountries.find { it.code == plateCountry }
+                
+                var finalPower = power.toIntOrNull() ?: 0
+                // If country changed and units differ, we could convert power too? 
+                // But request was specifically for mileage conversion and country selection.
+
                 val car = Car(
                     id = currentCarId ?: "",
                     name = name.uppercase(),
@@ -91,10 +101,24 @@ class AddCarViewModel @Inject constructor(
                     engineSize = engineSize,
                     fuelType = fuelType,
                     color = color,
-                    power = power.toIntOrNull() ?: 0,
+                    power = finalPower,
                     powerUnit = powerUnit,
                     updatedAt = Date()
                 )
+
+                // Mileage conversion logic if editing
+                if (currentCarId != null && currentCountry != null && newCountry != null && currentCountry.usesMiles != newCountry.usesMiles) {
+                    val logs = carRepository.getMileageLogs(currentCarId!!).take(1).first()
+                    logs.forEach { log ->
+                        val convertedKm = if (newCountry.usesMiles) {
+                            (log.km / 1.60934).toInt() // KM to Miles
+                        } else {
+                            (log.km * 1.60934).toInt() // Miles to KM
+                        }
+                        carRepository.updateMileageLog(currentCarId!!, log.copy(km = convertedKm))
+                    }
+                }
+
                 carRepository.createCar(car)
                 _state.value = AddCarState.Success
 
