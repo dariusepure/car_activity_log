@@ -71,7 +71,8 @@ class AddCarViewModel @Inject constructor(
         height: String,
         fuelTankCapacity: String,
         drivetrain: String,
-        vehicleType: String
+        vehicleType: String,
+        manufacturingCountry: String
     ) {
         if (make.isBlank() || model.isBlank()) {
             _state.value = AddCarState.Error("Make and Model are required")
@@ -125,6 +126,7 @@ class AddCarViewModel @Inject constructor(
                     fuelTankCapacity = fuelTankCapacity.toDoubleOrNull() ?: 0.0,
                     drivetrain = drivetrain,
                     vehicleType = vehicleType,
+                    manufacturingCountry = manufacturingCountry,
                     updatedAt = Date()
                 )
 

@@ -77,8 +77,10 @@ fun AddCarScreen(
     var fuelTankCapacity by remember { mutableStateOf("") }
     var drivetrain by remember { mutableStateOf("") }
     var vehicleType by remember { mutableStateOf("") }
+    var manufacturingCountry by remember { mutableStateOf("") }
 
     var countryExpanded by remember { mutableStateOf(false) }
+    var manufacturingCountryExpanded by remember { mutableStateOf(false) }
     var makeExpanded by remember { mutableStateOf(false) }
     var fuelTypeExpanded by remember { mutableStateOf(false) }
     var drivetrainExpanded by remember { mutableStateOf(false) }
@@ -118,7 +120,8 @@ fun AddCarScreen(
                 height = height,
                 fuelTankCapacity = fuelTankCapacity,
                 drivetrain = drivetrain,
-                vehicleType = vehicleType
+                vehicleType = vehicleType,
+                manufacturingCountry = manufacturingCountry
             )
         } else {
             onBack()
@@ -156,6 +159,7 @@ fun AddCarScreen(
                 fuelTankCapacity = car.fuelTankCapacity.takeIf { it != 0.0 }?.toString() ?: ""
                 drivetrain = car.drivetrain
                 vehicleType = car.vehicleType
+                manufacturingCountry = car.manufacturingCountry
             }
         }
     }
@@ -248,6 +252,38 @@ fun AddCarScreen(
                         }
                     }
                 )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = manufacturingCountry,
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text("Manufacturing Country") },
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        Icon(Icons.Default.ArrowDropDown, null, Modifier.clickable { manufacturingCountryExpanded = true })
+                    }
+                )
+                Box(modifier = Modifier.matchParentSize().clickable { manufacturingCountryExpanded = true })
+                
+                DropdownMenu(
+                    expanded = manufacturingCountryExpanded,
+                    onDismissRequest = { manufacturingCountryExpanded = false },
+                    modifier = Modifier.fillMaxWidth(0.9f).sizeIn(maxHeight = 300.dp)
+                ) {
+                    europeanCountries.forEach { country ->
+                        DropdownMenuItem(
+                            text = { Text(country.name) },
+                            onClick = {
+                                manufacturingCountry = country.name
+                                manufacturingCountryExpanded = false
+                            }
+                        )
+                    }
+                }
             }
 
             Spacer(Modifier.height(8.dp))
@@ -662,7 +698,8 @@ fun AddCarScreen(
                         height = height,
                         fuelTankCapacity = fuelTankCapacity,
                         drivetrain = drivetrain,
-                        vehicleType = vehicleType
+                        vehicleType = vehicleType,
+                        manufacturingCountry = manufacturingCountry
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),

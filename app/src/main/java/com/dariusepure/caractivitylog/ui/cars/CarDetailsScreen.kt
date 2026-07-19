@@ -193,6 +193,7 @@ fun CarDetailsScreen(
                                 "Make" to car.make,
                                 "Model" to car.model,
                                 "Type" to car.vehicleType,
+                                "Mfg. Country" to car.manufacturingCountry,
                                 "Year" to car.year.toString(),
                                 "Power" to "$hpValue hp / $kwValue kw",
                                 "Torque" to "${car.torque} Nm",
