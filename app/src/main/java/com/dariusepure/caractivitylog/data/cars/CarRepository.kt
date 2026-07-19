@@ -1,5 +1,6 @@
 package com.dariusepure.caractivitylog.data.cars
 
+import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -9,7 +10,6 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import com.dariusepure.caractivitylog.domain.Car
 import com.dariusepure.caractivitylog.domain.MileageLog
-import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
 class CarRepository @Inject constructor(
@@ -27,15 +27,17 @@ class CarRepository @Inject constructor(
             .document(uid)
             .collection("cars")
             .orderBy("updatedAt", Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshots, exception ->
+            .addSnapshotListener(MetadataChanges.INCLUDE) { snapshots, exception ->
                 if (exception != null) {
                     close(exception)
                     return@addSnapshotListener
                 }
 
-                val results = snapshots
-                    ?.toObjects(FirestoreCar::class.java)
-                    ?.map { it.fromFirebase() } ?: emptyList()
+                val results = snapshots?.documents?.mapNotNull { doc ->
+                    doc.toObject(FirestoreCar::class.java)?.fromFirebase(
+                        isSynced = !doc.metadata.hasPendingWrites()
+                    )
+                } ?: emptyList()
 
                 trySend(results)
             }
@@ -44,7 +46,6 @@ class CarRepository @Inject constructor(
     }
 
     suspend fun createCar(car: Car) {
-        // 1. Schimbăm return-ul silențios cu o eroare vizibilă în caz că nu există user logat
         val uid = firebaseAuth.currentUser?.uid
             ?: throw Exception("Eroare: Utilizatorul nu este logat pe Firebase!")
 
@@ -62,10 +63,10 @@ class CarRepository @Inject constructor(
                 .document(car.id)
         }
 
-        // 2. Înăsprim regulile: Dacă Firebase nu răspunde în 5 secunde, tăiem firul și aruncăm eroare
-        withTimeout(5000L) {
-            reference.set(firestoreCar).await()
-        }
+        // We don't use withTimeout here anymore. 
+        // Firestore will write to local cache immediately (latency compensation).
+        // The await() will complete once the local write is successful.
+        reference.set(firestoreCar).await()
     }
 
     suspend fun getCar(carId: String): Car? {

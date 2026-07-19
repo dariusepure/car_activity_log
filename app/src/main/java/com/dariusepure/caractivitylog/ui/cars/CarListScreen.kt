@@ -20,6 +20,9 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.outlined.DirectionsCar
 import com.dariusepure.caractivitylog.ui.theme.ThemeViewModel
 import androidx.compose.material3.Card
@@ -71,7 +74,26 @@ fun CarCard(
                         text = "${car.make} ${car.model}".trim().ifBlank { car.name.ifBlank { "Unnamed car" } },
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f, fill = false)
                     )
+                    
+                    Spacer(Modifier.width(8.dp))
+                    
+                    if (!car.isSynced) {
+                        Icon(
+                            imageVector = Icons.Default.Sync,
+                            contentDescription = "Pending Sync",
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Synced",
+                            tint = Color(0xFF4CAF50), // Green
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
                 }
                 Spacer(Modifier.height(4.dp))
                 
