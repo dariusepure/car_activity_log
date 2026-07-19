@@ -1,19 +1,26 @@
 package com.dariusepure.caractivitylog.ui.cars
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,9 +43,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddCarScreen(
@@ -49,16 +53,23 @@ fun AddCarScreen(
     viewModel: AddCarViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val scope = rememberCoroutineScope()
 
-    var name by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") } // License Plate
     var make by remember { mutableStateOf("") }
     var model by remember { mutableStateOf("") }
     var vin by remember { mutableStateOf("") }
     var year by remember { mutableStateOf("") }
     var engineSize by remember { mutableStateOf("") }
-    var fuelType by remember { mutableStateOf("") }
+    var fuelType by remember { mutableStateOf("Petrol") }
     var color by remember { mutableStateOf("") }
+    var power by remember { mutableStateOf("") }
+    var powerUnit by remember { mutableStateOf("hp") }
+
+    var fuelTypeExpanded by remember { mutableStateOf(false) }
+    val fuelTypes = listOf("Petrol", "Diesel", "Electric", "Hybrid", "LPG")
+
+    var powerUnitExpanded by remember { mutableStateOf(false) }
+    val powerUnits = listOf("hp", "kw")
 
     LaunchedEffect(carId) {
         if (carId != null) {
@@ -71,8 +82,10 @@ fun AddCarScreen(
                 vin = car.vin
                 year = car.year.takeIf { it != 0 }?.toString() ?: ""
                 engineSize = car.engineSize
-                fuelType = car.fuelType
+                fuelType = car.fuelType.ifBlank { "Petrol" }
                 color = car.color
+                power = car.power.takeIf { it != 0 }?.toString() ?: ""
+                powerUnit = car.powerUnit.ifBlank { "hp" }
             }
         }
     }
@@ -109,7 +122,9 @@ fun AddCarScreen(
                     color = MaterialTheme.colorScheme.errorContainer,
                     contentColor = MaterialTheme.colorScheme.onErrorContainer,
                     shape = MaterialTheme.shapes.medium,
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
                 ) {
                     Text(
                         text = error.message,
@@ -122,7 +137,7 @@ fun AddCarScreen(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Nickname (e.g. My Daily)") },
+                label = { Text("License Plate (e.g. B 123 ABC)") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = state !is AddCarState.Pending
@@ -154,7 +169,7 @@ fun AddCarScreen(
 
             OutlinedTextField(
                 value = year,
-                onValueChange = { year = it },
+                onValueChange = { if (it.all { char -> char.isDigit() }) year = it },
                 label = { Text("Year") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -166,12 +181,62 @@ fun AddCarScreen(
 
             OutlinedTextField(
                 value = vin,
-                onValueChange = { vin = it },
-                label = { Text("VIN") },
+                onValueChange = { if (it.length <= 17) vin = it.uppercase() },
+                label = { Text("VIN (Optional - 17 characters)") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                enabled = state !is AddCarState.Pending
+                enabled = state !is AddCarState.Pending,
+                supportingText = {
+                    if (vin.isNotEmpty()) {
+                        Text("${vin.length}/17")
+                    }
+                },
+                isError = vin.isNotEmpty() && vin.length != 17
             )
+
+            Spacer(Modifier.height(8.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = power,
+                    onValueChange = { if (it.all { char -> char.isDigit() }) power = it },
+                    label = { Text("Power") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    enabled = state !is AddCarState.Pending
+                )
+                Spacer(Modifier.width(8.dp))
+                Box(modifier = Modifier.width(100.dp)) {
+                    OutlinedTextField(
+                        value = powerUnit,
+                        onValueChange = { },
+                        readOnly = true,
+                        label = { Text("Unit") },
+                        trailingIcon = {
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                "dropdown",
+                                Modifier.clickable { powerUnitExpanded = true })
+                        },
+                        modifier = Modifier.clickable { powerUnitExpanded = true }
+                    )
+                    DropdownMenu(
+                        expanded = powerUnitExpanded,
+                        onDismissRequest = { powerUnitExpanded = false }
+                    ) {
+                        powerUnits.forEach { unit ->
+                            DropdownMenuItem(
+                                text = { Text(unit) },
+                                onClick = {
+                                    powerUnit = unit
+                                    powerUnitExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
 
             Spacer(Modifier.height(8.dp))
 
@@ -186,14 +251,42 @@ fun AddCarScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            OutlinedTextField(
-                value = fuelType,
-                onValueChange = { fuelType = it },
-                label = { Text("Fuel Type (e.g. Diesel)") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = state !is AddCarState.Pending
-            )
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = fuelType,
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text("Fuel Type") },
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        Icon(
+                            Icons.Default.ArrowDropDown,
+                            "dropdown",
+                            Modifier.clickable { fuelTypeExpanded = true })
+                    }
+                )
+                // Transparent click layer
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable { fuelTypeExpanded = true }
+                )
+                DropdownMenu(
+                    expanded = fuelTypeExpanded,
+                    onDismissRequest = { fuelTypeExpanded = false },
+                    modifier = Modifier.fillMaxWidth(0.9f)
+                ) {
+                    fuelTypes.forEach { type ->
+                        DropdownMenuItem(
+                            text = { Text(type) },
+                            onClick = {
+                                fuelType = type
+                                fuelTypeExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             Spacer(Modifier.height(8.dp))
 
@@ -218,7 +311,9 @@ fun AddCarScreen(
                         year = year,
                         engineSize = engineSize,
                         fuelType = fuelType,
-                        color = color
+                        color = color,
+                        power = power,
+                        powerUnit = powerUnit
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),

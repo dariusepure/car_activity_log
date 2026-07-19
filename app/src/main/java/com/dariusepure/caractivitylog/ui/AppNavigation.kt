@@ -10,12 +10,16 @@ import androidx.navigation.compose.rememberNavController
 import com.dariusepure.caractivitylog.ui.auth.SignInScreen
 import com.dariusepure.caractivitylog.ui.auth.SignUpScreen
 import com.dariusepure.caractivitylog.ui.cars.AddCarScreen
+import com.dariusepure.caractivitylog.ui.cars.CarDetailsScreen
 import com.dariusepure.caractivitylog.ui.cars.CarListScreen
 
 sealed class Screen(val route: String) {
     data object SignIn : Screen("signin")
     data object SignUp : Screen("signup")
     data object CarList : Screen("carlist")
+    data object CarDetails : Screen("cardetails/{carId}") {
+        fun createRoute(carId: String) = "cardetails/$carId"
+    }
     data object AddCar : Screen("addcar")
     data object EditCar : Screen("editcar/{carId}") {
         fun createRoute(carId: String) = "editcar/$carId"
@@ -60,7 +64,7 @@ fun AppNavigation(
         composable(Screen.CarList.route) {
             CarListScreen(
                 onCarClick = { carId ->
-                    // Navigate to car activities when implemented
+                    navController.navigate(Screen.CarDetails.createRoute(carId))
                 },
                 onAddCarClick = {
                     navController.navigate(Screen.AddCar.route)
@@ -68,6 +72,13 @@ fun AppNavigation(
                 onEditCarClick = { carId ->
                     navController.navigate(Screen.EditCar.createRoute(carId))
                 }
+            )
+        }
+        composable(Screen.CarDetails.route) { backStackEntry ->
+            val carId = backStackEntry.arguments?.getString("carId") ?: return@composable
+            CarDetailsScreen(
+                carId = carId,
+                onBack = { navController.popBackStack() }
             )
         }
         composable(Screen.AddCar.route) {

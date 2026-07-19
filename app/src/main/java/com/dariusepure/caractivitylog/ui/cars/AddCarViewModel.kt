@@ -52,10 +52,18 @@ class AddCarViewModel @Inject constructor(
         year: String,
         engineSize: String,
         fuelType: String,
-        color: String
+        color: String,
+        power: String,
+        powerUnit: String
     ) {
         if (name.isBlank()) {
-            _state.value = AddCarState.Error("Car nickname cannot be empty")
+            _state.value = AddCarState.Error("License plate cannot be empty")
+            return
+        }
+
+        // VIN validation: empty is okay (optional), but if not empty must be 17 chars
+        if (vin.isNotBlank() && vin.length != 17) {
+            _state.value = AddCarState.Error("VIN must be exactly 17 characters if provided")
             return
         }
 
@@ -72,6 +80,8 @@ class AddCarViewModel @Inject constructor(
                     engineSize = engineSize,
                     fuelType = fuelType,
                     color = color,
+                    power = power.toIntOrNull() ?: 0,
+                    powerUnit = powerUnit,
                     updatedAt = Date()
                 )
                 carRepository.createCar(car)

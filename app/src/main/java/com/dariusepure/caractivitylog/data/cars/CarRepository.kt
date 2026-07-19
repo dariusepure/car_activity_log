@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import com.dariusepure.caractivitylog.domain.Car
+import com.dariusepure.caractivitylog.domain.MileageLog
 import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
@@ -85,6 +86,70 @@ class CarRepository @Inject constructor(
             .document(uid)
             .collection("cars")
             .document(carId)
+            .delete()
+            .await()
+    }
+
+    fun getMileageLogs(carId: String): Flow<List<MileageLog>> = callbackFlow {
+        val uid = firebaseAuth.currentUser?.uid ?: run {
+            trySend(emptyList())
+            close()
+            return@callbackFlow
+        }
+
+        val listener = firestore.collection("users")
+            .document(uid)
+            .collection("cars")
+            .document(carId)
+            .collection("mileage")
+            .orderBy("date", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshots, exception ->
+                if (exception != null) {
+                    close(exception)
+                    return@addSnapshotListener
+                }
+
+                val results = snapshots
+                    ?.toObjects(FirestoreMileageLog::class.java)
+                    ?.map { it.fromFirebase() } ?: emptyList()
+
+                trySend(results)
+            }
+
+        awaitClose { listener.remove() }
+    }
+
+    suspend fun addMileageLog(carId: String, log: MileageLog) {
+        val uid = firebaseAuth.currentUser?.uid ?: return
+        firestore.collection("users")
+            .document(uid)
+            .collection("cars")
+            .document(carId)
+            .collection("mileage")
+            .add(log.toFirebase())
+            .await()
+    }
+
+    suspend fun updateMileageLog(carId: String, log: MileageLog) {
+        val uid = firebaseAuth.currentUser?.uid ?: return
+        firestore.collection("users")
+            .document(uid)
+            .collection("cars")
+            .document(carId)
+            .collection("mileage")
+            .document(log.id)
+            .set(log.toFirebase())
+            .await()
+    }
+
+    suspend fun deleteMileageLog(carId: String, logId: String) {
+        val uid = firebaseAuth.currentUser?.uid ?: return
+        firestore.collection("users")
+            .document(uid)
+            .collection("cars")
+            .document(carId)
+            .collection("mileage")
+            .document(logId)
             .delete()
             .await()
     }
