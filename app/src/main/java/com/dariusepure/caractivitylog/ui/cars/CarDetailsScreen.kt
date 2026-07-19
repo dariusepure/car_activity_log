@@ -80,8 +80,11 @@ fun CarDetailsScreen(
     }
 
     if (showAddMileageDialog || editingMileageLog != null) {
+        val existingLogs = (state as? CarDetailsUiState.Success)?.mileageLogs ?: emptyList()
+        
         AddMileageDialog(
             existingLog = editingMileageLog,
+            existingLogs = existingLogs,
             onDismiss = { 
                 showAddMileageDialog = false
                 editingMileageLog = null
@@ -264,11 +267,13 @@ fun MileageItem(
 @Composable
 fun AddMileageDialog(
     existingLog: MileageLog? = null,
+    existingLogs: List<MileageLog> = emptyList(),
     onDismiss: () -> Unit,
     onConfirm: (Int, Date) -> Unit
 ) {
     var km by remember { mutableStateOf(existingLog?.km?.toString() ?: "") }
     var selectedDate by remember { mutableStateOf(existingLog?.date ?: Date()) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
 
@@ -281,6 +286,7 @@ fun AddMileageDialog(
             val newCalendar = Calendar.getInstance()
             newCalendar.set(year, month, dayOfMonth)
             selectedDate = newCalendar.time
+            errorMessage = null // Reset error on date change
         },
         calendar.get(Calendar.YEAR),
         calendar.get(Calendar.MONTH),
@@ -294,11 +300,27 @@ fun AddMileageDialog(
             Column {
                 OutlinedTextField(
                     value = km,
-                    onValueChange = { if (it.all { char -> char.isDigit() }) km = it },
+                    onValueChange = { 
+                        if (it.all { char -> char.isDigit() }) {
+                            km = it
+                            errorMessage = null
+                        }
+                    },
                     label = { Text("Kilometers") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = errorMessage != null
                 )
+                
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = dateFormat.format(selectedDate),
@@ -328,7 +350,25 @@ fun AddMileageDialog(
                 onClick = {
                     val kmInt = km.toIntOrNull() ?: 0
                     if (kmInt > 0) {
-                        onConfirm(kmInt, selectedDate)
+                        // Verificare anti-fraudă (km dați înapoi)
+                        val conflict = existingLogs.find { log ->
+                            if (log.id == existingLog?.id) return@find false
+                            
+                            val kmBackwards = selectedDate.after(log.date) && kmInt < log.km
+                            val dateBackwards = selectedDate.before(log.date) && kmInt > log.km
+                            
+                            kmBackwards || dateBackwards
+                        }
+
+                        if (conflict != null) {
+                            errorMessage = if (selectedDate.after(conflict.date)) {
+                                "Cannot be less than ${conflict.km} km (recorded on ${dateFormat.format(conflict.date)})"
+                            } else {
+                                "Cannot be more than ${conflict.km} km (recorded on ${dateFormat.format(conflict.date)})"
+                            }
+                        } else {
+                            onConfirm(kmInt, selectedDate)
+                        }
                     }
                 },
                 enabled = km.isNotBlank()
