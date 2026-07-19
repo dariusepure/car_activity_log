@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import kotlin.math.roundToInt
 import androidx.compose.ui.unit.dp
 import com.dariusepure.caractivitylog.domain.MileageLog
 import com.dariusepure.caractivitylog.domain.VehicleInspection
@@ -69,6 +70,7 @@ fun MileageItem(
 @Composable
 fun InspectionItem(
     inspection: VehicleInspection,
+    unit: String = "km",
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
@@ -87,7 +89,7 @@ fun InspectionItem(
                 color = if (isExpired) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "Inspection date: ${CarFormatters.formatDate(inspection.date)} \u00B7 ${inspection.mileage.toInt()} km",
+                text = "Inspection date: ${CarFormatters.formatDate(inspection.date)} \u00B7 ${inspection.mileage.roundToInt()} $unit",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

@@ -1,35 +1,27 @@
-# Adăugare detalii motor și caroserie suplimentare
+# Corecție Definitivă: Stocare Canonică și Conversie Reversibilă
 
-Acest plan detaliază pașii pentru a adăuga câmpuri tehnice avansate: numărul de supape per cilindru, numărul de uși și spațiul portbagajului, inclusiv calcularea automată a numărului total de supape.
+Pentru a elimina definitiv driftul (170 -> 106 -> 171) și a satisface cerința "revii la valoarea inițială", vom adopta o strategie de **Stocare Canonică în Unități Metrice** (KM, KM/H) în baza de date, realizând conversia doar pentru afișare și intrare.
 
 ## Schimbări propuse
 
-### [Componenta Domain]
-#### [MODIFY] [Car.kt](file:///home/darius/StudioProjects/car_activity_log/app/src/main/java/com/dariusepure/caractivitylog/domain/Car.kt)
-- Adăugarea câmpurilor:
-    - `valvesPerCylinder: Int`
-    - `numberOfDoors: Int`
-    - `bootSpace: Int` (în litri)
-
-### [Componenta Data]
-#### [MODIFY] [FirestoreCar.kt](file:///home/darius/StudioProjects/car_activity_log/app/src/main/java/com/dariusepure/caractivitylog/data/cars/FirestoreCar.kt)
-- Adăugarea câmpurilor pentru persistența Firebase și actualizarea mapărilor `toFirebase` și `fromFirebase`.
-
 ### [Componenta UI]
 #### [MODIFY] [AddCarViewModel.kt](file:///home/darius/StudioProjects/car_activity_log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/AddCarViewModel.kt)
-- Actualizarea funcției `onAddOrUpdateCar` pentru a procesa noile câmpuri.
+- **ELIMINARE**: Vom șterge logica de conversie "batch" a kilometrajului (`logs.forEach { ... }`) atunci când se schimbă țara. Datele din Firestore vor rămâne mereu în KM.
+- **Salvare**: Funcția `onAddOrUpdateCar` va primi valorile așa cum sunt în UI și le va converti în Metric (KM/H, L, kg, mm) înainte de salvare, bazându-se pe unitatea țării selectate.
 
 #### [MODIFY] [AddCarScreen.kt](file:///home/darius/StudioProjects/car_activity_log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/AddCarScreen.kt)
-- Adăugarea input-urilor pentru:
-    - **Valves per Cylinder** (în secțiunea Engine).
-    - **Number of Doors** și **Boot Space (L)** (în secțiunea Dimensions & Chassis).
-- Actualizarea stării locale și a logicii de salvare.
+- **Încărcare**: Când se încarcă o mașină, valorile din DB (Metric) vor fi convertite în unitatea locală pentru afișare în `OutlinedTextField` (ex: KM/H -> MPH dacă mașina e din UK).
+- **Interacțiune**: Când utilizatorul schimbă țara în dropdown, valorile din câmpurile de text se vor converti vizual pentru a reflecta noua unitate, permițând utilizatorului să vadă echivalentul instant.
 
 #### [MODIFY] [TechnicalSheetScreen.kt](file:///home/darius/StudioProjects/car_activity_log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/TechnicalSheetScreen.kt)
-- Afișarea noilor câmpuri.
-- **Calcul automat**: Afișarea numărului total de supape (ex: "16 (4 per cylinder)").
+- Afișarea va face conversia Metric -> Local bazat pe țara mașinii, folosind `roundToInt()` pentru prezentare.
+
+#### [MODIFY] [MileageHistoryScreen.kt](file:///home/darius/StudioProjects/car_activity_log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/MileageHistoryScreen.kt)
+- Istoricul va afișa log-urile (stocate ca KM) convertite în Mile dacă țara o cere.
+
+#### [MODIFY] [CarFormatters.kt](file:///home/darius/StudioProjects/car_activity_log/app/src/main/java/com/dariusepure/caractivitylog/ui/common/CarFormatters.kt)
+- Adăugarea de funcții utilitare pentru conversia metric/imperial cu precizie `Double` și rotunjire `.5 up` pentru UI.
 
 ## Plan de verificare
-- [ ] Verificarea calculului automat al supapelor (ex: 4 cilindri * 4 supape = 16).
-- [ ] Verificarea persistenței noilor câmpuri (Doors, Boot Space).
-- [ ] Testarea validării numerice pe noile input-uri.
+- [ ] **Test Reversibilitate**: Salvare 170 km/h (RO) -> Schimbare în UK (Display 106) -> Salvare -> Schimbare înapoi în RO -> Verificare Display 170.
+- [ ] **Test Kilometraj**: Verificare dacă schimbarea țării nu mai modifică valorile brute în Firestore, ci doar cum sunt ele văzute în aplicație.

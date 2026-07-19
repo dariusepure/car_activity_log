@@ -289,7 +289,9 @@ fun AddMileageDialog(
     onDismiss: () -> Unit,
     onConfirm: (Double, Date) -> Unit
 ) {
-    var km by remember { mutableStateOf(existingLog?.km?.toInt()?.toString() ?: "") }
+    val usesMiles = unit == "mi"
+    val initialKm = existingLog?.let { CarFormatters.fromCanonicalDistance(it.km, usesMiles) }
+    var km by remember { mutableStateOf(initialKm?.roundToInt()?.toString() ?: "") }
     var selectedDate by remember { mutableStateOf(existingLog?.date ?: Date()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
@@ -363,27 +365,29 @@ fun AddMileageDialog(
                 )
             }
         },
-        confirmButton = {
+                confirmButton = {
             Button(
                 onClick = {
-                    val kmInt = km.toIntOrNull() ?: 0
-                    if (kmInt > 0) {
-                        val kmDouble = kmInt.toDouble()
+                    val inputVal = km.toDoubleOrNull() ?: 0.0
+                    if (inputVal > 0) {
+                        val canonicalInput = CarFormatters.toCanonicalDistance(inputVal, unit == "mi")
+                        
                         val conflict = existingLogs.find { log ->
                             if (log.id == existingLog?.id) return@find false
-                            val kmBackwards = selectedDate.after(log.date) && kmDouble < log.km
-                            val dateBackwards = selectedDate.before(log.date) && kmDouble > log.km
+                            val kmBackwards = selectedDate.after(log.date) && canonicalInput < log.km
+                            val dateBackwards = selectedDate.before(log.date) && canonicalInput > log.km
                             kmBackwards || dateBackwards
                         }
 
                         if (conflict != null) {
+                            val conflictDisplay = CarFormatters.fromCanonicalDistance(conflict.km, unit == "mi")
                             errorMessage = if (selectedDate.after(conflict.date)) {
-                                "Cannot be less than ${conflict.km.toInt()} $unit (recorded on ${dateFormat.format(conflict.date)})"
+                                "Cannot be less than ${conflictDisplay.roundToInt()} $unit (recorded on ${dateFormat.format(conflict.date)})"
                             } else {
-                                "Cannot be more than ${conflict.km.toInt()} $unit (recorded on ${dateFormat.format(conflict.date)})"
+                                "Cannot be more than ${conflictDisplay.roundToInt()} $unit (recorded on ${dateFormat.format(conflict.date)})"
                             }
                         } else {
-                            onConfirm(kmDouble, selectedDate)
+                            onConfirm(inputVal, selectedDate)
                         }
                     }
                 },
@@ -403,10 +407,13 @@ fun AddMileageDialog(
 @Composable
 fun AddInspectionDialog(
     existingInspection: VehicleInspection? = null,
+    unit: String = "km",
     onDismiss: () -> Unit,
     onConfirm: (VehicleInspection) -> Unit
 ) {
-    var km by remember { mutableStateOf(existingInspection?.mileage?.toInt()?.toString() ?: "") }
+    val usesMiles = unit == "mi"
+    val initialKm = existingInspection?.let { CarFormatters.fromCanonicalDistance(it.mileage, usesMiles) }
+    var km by remember { mutableStateOf(initialKm?.roundToInt()?.toString() ?: "") }
     var selectedDate by remember { mutableStateOf(existingInspection?.date ?: Date()) }
     var durationValue by remember { mutableStateOf(existingInspection?.durationValue?.toString() ?: "1") }
     var durationUnit by remember { mutableStateOf(existingInspection?.durationUnit ?: InspectionDurationUnit.YEARS) }
@@ -519,10 +526,12 @@ fun AddInspectionDialog(
         confirmButton = {
             Button(
                 onClick = {
+                    val inputVal = km.toDoubleOrNull() ?: 0.0
+                    val canonicalValue = CarFormatters.toCanonicalDistance(inputVal, unit == "mi")
                     onConfirm(
                         VehicleInspection(
                             date = selectedDate,
-                            mileage = km.toDoubleOrNull() ?: 0.0,
+                            mileage = canonicalValue,
                             durationValue = durationValue.toIntOrNull() ?: 1,
                             durationUnit = durationUnit
                         )

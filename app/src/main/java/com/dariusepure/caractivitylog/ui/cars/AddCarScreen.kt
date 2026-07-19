@@ -49,6 +49,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.animation.AnimatedVisibility
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.sizeIn
+import com.dariusepure.caractivitylog.ui.common.CarFormatters
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,6 +93,9 @@ fun AddCarScreen(
     var numberOfSeats by remember { mutableStateOf("") }
     var numberOfDoors by remember { mutableStateOf("") }
     var bootSpace by remember { mutableStateOf("") }
+    var tireWidth by remember { mutableStateOf("") }
+    var tireAspectRatio by remember { mutableStateOf("") }
+    var tireDiameter by remember { mutableStateOf("") }
     var fuelTankCapacity by remember { mutableStateOf("") }
     var drivetrain by remember { mutableStateOf("") }
     var gearboxType by remember { mutableStateOf("") }
@@ -163,7 +168,10 @@ fun AddCarScreen(
                 numberOfCylinders = numberOfCylinders,
                 valvesPerCylinder = valvesPerCylinder,
                 numberOfDoors = numberOfDoors,
-                bootSpace = bootSpace
+                bootSpace = bootSpace,
+                tireWidth = tireWidth,
+                tireAspectRatio = tireAspectRatio,
+                tireDiameter = tireDiameter
             )
         } else {
             onBack()
@@ -200,7 +208,10 @@ fun AddCarScreen(
                 engineCode = car.engineCode
                 engineLayout = car.engineLayout
                 emissionStandard = car.emissionStandard
-                topSpeed = car.topSpeed.takeIf { it != 0 }?.toString() ?: ""
+                
+                val displayTopSpeed = CarFormatters.fromCanonicalSpeed(car.topSpeed, selectedCountry.usesMiles)
+                topSpeed = displayTopSpeed.takeIf { it != 0.0 }?.roundToInt()?.toString() ?: ""
+                
                 numberOfCylinders = car.numberOfCylinders.takeIf { it != 0 }?.toString() ?: ""
                 valvesPerCylinder = car.valvesPerCylinder.takeIf { it != 0 }?.toString() ?: ""
                 
@@ -213,6 +224,9 @@ fun AddCarScreen(
                 numberOfSeats = car.numberOfSeats.takeIf { it != 0 }?.toString() ?: ""
                 numberOfDoors = car.numberOfDoors.takeIf { it != 0 }?.toString() ?: ""
                 bootSpace = car.bootSpace.takeIf { it != 0 }?.toString() ?: ""
+                tireWidth = car.tireWidth.takeIf { it != 0 }?.toString() ?: ""
+                tireAspectRatio = car.tireAspectRatio.takeIf { it != 0 }?.toString() ?: ""
+                tireDiameter = car.tireDiameter.takeIf { it != 0 }?.toString() ?: ""
                 
                 fuelTankCapacity = car.fuelTankCapacity.takeIf { it != 0.0 }?.toString() ?: ""
                 drivetrain = car.drivetrain
@@ -495,8 +509,20 @@ fun AddCarScreen(
                                 DropdownMenuItem(
                                     text = { Text(country.name) },
                                     onClick = {
+                                        val previousUsesMiles = selectedCountry.usesMiles
                                         selectedCountry = country
                                         countryExpanded = false
+                                        
+                                        // Convert current top speed to new unit if country changed unit system
+                                        if (previousUsesMiles != country.usesMiles && topSpeed.isNotBlank()) {
+                                            val currentSpeed = topSpeed.toDoubleOrNull() ?: 0.0
+                                            val converted = if (country.usesMiles) {
+                                                currentSpeed / 1.609344 // km/h to mph
+                                            } else {
+                                                currentSpeed * 1.609344 // mph to km/h
+                                            }
+                                            topSpeed = converted.roundToInt().toString()
+                                        }
                                     }
                                 )
                             }
@@ -950,6 +976,46 @@ fun AddCarScreen(
 
                 Spacer(Modifier.height(8.dp))
 
+                Text(
+                    text = "Tire Size",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                )
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = tireWidth,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) tireWidth = it },
+                        label = { Text("Width") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                    Text("/", modifier = Modifier.padding(horizontal = 4.dp), style = MaterialTheme.typography.titleMedium)
+                    OutlinedTextField(
+                        value = tireAspectRatio,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) tireAspectRatio = it },
+                        label = { Text("Ratio") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                    Text("R", modifier = Modifier.padding(horizontal = 4.dp), style = MaterialTheme.typography.titleMedium)
+                    OutlinedTextField(
+                        value = tireDiameter,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) tireDiameter = it },
+                        label = { Text("Diam.") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = drivetrain,
@@ -1025,7 +1091,10 @@ fun AddCarScreen(
                         numberOfCylinders = numberOfCylinders,
                         valvesPerCylinder = valvesPerCylinder,
                         numberOfDoors = numberOfDoors,
-                        bootSpace = bootSpace
+                        bootSpace = bootSpace,
+                        tireWidth = tireWidth,
+                        tireAspectRatio = tireAspectRatio,
+                        tireDiameter = tireDiameter
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -1039,7 +1108,7 @@ fun AddCarScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text(if (carId == null) "Save Car" else "Update Car")
+                    Text("Save")
                 }
             }
         }

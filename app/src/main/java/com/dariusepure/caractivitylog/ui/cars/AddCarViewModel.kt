@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.dariusepure.caractivitylog.data.cars.CarRepository
 import com.dariusepure.caractivitylog.data.auth.AuthRepository
 import com.dariusepure.caractivitylog.domain.Car
+import com.dariusepure.caractivitylog.ui.common.CarFormatters
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -84,7 +85,10 @@ class AddCarViewModel @Inject constructor(
         numberOfCylinders: String,
         valvesPerCylinder: String,
         numberOfDoors: String,
-        bootSpace: String
+        bootSpace: String,
+        tireWidth: String,
+        tireAspectRatio: String,
+        tireDiameter: String
     ) {
         if (make.isBlank() || model.isBlank()) {
             _state.value = AddCarState.Error("Make and Model are required")
@@ -110,9 +114,12 @@ class AddCarViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = AddCarState.Pending
             try {
-                val currentCountry = europeanCountries.find { it.code == (currentCarId?.let { carRepository.getCar(it)?.plateCountry } ?: "RO") }
-                val newCountry = europeanCountries.find { it.code == plateCountry }
+                val country = europeanCountries.find { it.code == plateCountry }
+                val usesMiles = country?.usesMiles == true
                 
+                val inputTopSpeed = topSpeed.toDoubleOrNull() ?: 0.0
+                val canonicalTopSpeed = CarFormatters.toCanonicalSpeed(inputTopSpeed, usesMiles)
+
                 var finalPower = power.toIntOrNull() ?: 0
                 // If country changed and units differ, we could convert power too? 
                 // But request was specifically for mileage conversion and country selection.
@@ -144,28 +151,18 @@ class AddCarViewModel @Inject constructor(
                     gearboxType = gearboxType,
                     vehicleType = vehicleType,
                     manufacturingCountry = manufacturingCountry,
-                    topSpeed = topSpeed.toIntOrNull() ?: 0,
+                    topSpeed = canonicalTopSpeed,
                     weight = weight.toIntOrNull() ?: 0,
                     numberOfSeats = numberOfSeats.toIntOrNull() ?: 0,
                     numberOfCylinders = numberOfCylinders.toIntOrNull() ?: 0,
                     valvesPerCylinder = valvesPerCylinder.toIntOrNull() ?: 0,
                     numberOfDoors = numberOfDoors.toIntOrNull() ?: 0,
                     bootSpace = bootSpace.toIntOrNull() ?: 0,
+                    tireWidth = tireWidth.toIntOrNull() ?: 0,
+                    tireAspectRatio = tireAspectRatio.toIntOrNull() ?: 0,
+                    tireDiameter = tireDiameter.toIntOrNull() ?: 0,
                     updatedAt = Date()
                 )
-
-                // Mileage conversion logic if editing
-                if (currentCarId != null && currentCountry != null && newCountry != null && currentCountry.usesMiles != newCountry.usesMiles) {
-                    val logs = carRepository.getMileageLogs(currentCarId!!).take(1).first()
-                    logs.forEach { log ->
-                        val convertedKm = if (newCountry.usesMiles) {
-                            log.km / 1.609344 // KM to Miles
-                        } else {
-                            log.km * 1.609344 // Miles to KM
-                        }
-                        carRepository.updateMileageLog(currentCarId!!, log.copy(km = convertedKm))
-                    }
-                }
 
                 carRepository.createCar(car)
                 _state.value = AddCarState.Success

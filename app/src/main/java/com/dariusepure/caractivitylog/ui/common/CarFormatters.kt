@@ -9,6 +9,23 @@ import kotlin.math.roundToInt
 
 object CarFormatters {
     private val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+    private const val MILE_RATIO = 1.609344
+
+    fun toCanonicalDistance(value: Double, usesMiles: Boolean): Double {
+        return if (usesMiles) value * MILE_RATIO else value
+    }
+
+    fun fromCanonicalDistance(value: Double, usesMiles: Boolean): Double {
+        return if (usesMiles) value / MILE_RATIO else value
+    }
+
+    fun toCanonicalSpeed(value: Double, usesMiles: Boolean): Double {
+        return if (usesMiles) value * MILE_RATIO else value
+    }
+
+    fun fromCanonicalSpeed(value: Double, usesMiles: Boolean): Double {
+        return if (usesMiles) value / MILE_RATIO else value
+    }
 
     fun formatPower(car: Car): String {
         val hpValue: Int

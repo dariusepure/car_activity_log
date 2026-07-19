@@ -73,12 +73,15 @@ fun MileageHistoryScreen(
                 showAddMileageDialog = false
                 editingMileageLog = null
             },
-            onConfirm = { km, date ->
+            onConfirm = { value, date ->
+                val usesMiles = country?.usesMiles == true
+                val canonicalValue = CarFormatters.toCanonicalDistance(value, usesMiles)
+                
                 val logToEdit = editingMileageLog
                 if (logToEdit != null) {
-                    viewModel.updateMileage(carId, logToEdit.copy(km = km, date = date))
+                    viewModel.updateMileage(carId, logToEdit.copy(km = canonicalValue, date = date))
                 } else {
-                    viewModel.addMileage(carId, km, date)
+                    viewModel.addMileage(carId, canonicalValue, date)
                 }
                 showAddMileageDialog = false
                 editingMileageLog = null
@@ -141,8 +144,9 @@ fun MileageHistoryScreen(
                         }
                     } else {
                         items(s.mileageLogs) { log ->
+                            val displayValue = CarFormatters.fromCanonicalDistance(log.km, country?.usesMiles == true)
                             MileageItem(
-                                log = log,
+                                log = log.copy(km = displayValue),
                                 unit = unitLabel,
                                 onEditClick = { editingMileageLog = log },
                                 onDeleteClick = { viewModel.deleteMileage(carId, log.id) }

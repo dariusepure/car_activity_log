@@ -60,8 +60,13 @@ fun InspectionHistoryScreen(
     }
 
     if (showAddDialog || editingInspection != null) {
+        val car = (state as? CarDetailsUiState.Success)?.car
+        val country = europeanCountries.find { it.code == car?.plateCountry }
+        val unitLabel = if (country?.usesMiles == true) "mi" else "km"
+        
         AddInspectionDialog(
             existingInspection = editingInspection,
+            unit = unitLabel,
             onDismiss = { 
                 showAddDialog = false
                 editingInspection = null
@@ -131,8 +136,13 @@ fun InspectionHistoryScreen(
                         }
                     } else {
                         items(s.inspections) { inspection ->
+                            val country = europeanCountries.find { it.code == car.plateCountry }
+                            val unitLabel = if (country?.usesMiles == true) "mi" else "km"
+                            val displayMileage = CarFormatters.fromCanonicalDistance(inspection.mileage, country?.usesMiles == true)
+                            
                             InspectionItem(
-                                inspection = inspection,
+                                inspection = inspection.copy(mileage = displayMileage),
+                                unit = unitLabel,
                                 onEditClick = { editingInspection = inspection },
                                 onDeleteClick = { viewModel.deleteInspection(carId, inspection.id) }
                             )

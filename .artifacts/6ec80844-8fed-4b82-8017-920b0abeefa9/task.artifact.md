@@ -1,6 +1,6 @@
-- [x] `[x]` Update `Car.kt` domain model
-- [x] `[x]` Update `FirestoreCar.kt` data model and mappers
-- [x] `[x]` Update `AddCarViewModel.kt` to handle new fields
-- [x] `[x]` Update `AddCarScreen.kt` with new inputs
-- [x] `[x]` Update `TechnicalSheetScreen.kt` to display new fields and calculated valves
-- [x] `[x]` Verify changes
+- [x] `[x]` Update `Car.kt` (topSpeed to Double)
+- [x] `[x]` Update `FirestoreCar.kt` (topSpeed to Double)
+- [x] `[x]` Update `AddCarViewModel.kt` (fix conversion drift)
+- [x] `[x]` Update `AddCarScreen.kt` (round for display)
+- [x] `[x]` Update `TechnicalSheetScreen.kt` (round for display)
+- [x] `[x]` Verify rounding and conversion

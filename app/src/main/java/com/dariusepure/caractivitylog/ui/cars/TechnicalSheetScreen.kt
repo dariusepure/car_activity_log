@@ -22,6 +22,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dariusepure.caractivitylog.ui.common.CarFormatters
@@ -66,6 +67,16 @@ fun TechnicalSheetScreen(
                 val valvesText = if (totalValves > 0) {
                     "$totalValves (${car.valvesPerCylinder} per cylinder)"
                 } else "-"
+                
+                val country = europeanCountries.find { it.code == car.plateCountry }
+                val usesMiles = country?.usesMiles == true
+                val speedUnit = if (usesMiles) "mph" else "km/h"
+                val displayTopSpeed = CarFormatters.fromCanonicalSpeed(car.topSpeed, usesMiles)
+                val topSpeedText = if (displayTopSpeed > 0) "${displayTopSpeed.roundToInt()} $speedUnit" else "-"
+                
+                val tireSizeText = if (car.tireWidth > 0 && car.tireAspectRatio > 0 && car.tireDiameter > 0) {
+                    "${car.tireWidth}/${car.tireAspectRatio} R${car.tireDiameter}"
+                } else "-"
 
                 Column(
                     modifier = Modifier
@@ -100,7 +111,7 @@ fun TechnicalSheetScreen(
                             specifications = listOf(
                                 "Power" to powerText,
                                 "Torque" to "${car.torque} Nm",
-                                "Top Speed" to if (car.topSpeed > 0) "${car.topSpeed} km/h" else "-",
+                                "Top Speed" to topSpeedText,
                                 "Cylinders" to if (car.numberOfCylinders > 0) car.numberOfCylinders.toString() else "-",
                                 "Valves" to valvesText,
                                 "Engine Code" to car.engineCode,
@@ -123,6 +134,7 @@ fun TechnicalSheetScreen(
                                 "Seats" to if (car.numberOfSeats > 0) car.numberOfSeats.toString() else "-",
                                 "Doors" to if (car.numberOfDoors > 0) car.numberOfDoors.toString() else "-",
                                 "Boot Space" to if (car.bootSpace > 0) "${car.bootSpace} L" else "-",
+                                "Tires" to tireSizeText,
                                 "Mfg. Country" to car.manufacturingCountry
                             )
                         )
