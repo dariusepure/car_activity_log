@@ -8,5 +8,5 @@ val carBrands = listOf(
     "Lotus", "Lucid", "Maserati", "Maybach", "Mazda", "McLaren", "Mercedes-Benz", "MG", "Mini", "Mitsubishi",
     "Morgan", "Nissan", "Opel", "Pagani", "Peugeot", "Polestar", "Porsche", "Ram", "Renault", "Rimac",
     "Rolls-Royce", "Rover", "Saab", "Seat", "Skoda", "Smart", "SsangYong", "Subaru", "Suzuki", "Tesla",
-    "Toyota", "Triumph", "TVR", "Vauxhall", "Volkswagen", "Volvo", "Other"
-).sorted()
+    "Toyota", "Triumph", "TVR", "Vauxhall", "Volkswagen", "Volvo"
+).sorted() + "Other"

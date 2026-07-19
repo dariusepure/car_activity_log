@@ -1,5 +1,6 @@
 package com.dariusepure.caractivitylog.data.cars
 
+import com.dariusepure.caractivitylog.domain.VehicleInspection
 import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -172,5 +173,50 @@ class CarRepository @Inject constructor(
             .await()
             
         return downloadUrl
+    }
+
+    fun getInspections(carId: String): Flow<List<VehicleInspection>> = callbackFlow {
+        val uid = firebaseAuth.currentUser?.uid ?: run {
+            trySend(emptyList())
+            close()
+            return@callbackFlow
+        }
+
+        val listener = firestore.collection("users")
+            .document(uid)
+            .collection("cars")
+            .document(carId)
+            .collection("inspections")
+            .orderBy("date", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshots, exception ->
+                if (exception != null) {
+                    close(exception)
+                    return@addSnapshotListener
+                }
+
+                val results = snapshots
+                    ?.toObjects(FirestoreVehicleInspection::class.java)
+                    ?.map { it.fromFirebase() } ?: emptyList()
+
+                trySend(results)
+            }
+
+        awaitClose { listener.remove() }
+    }
+
+    suspend fun addInspection(carId: String, inspection: VehicleInspection) {
+        val uid = firebaseAuth.currentUser?.uid ?: return
+        
+        // 1. Add Inspection
+        firestore.collection("users")
+            .document(uid)
+            .collection("cars")
+            .document(carId)
+            .collection("inspections")
+            .add(inspection.toFirebase())
+            .await()
+
+        // 2. Automatically add to mileage history
+        addMileageLog(carId, MileageLog(km = inspection.mileage, date = inspection.date))
     }
 }

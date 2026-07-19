@@ -9,9 +9,11 @@ import androidx.lifecycle.viewModelScope
 import com.dariusepure.caractivitylog.data.cars.CarRepository
 import com.dariusepure.caractivitylog.domain.Car
 import com.dariusepure.caractivitylog.domain.MileageLog
+import com.dariusepure.caractivitylog.domain.VehicleInspection
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.util.Date
@@ -21,7 +23,8 @@ sealed class CarDetailsUiState {
     object Loading : CarDetailsUiState()
     data class Success(
         val car: Car,
-        val mileageLogs: List<MileageLog>
+        val mileageLogs: List<MileageLog>,
+        val inspections: List<VehicleInspection>
     ) : CarDetailsUiState()
     data class Error(val message: String) : CarDetailsUiState()
 }
@@ -40,15 +43,30 @@ class CarDetailsViewModel @Inject constructor(
             try {
                 val car = carRepository.getCar(carId)
                 if (car != null) {
-                    // Observe mileage logs
-                    carRepository.getMileageLogs(carId).collect { logs ->
-                        _state.value = CarDetailsUiState.Success(car, logs)
+                    // Observe mileage logs and inspections
+                    combine(
+                        carRepository.getMileageLogs(carId),
+                        carRepository.getInspections(carId)
+                    ) { logs, inspections ->
+                        CarDetailsUiState.Success(car, logs, inspections)
+                    }.collect { newState ->
+                        _state.value = newState
                     }
                 } else {
                     _state.value = CarDetailsUiState.Error("Car not found")
                 }
             } catch (e: Exception) {
                 _state.value = CarDetailsUiState.Error(e.localizedMessage ?: "An error occurred")
+            }
+        }
+    }
+
+    fun addInspection(carId: String, inspection: VehicleInspection) {
+        viewModelScope.launch {
+            try {
+                carRepository.addInspection(carId, inspection)
+            } catch (e: Exception) {
+                // handle error
             }
         }
     }

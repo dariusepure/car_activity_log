@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddAPhoto
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
@@ -57,6 +58,11 @@ import androidx.compose.foundation.background
 import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.outlined.DirectionsCar
 import coil.compose.AsyncImage
+import androidx.compose.material.icons.filled.AssignmentTurnedIn
+import com.dariusepure.caractivitylog.domain.InspectionDurationUnit
+import com.dariusepure.caractivitylog.domain.VehicleInspection
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dariusepure.caractivitylog.domain.MileageLog
@@ -73,6 +79,7 @@ fun CarDetailsScreen(
     carId: String,
     onBack: () -> Unit,
     onMileageClick: () -> Unit,
+    onInspectionClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: CarDetailsViewModel = hiltViewModel()
 ) {
@@ -226,6 +233,46 @@ fun CarDetailsScreen(
                                     Text(
                                         text = "View and manage records",
                                         style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                            }
+                        }
+                        
+                        Spacer(Modifier.height(12.dp))
+
+                        val latestInspection = s.inspections.maxByOrNull { it.date }
+                        val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+
+                        Card(
+                            onClick = onInspectionClick,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.AssignmentTurnedIn, contentDescription = null)
+                                Spacer(Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "Vehicle Inspection (ITP)",
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    Text(
+                                        text = if (latestInspection != null) {
+                                            "Valid until ${dateFormat.format(latestInspection.expiryDate)}"
+                                        } else {
+                                            "No inspection recorded"
+                                        },
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = if (latestInspection?.expiryDate?.before(Date()) == true) {
+                                            MaterialTheme.colorScheme.error
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        }
                                     )
                                 }
                             }
@@ -393,6 +440,146 @@ fun AddMileageDialog(
                 enabled = km.isNotBlank()
             ) {
                 Text(if (existingLog == null) "Add" else "Update")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+fun AddInspectionDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (VehicleInspection) -> Unit
+) {
+    var km by remember { mutableStateOf("") }
+    var selectedDate by remember { mutableStateOf(Date()) }
+    var durationValue by remember { mutableStateOf("1") }
+    var durationUnit by remember { mutableStateOf(InspectionDurationUnit.YEARS) }
+    var unitExpanded by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+
+    val calendar = Calendar.getInstance()
+    calendar.time = selectedDate
+    
+    val datePickerDialog = DatePickerDialog(
+        context,
+        { _, year, month, dayOfMonth ->
+            val newCalendar = Calendar.getInstance()
+            newCalendar.set(year, month, dayOfMonth)
+            selectedDate = newCalendar.time
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add Vehicle Inspection") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = km,
+                    onValueChange = { if (it.all { char -> char.isDigit() }) km = it },
+                    label = { Text("Mileage (km)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = dateFormat.format(selectedDate),
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text("Inspection Date") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { datePickerDialog.show() },
+                    trailingIcon = {
+                        IconButton(onClick = { datePickerDialog.show() }) {
+                            Icon(imageVector = Icons.Default.Add, contentDescription = null)
+                        }
+                    },
+                    enabled = false,
+                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                        disabledBorderColor = MaterialTheme.colorScheme.outline,
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = durationValue,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) durationValue = it },
+                        label = { Text("Validity") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Box(modifier = Modifier.weight(1f)) {
+                        OutlinedTextField(
+                            value = durationUnit.name.lowercase().replaceFirstChar { it.uppercase() },
+                            onValueChange = { },
+                            readOnly = true,
+                            label = { Text("Unit") },
+                            trailingIcon = {
+                                IconButton(onClick = { unitExpanded = true }) {
+                                    Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null)
+                                }
+                            },
+                            modifier = Modifier.clickable { unitExpanded = true },
+                            enabled = false,
+                            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                                disabledBorderColor = MaterialTheme.colorScheme.outline,
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                        DropdownMenu(
+                            expanded = unitExpanded,
+                            onDismissRequest = { unitExpanded = false }
+                        ) {
+                            InspectionDurationUnit.entries.forEach { unit ->
+                                DropdownMenuItem(
+                                    text = { Text(unit.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                                    onClick = {
+                                        durationUnit = unit
+                                        unitExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onConfirm(
+                        VehicleInspection(
+                            date = selectedDate,
+                            mileage = km.toDoubleOrNull() ?: 0.0,
+                            durationValue = durationValue.toIntOrNull() ?: 1,
+                            durationUnit = durationUnit
+                        )
+                    )
+                },
+                enabled = km.isNotBlank() && durationValue.isNotBlank()
+            ) {
+                Text("Save")
             }
         },
         dismissButton = {

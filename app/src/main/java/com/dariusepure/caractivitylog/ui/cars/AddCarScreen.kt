@@ -60,6 +60,7 @@ fun AddCarScreen(
     var name by remember { mutableStateOf("") } // License Plate
     var selectedCountry by remember { mutableStateOf(europeanCountries.find { it.code == "RO" } ?: europeanCountries[0]) }
     var make by remember { mutableStateOf("") }
+    var customMake by remember { mutableStateOf("") }
     var model by remember { mutableStateOf("") }
     var vin by remember { mutableStateOf("") }
     var year by remember { mutableStateOf("") }
@@ -96,11 +97,12 @@ fun AddCarScreen(
     val powerUnits = listOf("hp", "kw")
 
     val handleBack = {
-        if (carId != null && make.isNotBlank() && model.isNotBlank() && (vin.isEmpty() || vin.length == 17)) {
+        val finalMake = if (make == "Other") customMake else make
+        if (carId != null && finalMake.isNotBlank() && model.isNotBlank() && (vin.isEmpty() || vin.length == 17)) {
             viewModel.onAddOrUpdateCar(
                 name = name,
                 plateCountry = selectedCountry.code,
-                make = make,
+                make = finalMake,
                 model = model,
                 vin = vin,
                 year = year,
@@ -132,7 +134,12 @@ fun AddCarScreen(
             if (car != null) {
                 name = car.name
                 selectedCountry = europeanCountries.find { it.code == car.plateCountry } ?: europeanCountries[0]
-                make = car.make
+                if (carBrands.contains(car.make) && car.make != "Other") {
+                    make = car.make
+                } else {
+                    make = "Other"
+                    customMake = car.make
+                }
                 model = car.model
                 vin = car.vin
                 year = car.year.takeIf { it != 0 }?.toString() ?: ""
@@ -275,11 +282,25 @@ fun AddCarScreen(
                             text = { Text(brand) },
                             onClick = {
                                 make = brand
+                                if (brand != "Other") customMake = ""
                                 makeExpanded = false
                             }
                         )
                     }
                 }
+            }
+
+            if (make == "Other") {
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = customMake,
+                    onValueChange = { customMake = it },
+                    label = { Text("Brand Name *") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    enabled = state !is AddCarState.Pending,
+                    isError = state !is AddCarState.Pending && customMake.isBlank()
+                )
             }
 
             Spacer(Modifier.height(8.dp))
@@ -621,10 +642,11 @@ fun AddCarScreen(
 
             Button(
                 onClick = {
+                    val finalMake = if (make == "Other") customMake else make
                     viewModel.onAddOrUpdateCar(
                         name = name,
                         plateCountry = selectedCountry.code,
-                        make = make,
+                        make = finalMake,
                         model = model,
                         vin = vin,
                         year = year,
@@ -644,7 +666,8 @@ fun AddCarScreen(
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = make.isNotBlank() && model.isNotBlank() && state !is AddCarState.Pending
+                enabled = (if (make == "Other") customMake.isNotBlank() else make.isNotBlank()) && 
+                         model.isNotBlank() && state !is AddCarState.Pending
             ) {
                 if (state is AddCarState.Pending) {
                     CircularProgressIndicator(

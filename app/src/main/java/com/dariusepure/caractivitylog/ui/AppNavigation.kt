@@ -13,6 +13,7 @@ import com.dariusepure.caractivitylog.ui.cars.AddCarScreen
 import com.dariusepure.caractivitylog.ui.cars.CarDetailsScreen
 import com.dariusepure.caractivitylog.ui.cars.CarListScreen
 import com.dariusepure.caractivitylog.ui.cars.MileageHistoryScreen
+import com.dariusepure.caractivitylog.ui.cars.InspectionHistoryScreen
 
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dariusepure.caractivitylog.ui.theme.ThemeViewModel
@@ -26,6 +27,9 @@ sealed class Screen(val route: String) {
     }
     data object MileageHistory : Screen("mileagehistory/{carId}") {
         fun createRoute(carId: String) = "mileagehistory/$carId"
+    }
+    data object InspectionHistory : Screen("inspectionhistory/{carId}") {
+        fun createRoute(carId: String) = "inspectionhistory/$carId"
     }
     data object AddCar : Screen("addcar")
     data object EditCar : Screen("editcar/{carId}") {
@@ -95,12 +99,22 @@ fun AppNavigation(
                 onBack = { navController.popBackStack() },
                 onMileageClick = {
                     navController.navigate(Screen.MileageHistory.createRoute(carId))
+                },
+                onInspectionClick = {
+                    navController.navigate(Screen.InspectionHistory.createRoute(carId))
                 }
             )
         }
         composable(Screen.MileageHistory.route) { backStackEntry ->
             val carId = backStackEntry.arguments?.getString("carId") ?: return@composable
             MileageHistoryScreen(
+                carId = carId,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.InspectionHistory.route) { backStackEntry ->
+            val carId = backStackEntry.arguments?.getString("carId") ?: return@composable
+            InspectionHistoryScreen(
                 carId = carId,
                 onBack = { navController.popBackStack() }
             )
