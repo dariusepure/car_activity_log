@@ -48,6 +48,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.activity.compose.BackHandler
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,6 +79,30 @@ fun AddCarScreen(
 
     var powerUnitExpanded by remember { mutableStateOf(false) }
     val powerUnits = listOf("hp", "kw")
+
+    val handleBack = {
+        if (carId != null && name.isNotBlank() && (vin.isEmpty() || vin.length == 17)) {
+            // Auto-save logic for existing cars
+            viewModel.onAddOrUpdateCar(
+                name = name,
+                plateCountry = selectedCountry.code,
+                make = make,
+                model = model,
+                vin = vin,
+                year = year,
+                engineSize = engineSize,
+                fuelType = fuelType,
+                color = color,
+                power = power,
+                powerUnit = powerUnit
+            )
+        } else {
+            onBack()
+        }
+    }
+
+    // Handle system back button
+    BackHandler(onBack = handleBack)
 
     LaunchedEffect(carId) {
         if (carId != null) {
@@ -111,7 +136,7 @@ fun AddCarScreen(
             TopAppBar(
                 title = { Text(if (carId == null) "Add New Car" else "Edit Car") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = handleBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
