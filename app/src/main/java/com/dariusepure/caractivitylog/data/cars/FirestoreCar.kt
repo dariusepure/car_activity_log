@@ -25,6 +25,7 @@ data class FirestoreCar(
     val fuelTankCapacity: Double = 0.0,
     val drivetrain: String = "",
     val vehicleType: String = "",
+    val profileImageUrl: String? = null,
     val createdAt: Timestamp = Timestamp.now(),
     val updatedAt: Timestamp = Timestamp.now(),
     val activityCount: Int = 0
@@ -51,6 +52,7 @@ fun Car.toFirebase() = FirestoreCar(
     fuelTankCapacity = this.fuelTankCapacity,
     drivetrain = this.drivetrain,
     vehicleType = this.vehicleType,
+    profileImageUrl = this.profileImageUrl,
     createdAt = Timestamp(this.createdAt),
     updatedAt = Timestamp(this.updatedAt),
     activityCount = this.activityCount
@@ -77,6 +79,7 @@ fun FirestoreCar.fromFirebase(isSynced: Boolean = true) = Car(
     fuelTankCapacity = this.fuelTankCapacity,
     drivetrain = this.drivetrain,
     vehicleType = this.vehicleType,
+    profileImageUrl = this.profileImageUrl,
     createdAt = this.createdAt.toDate(),
     updatedAt = this.updatedAt.toDate(),
     activityCount = this.activityCount,

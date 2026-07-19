@@ -4,6 +4,7 @@ import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -14,7 +15,8 @@ import javax.inject.Inject
 
 class CarRepository @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val storage: FirebaseStorage
 ) {
     val cars: Flow<List<Car>> = callbackFlow {
         val uid = firebaseAuth.currentUser?.uid ?: run {
@@ -153,5 +155,22 @@ class CarRepository @Inject constructor(
             .document(logId)
             .delete()
             .await()
+    }
+
+    suspend fun uploadCarProfileImage(carId: String, imageData: ByteArray): String {
+        val uid = firebaseAuth.currentUser?.uid ?: throw Exception("User not logged in")
+        val imageRef = storage.reference.child("users/$uid/cars/$carId/profile.jpg")
+        
+        imageRef.putBytes(imageData).await()
+        val downloadUrl = imageRef.downloadUrl.await().toString()
+        
+        firestore.collection("users")
+            .document(uid)
+            .collection("cars")
+            .document(carId)
+            .update("profileImageUrl", downloadUrl)
+            .await()
+            
+        return downloadUrl
     }
 }

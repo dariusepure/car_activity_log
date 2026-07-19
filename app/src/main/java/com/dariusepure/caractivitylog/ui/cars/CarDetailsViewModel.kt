@@ -1,5 +1,9 @@
 package com.dariusepure.caractivitylog.ui.cars
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dariusepure.caractivitylog.data.cars.CarRepository
@@ -9,6 +13,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
 import java.util.Date
 import javax.inject.Inject
 
@@ -76,5 +81,43 @@ class CarDetailsViewModel @Inject constructor(
                 // handle error
             }
         }
+    }
+
+    fun updateProfileImage(carId: String, uri: Uri, context: Context) {
+        viewModelScope.launch {
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                val outputStream = ByteArrayOutputStream()
+                
+                // Compression: max 1024px, 70% quality
+                val scaledBitmap = if (bitmap.width > 1024 || bitmap.height > 1024) {
+                    scaleBitmap(bitmap, 1024)
+                } else {
+                    bitmap
+                }
+                
+                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
+                val imageData = outputStream.toByteArray()
+                
+                carRepository.uploadCarProfileImage(carId, imageData)
+            } catch (e: Exception) {
+                // handle error
+            }
+        }
+    }
+
+    private fun scaleBitmap(bitmap: Bitmap, maxSize: Int): Bitmap {
+        var width = bitmap.width
+        var height = bitmap.height
+        val bitmapRatio = width.toFloat() / height.toFloat()
+        if (bitmapRatio > 1) {
+            width = maxSize
+            height = (width / bitmapRatio).toInt()
+        } else {
+            height = maxSize
+            width = (height * bitmapRatio).toInt()
+        }
+        return Bitmap.createScaledBitmap(bitmap, width, height, true)
     }
 }

@@ -92,9 +92,13 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
+    implementation(libs.firebase.storage)
     implementation(libs.firebase.ai)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.config)
+
+    // Image loading
+    implementation(libs.coil.compose)
 
     // Testing (minimal for the starter, expanded later if needed)
     testImplementation(libs.junit)
