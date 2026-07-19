@@ -7,6 +7,7 @@ import com.dariusepure.caractivitylog.domain.Car
 data class FirestoreCar(
     @DocumentId val id: String = "",
     val name: String = "",
+    val plateCountry: String = "RO",
     val make: String = "",
     val model: String = "",
     val vin: String = "",
@@ -24,6 +25,7 @@ data class FirestoreCar(
 fun Car.toFirebase() = FirestoreCar(
     id = this.id,
     name = this.name,
+    plateCountry = this.plateCountry,
     make = this.make,
     model = this.model,
     vin = this.vin,
@@ -41,6 +43,7 @@ fun Car.toFirebase() = FirestoreCar(
 fun FirestoreCar.fromFirebase() = Car(
     id = this.id,
     name = this.name,
+    plateCountry = this.plateCountry,
     make = this.make,
     model = this.model,
     vin = this.vin,

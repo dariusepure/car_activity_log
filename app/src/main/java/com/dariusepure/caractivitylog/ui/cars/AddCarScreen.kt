@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -39,7 +41,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -55,6 +61,7 @@ fun AddCarScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     var name by remember { mutableStateOf("") } // License Plate
+    var selectedCountry by remember { mutableStateOf(europeanCountries.find { it.code == "RO" } ?: europeanCountries[0]) }
     var make by remember { mutableStateOf("") }
     var model by remember { mutableStateOf("") }
     var vin by remember { mutableStateOf("") }
@@ -65,6 +72,7 @@ fun AddCarScreen(
     var power by remember { mutableStateOf("") }
     var powerUnit by remember { mutableStateOf("hp") }
 
+    var countryExpanded by remember { mutableStateOf(false) }
     var fuelTypeExpanded by remember { mutableStateOf(false) }
     val fuelTypes = listOf("Petrol", "Diesel", "Electric", "Hybrid", "LPG")
 
@@ -77,6 +85,7 @@ fun AddCarScreen(
             val car = viewModel.getCarData(carId)
             if (car != null) {
                 name = car.name
+                selectedCountry = europeanCountries.find { it.code == car.plateCountry } ?: europeanCountries[0]
                 make = car.make
                 model = car.model
                 vin = car.vin
@@ -134,14 +143,50 @@ fun AddCarScreen(
                 }
             }
 
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("License Plate (e.g. B 123 ABC)") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = state !is AddCarState.Pending
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(modifier = Modifier.width(90.dp)) {
+                    OutlinedTextField(
+                        value = selectedCountry.flag,
+                        onValueChange = { },
+                        readOnly = true,
+                        label = { Text("Country") },
+                        modifier = Modifier.clickable { countryExpanded = true },
+                        trailingIcon = {
+                            Icon(Icons.Default.ArrowDropDown, null, Modifier.clickable { countryExpanded = true })
+                        }
+                    )
+                    // Overlay to capture clicks
+                    Box(modifier = Modifier.matchParentSize().clickable { countryExpanded = true })
+                    
+                    DropdownMenu(
+                        expanded = countryExpanded,
+                        onDismissRequest = { countryExpanded = false },
+                        modifier = Modifier.sizeIn(maxHeight = 300.dp)
+                    ) {
+                        europeanCountries.forEach { country ->
+                            DropdownMenuItem(
+                                text = { Text("${country.flag} ${country.name}") },
+                                onClick = {
+                                    selectedCountry = country
+                                    countryExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.width(8.dp))
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it.uppercase() },
+                    label = { Text("License Plate") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    enabled = state !is AddCarState.Pending,
+                    placeholder = { 
+                        if (selectedCountry.code == "RO") Text("B 123 ABC") 
+                    }
+                )
+            }
 
             Spacer(Modifier.height(8.dp))
 
@@ -221,6 +266,9 @@ fun AddCarScreen(
                         },
                         modifier = Modifier.clickable { powerUnitExpanded = true }
                     )
+                    // Overlay
+                    Box(modifier = Modifier.matchParentSize().clickable { powerUnitExpanded = true })
+
                     DropdownMenu(
                         expanded = powerUnitExpanded,
                         onDismissRequest = { powerUnitExpanded = false }
@@ -305,6 +353,7 @@ fun AddCarScreen(
                 onClick = {
                     viewModel.onAddOrUpdateCar(
                         name = name,
+                        plateCountry = selectedCountry.code,
                         make = make,
                         model = model,
                         vin = vin,

@@ -131,33 +131,42 @@ fun CarDetailsScreen(
         when (val s = state) {
             CarDetailsUiState.Loading -> LoadingState()
             is CarDetailsUiState.Error -> ErrorState(message = s.message, onRetry = { viewModel.loadCarData(carId) })
-            is CarDetailsUiState.Success -> {
-                val car = s.car
-                val hpValue: Int
-                val kwValue: Int
-                
-                if (car.powerUnit.lowercase() == "kw") {
-                    kwValue = car.power
-                    hpValue = (car.power * 1.34102).toInt()
-                } else {
-                    hpValue = car.power
-                    kwValue = (car.power / 1.34102).toInt()
-                }
+                is CarDetailsUiState.Success -> {
+                    val car = s.car
+                    val hpValue: Int
+                    val kwValue: Int
+                    
+                    if (car.powerUnit.lowercase() == "kw") {
+                        kwValue = car.power
+                        hpValue = (car.power * 1.34102).toInt()
+                    } else {
+                        hpValue = car.power
+                        kwValue = (car.power / 1.34102).toInt()
+                    }
 
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                        .padding(horizontal = 16.dp)
-                ) {
-                    item {
-                        Spacer(Modifier.height(16.dp))
-                        Text(
-                            text = car.name,
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
+                    val flag = europeanCountries.find { it.code == car.plateCountry }?.flag ?: "🏳️"
+
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(padding)
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        item {
+                            Spacer(Modifier.height(16.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = flag,
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Text(
+                                    text = car.name,
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
                         
                         SpecificationCard(
                             specifications = listOf(

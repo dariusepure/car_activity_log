@@ -45,7 +45,8 @@ class AddCarViewModel @Inject constructor(
     suspend fun getCarData(carId: String): Car? = carRepository.getCar(carId)
 
     fun onAddOrUpdateCar(
-        name: String,
+        name: String, // License Plate
+        plateCountry: String,
         make: String,
         model: String,
         vin: String,
@@ -61,6 +62,15 @@ class AddCarViewModel @Inject constructor(
             return
         }
 
+        // Romanian License Plate Validation
+        if (plateCountry == "RO") {
+            val roPlateRegex = Regex("^(B|AB|AR|AG|BC|BH|BN|BT|BV|BR|BZ|CS|CL|CJ|CT|CV|DB|DJ|GL|GR|GJ|HR|HD|IL|IS|IF|MM|MH|MS|NT|OT|PH|SM|SJ|SB|SV|TR|TM|TL|VS|VL|VN)\\s?\\d{2,3}\\s?[A-PR-Z]{3}$", RegexOption.IGNORE_CASE)
+            if (!name.replace(" ", "").matches(roPlateRegex)) {
+                _state.value = AddCarState.Error("Invalid Romanian license plate format (ex: B 123 ABC or CJ 12 ABC)")
+                return
+            }
+        }
+
         // VIN validation: empty is okay (optional), but if not empty must be 17 chars
         if (vin.isNotBlank() && vin.length != 17) {
             _state.value = AddCarState.Error("VIN must be exactly 17 characters if provided")
@@ -72,10 +82,11 @@ class AddCarViewModel @Inject constructor(
             try {
                 val car = Car(
                     id = currentCarId ?: "",
-                    name = name,
+                    name = name.uppercase(),
+                    plateCountry = plateCountry,
                     make = make,
                     model = model,
-                    vin = vin,
+                    vin = vin.uppercase(),
                     year = year.toIntOrNull() ?: 0,
                     engineSize = engineSize,
                     fuelType = fuelType,

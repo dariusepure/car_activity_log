@@ -5,6 +5,7 @@ import java.util.Date
 data class Car(
     val id: String = "",
     val name: String = "", // Used for License Plate now
+    val plateCountry: String = "RO", // Country code (e.g., RO, DE, IT)
     val make: String = "",
     val model: String = "",
     val vin: String = "",

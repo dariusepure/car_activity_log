@@ -55,6 +55,8 @@ fun CarCard(
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val flag = europeanCountries.find { it.code == car.plateCountry }?.flag ?: ""
+
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
@@ -67,11 +69,20 @@ fun CarCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = car.name.ifBlank { "Unnamed car" },
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (flag.isNotEmpty()) {
+                        Text(
+                            text = flag,
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                    }
+                    Text(
+                        text = car.name.ifBlank { "Unnamed car" },
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
                 Spacer(Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
