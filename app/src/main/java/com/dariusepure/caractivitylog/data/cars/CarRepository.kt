@@ -219,4 +219,28 @@ class CarRepository @Inject constructor(
         // 2. Automatically add to mileage history
         addMileageLog(carId, MileageLog(km = inspection.mileage, date = inspection.date))
     }
+
+    suspend fun updateInspection(carId: String, inspection: VehicleInspection) {
+        val uid = firebaseAuth.currentUser?.uid ?: return
+        firestore.collection("users")
+            .document(uid)
+            .collection("cars")
+            .document(carId)
+            .collection("inspections")
+            .document(inspection.id)
+            .set(inspection.toFirebase())
+            .await()
+    }
+
+    suspend fun deleteInspection(carId: String, inspectionId: String) {
+        val uid = firebaseAuth.currentUser?.uid ?: return
+        firestore.collection("users")
+            .document(uid)
+            .collection("cars")
+            .document(carId)
+            .collection("inspections")
+            .document(inspectionId)
+            .delete()
+            .await()
+    }
 }

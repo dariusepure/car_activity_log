@@ -43,6 +43,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.animation.AnimatedVisibility
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.sizeIn
 
@@ -71,21 +75,31 @@ fun AddCarScreen(
     var powerUnit by remember { mutableStateOf("hp") }
     var torque by remember { mutableStateOf("") }
     var engineCode by remember { mutableStateOf("") }
+    var engineLayout by remember { mutableStateOf("") }
     var length by remember { mutableStateOf("") }
     var width by remember { mutableStateOf("") }
     var height by remember { mutableStateOf("") }
+    var wheelbase by remember { mutableStateOf("") }
+    var trackWidth by remember { mutableStateOf("") }
     var fuelTankCapacity by remember { mutableStateOf("") }
     var drivetrain by remember { mutableStateOf("") }
     var vehicleType by remember { mutableStateOf("") }
     var manufacturingCountry by remember { mutableStateOf("") }
 
+    var identityExpanded by remember { mutableStateOf(true) }
+    var registrationExpanded by remember { mutableStateOf(false) }
+    var engineExpanded by remember { mutableStateOf(false) }
+    var dimensionsExpanded by remember { mutableStateOf(false) }
+
     var countryExpanded by remember { mutableStateOf(false) }
     var manufacturingCountryExpanded by remember { mutableStateOf(false) }
     var makeExpanded by remember { mutableStateOf(false) }
     var fuelTypeExpanded by remember { mutableStateOf(false) }
+    var engineLayoutExpanded by remember { mutableStateOf(false) }
     var drivetrainExpanded by remember { mutableStateOf(false) }
     var vehicleTypeExpanded by remember { mutableStateOf(false) }
     val fuelTypes = listOf("Petrol", "Diesel", "Electric", "Hybrid", "LPG")
+    val engineLayouts = listOf("Transverse", "Longitudinal")
     val drivetrainOptions = listOf("FWD", "RWD", "AWD", "4WD")
     val vehicleTypes = listOf("Saloon", "Estate", "Hatchback", "MPV", "SUV", "Coupe", "Convertible", "Van", "Pickup")
 
@@ -115,9 +129,12 @@ fun AddCarScreen(
                 powerUnit = powerUnit,
                 torque = torque,
                 engineCode = engineCode,
+                engineLayout = engineLayout,
                 length = length,
                 width = width,
                 height = height,
+                wheelbase = wheelbase,
+                trackWidth = trackWidth,
                 fuelTankCapacity = fuelTankCapacity,
                 drivetrain = drivetrain,
                 vehicleType = vehicleType,
@@ -152,9 +169,12 @@ fun AddCarScreen(
                 powerUnit = car.powerUnit.ifBlank { "hp" }
                 torque = car.torque.takeIf { it != 0 }?.toString() ?: ""
                 engineCode = car.engineCode
+                engineLayout = car.engineLayout
                 length = car.length.takeIf { it != 0 }?.toString() ?: ""
                 width = car.width.takeIf { it != 0 }?.toString() ?: ""
                 height = car.height.takeIf { it != 0 }?.toString() ?: ""
+                wheelbase = car.wheelbase.takeIf { it != 0 }?.toString() ?: ""
+                trackWidth = car.trackWidth.takeIf { it != 0 }?.toString() ?: ""
                 fuelTankCapacity = car.fuelTankCapacity.takeIf { it != 0.0 }?.toString() ?: ""
                 drivetrain = car.drivetrain
                 vehicleType = car.vehicleType
@@ -207,468 +227,599 @@ fun AddCarScreen(
                 }
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.width(90.dp)) {
+            // --- IDENTITY SECTION ---
+            CollapsibleSection(
+                title = "Identity & Style",
+                isExpanded = identityExpanded,
+                onToggle = { identityExpanded = !identityExpanded }
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
-                        value = selectedCountry.code,
+                        value = make,
                         onValueChange = { },
                         readOnly = true,
-                        label = { Text("Country") },
-                        modifier = Modifier.clickable { countryExpanded = true },
+                        label = { Text("Make *") },
+                        modifier = Modifier.fillMaxWidth(),
                         trailingIcon = {
-                            Icon(Icons.Default.ArrowDropDown, null, Modifier.clickable { countryExpanded = true })
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                "dropdown",
+                                Modifier.clickable { makeExpanded = true })
+                        },
+                        isError = state !is AddCarState.Pending && make.isBlank()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { makeExpanded = true }
+                    )
+                    DropdownMenu(
+                        expanded = makeExpanded,
+                        onDismissRequest = { makeExpanded = false },
+                        modifier = Modifier.fillMaxWidth(0.9f).sizeIn(maxHeight = 300.dp)
+                    ) {
+                        carBrands.forEach { brand ->
+                            DropdownMenuItem(
+                                text = { Text(brand) },
+                                onClick = {
+                                    make = brand
+                                    if (brand != "Other") customMake = ""
+                                    makeExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                if (make == "Other") {
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = customMake,
+                        onValueChange = { customMake = it },
+                        label = { Text("Brand Name *") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        enabled = state !is AddCarState.Pending,
+                        isError = state !is AddCarState.Pending && customMake.isBlank()
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = model,
+                    onValueChange = { model = it },
+                    label = { Text("Model *") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    enabled = state !is AddCarState.Pending,
+                    isError = state !is AddCarState.Pending && model.isBlank()
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = year,
+                    onValueChange = { if (it.all { char -> char.isDigit() }) year = it },
+                    label = { Text("Year") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    enabled = state !is AddCarState.Pending
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = wheelbase,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) wheelbase = it },
+                        label = { Text("Wheelbase") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedTextField(
+                        value = trackWidth,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) trackWidth = it },
+                        label = { Text("Track Width") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = vehicleType,
+                        onValueChange = { },
+                        readOnly = true,
+                        label = { Text("Vehicle Type") },
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                "dropdown",
+                                Modifier.clickable { vehicleTypeExpanded = true })
                         }
                     )
-                    Box(modifier = Modifier.matchParentSize().clickable { countryExpanded = true })
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { vehicleTypeExpanded = true }
+                    )
+                    DropdownMenu(
+                        expanded = vehicleTypeExpanded,
+                        onDismissRequest = { vehicleTypeExpanded = false },
+                        modifier = Modifier.fillMaxWidth(0.9f).sizeIn(maxHeight = 300.dp)
+                    ) {
+                        vehicleTypes.forEach { type ->
+                            DropdownMenuItem(
+                                text = { Text(type) },
+                                onClick = {
+                                    vehicleType = type
+                                    vehicleTypeExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = color,
+                        onValueChange = { },
+                        readOnly = true,
+                        label = { Text("Color") },
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                "dropdown",
+                                Modifier.clickable { colorExpanded = true })
+                        }
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { colorExpanded = true }
+                    )
+                    DropdownMenu(
+                        expanded = colorExpanded,
+                        onDismissRequest = { colorExpanded = false },
+                        modifier = Modifier.sizeIn(maxHeight = 300.dp)
+                    ) {
+                        carColors.forEach { colorOption ->
+                            DropdownMenuItem(
+                                text = { Text(colorOption) },
+                                onClick = {
+                                    color = colorOption
+                                    colorExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = vin,
+                    onValueChange = { input ->
+                        val filtered = input.uppercase().filter { it.isLetterOrDigit() && it !in listOf('I', 'O', 'Q') }
+                        if (filtered.length <= 17) vin = filtered
+                    },
+                    label = { Text("VIN") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    enabled = state !is AddCarState.Pending,
+                    supportingText = {
+                        Column {
+                            if (vin.isNotEmpty()) {
+                                Text("${vin.length}/17")
+                                if (vin.length < 17) {
+                                    Text("Remaining: ${17 - vin.length} characters", color = MaterialTheme.colorScheme.secondary)
+                                }
+                            }
+                            Text("Letters I, O, Q are not allowed", style = MaterialTheme.typography.bodySmall)
+                        }
+                    },
+                    isError = vin.isNotEmpty() && vin.length != 17
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // --- REGISTRATION SECTION ---
+            CollapsibleSection(
+                title = "Registration",
+                isExpanded = registrationExpanded,
+                onToggle = { registrationExpanded = !registrationExpanded }
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(modifier = Modifier.width(90.dp)) {
+                        OutlinedTextField(
+                            value = selectedCountry.code,
+                            onValueChange = { },
+                            readOnly = true,
+                            label = { Text("Country") },
+                            modifier = Modifier.clickable { countryExpanded = true },
+                            trailingIcon = {
+                                Icon(Icons.Default.ArrowDropDown, null, Modifier.clickable { countryExpanded = true })
+                            }
+                        )
+                        Box(modifier = Modifier.matchParentSize().clickable { countryExpanded = true })
+                        
+                        DropdownMenu(
+                            expanded = countryExpanded,
+                            onDismissRequest = { countryExpanded = false },
+                            modifier = Modifier.sizeIn(maxHeight = 300.dp)
+                        ) {
+                            europeanCountries.forEach { country ->
+                                DropdownMenuItem(
+                                    text = { Text(country.name) },
+                                    onClick = {
+                                        selectedCountry = country
+                                        countryExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it.uppercase() },
+                        label = { Text("License Plate (Optional)") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        enabled = state !is AddCarState.Pending,
+                        supportingText = {
+                            selectedCountry.plateHint?.let { hint ->
+                                Text("Ex: $hint", style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = manufacturingCountry,
+                        onValueChange = { },
+                        readOnly = true,
+                        label = { Text("Manufacturing Country") },
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            Icon(Icons.Default.ArrowDropDown, null, Modifier.clickable { manufacturingCountryExpanded = true })
+                        }
+                    )
+                    Box(modifier = Modifier.matchParentSize().clickable { manufacturingCountryExpanded = true })
                     
                     DropdownMenu(
-                        expanded = countryExpanded,
-                        onDismissRequest = { countryExpanded = false },
+                        expanded = manufacturingCountryExpanded,
+                        onDismissRequest = { manufacturingCountryExpanded = false },
                         modifier = Modifier.sizeIn(maxHeight = 300.dp)
                     ) {
                         europeanCountries.forEach { country ->
                             DropdownMenuItem(
                                 text = { Text(country.name) },
                                 onClick = {
-                                    selectedCountry = country
-                                    countryExpanded = false
+                                    manufacturingCountry = country.name
+                                    manufacturingCountryExpanded = false
                                 }
                             )
                         }
                     }
                 }
-                Spacer(Modifier.width(8.dp))
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it.uppercase() },
-                    label = { Text("License Plate (Optional)") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    enabled = state !is AddCarState.Pending,
-                    supportingText = {
-                        selectedCountry.plateHint?.let { hint ->
-                            Text("Ex: $hint", style = MaterialTheme.typography.bodySmall)
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // --- ENGINE SECTION ---
+            CollapsibleSection(
+                title = "Engine & Performance",
+                isExpanded = engineExpanded,
+                onToggle = { engineExpanded = !engineExpanded }
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = power,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) power = it },
+                        label = { Text("Power") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Box(modifier = Modifier.width(100.dp)) {
+                        OutlinedTextField(
+                            value = powerUnit,
+                            onValueChange = { },
+                            readOnly = true,
+                            label = { Text("Unit") },
+                            trailingIcon = {
+                                Icon(
+                                    Icons.Default.ArrowDropDown,
+                                    "dropdown",
+                                    Modifier.clickable { powerUnitExpanded = true })
+                            },
+                            modifier = Modifier.clickable { powerUnitExpanded = true }
+                        )
+                        Box(modifier = Modifier.matchParentSize().clickable { powerUnitExpanded = true })
+
+                        DropdownMenu(
+                            expanded = powerUnitExpanded,
+                            onDismissRequest = { powerUnitExpanded = false }
+                        ) {
+                            powerUnits.forEach { unit ->
+                                DropdownMenuItem(
+                                    text = { Text(unit) },
+                                    onClick = {
+                                        powerUnit = unit
+                                        powerUnitExpanded = false
+                                    }
+                                )
+                            }
                         }
                     }
-                )
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            Box(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = manufacturingCountry,
-                    onValueChange = { },
-                    readOnly = true,
-                    label = { Text("Manufacturing Country") },
-                    modifier = Modifier.fillMaxWidth(),
-                    trailingIcon = {
-                        Icon(Icons.Default.ArrowDropDown, null, Modifier.clickable { manufacturingCountryExpanded = true })
-                    }
-                )
-                Box(modifier = Modifier.matchParentSize().clickable { manufacturingCountryExpanded = true })
-                
-                DropdownMenu(
-                    expanded = manufacturingCountryExpanded,
-                    onDismissRequest = { manufacturingCountryExpanded = false },
-                    modifier = Modifier.fillMaxWidth(0.9f).sizeIn(maxHeight = 300.dp)
-                ) {
-                    europeanCountries.forEach { country ->
-                        DropdownMenuItem(
-                            text = { Text(country.name) },
-                            onClick = {
-                                manufacturingCountry = country.name
-                                manufacturingCountryExpanded = false
-                            }
-                        )
-                    }
                 }
-            }
 
-            Spacer(Modifier.height(8.dp))
-
-            Box(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = make,
-                    onValueChange = { },
-                    readOnly = true,
-                    label = { Text("Make *") },
-                    modifier = Modifier.fillMaxWidth(),
-                    trailingIcon = {
-                        Icon(
-                            Icons.Default.ArrowDropDown,
-                            "dropdown",
-                            Modifier.clickable { makeExpanded = true })
-                    },
-                    isError = state !is AddCarState.Pending && make.isBlank()
-                )
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .clickable { makeExpanded = true }
-                )
-                DropdownMenu(
-                    expanded = makeExpanded,
-                    onDismissRequest = { makeExpanded = false },
-                    modifier = Modifier.fillMaxWidth(0.9f).sizeIn(maxHeight = 300.dp)
-                ) {
-                    carBrands.forEach { brand ->
-                        DropdownMenuItem(
-                            text = { Text(brand) },
-                            onClick = {
-                                make = brand
-                                if (brand != "Other") customMake = ""
-                                makeExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            if (make == "Other") {
                 Spacer(Modifier.height(8.dp))
+
                 OutlinedTextField(
-                    value = customMake,
-                    onValueChange = { customMake = it },
-                    label = { Text("Brand Name *") },
+                    value = torque,
+                    onValueChange = { if (it.all { char -> char.isDigit() }) torque = it },
+                    label = { Text("Torque (Nm)") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    enabled = state !is AddCarState.Pending,
-                    isError = state !is AddCarState.Pending && customMake.isBlank()
-                )
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = model,
-                onValueChange = { model = it },
-                label = { Text("Model *") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = state !is AddCarState.Pending,
-                isError = state !is AddCarState.Pending && model.isBlank()
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = year,
-                onValueChange = { if (it.all { char -> char.isDigit() }) year = it },
-                label = { Text("Year") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                enabled = state !is AddCarState.Pending
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = vin,
-                onValueChange = { input ->
-                    val filtered = input.uppercase().filter { it.isLetterOrDigit() && it !in listOf('I', 'O', 'Q') }
-                    if (filtered.length <= 17) vin = filtered
-                },
-                label = { Text("VIN") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = state !is AddCarState.Pending,
-                supportingText = {
-                    Column {
-                        if (vin.isNotEmpty()) {
-                            Text("${vin.length}/17")
-                            if (vin.length < 17) {
-                                Text("Remaining: ${17 - vin.length} characters", color = MaterialTheme.colorScheme.secondary)
-                            }
-                        }
-                        Text("Letters I, O, Q are not allowed", style = MaterialTheme.typography.bodySmall)
-                    }
-                },
-                isError = vin.isNotEmpty() && vin.length != 17
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    value = power,
-                    onValueChange = { if (it.all { char -> char.isDigit() }) power = it },
-                    label = { Text("Power") },
-                    modifier = Modifier.weight(1f),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     enabled = state !is AddCarState.Pending
                 )
-                Spacer(Modifier.width(8.dp))
-                Box(modifier = Modifier.width(100.dp)) {
+
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = engineCode,
+                    onValueChange = { engineCode = it.uppercase() },
+                    label = { Text("Engine Code") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    enabled = state !is AddCarState.Pending
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                Row(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
-                        value = powerUnit,
+                        value = wheelbase,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) wheelbase = it },
+                        label = { Text("Wheelbase") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedTextField(
+                        value = trackWidth,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) trackWidth = it },
+                        label = { Text("Track Width") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = engineLayout,
                         onValueChange = { },
                         readOnly = true,
-                        label = { Text("Unit") },
+                        label = { Text("Engine Layout") },
+                        modifier = Modifier.fillMaxWidth(),
                         trailingIcon = {
                             Icon(
                                 Icons.Default.ArrowDropDown,
                                 "dropdown",
-                                Modifier.clickable { powerUnitExpanded = true })
-                        },
-                        modifier = Modifier.clickable { powerUnitExpanded = true }
+                                Modifier.clickable { engineLayoutExpanded = true })
+                        }
                     )
-                    Box(modifier = Modifier.matchParentSize().clickable { powerUnitExpanded = true })
-
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { engineLayoutExpanded = true }
+                    )
                     DropdownMenu(
-                        expanded = powerUnitExpanded,
-                        onDismissRequest = { powerUnitExpanded = false }
+                        expanded = engineLayoutExpanded,
+                        onDismissRequest = { engineLayoutExpanded = false },
+                        modifier = Modifier.fillMaxWidth(0.9f)
                     ) {
-                        powerUnits.forEach { unit ->
+                        engineLayouts.forEach { layout ->
                             DropdownMenuItem(
-                                text = { Text(unit) },
+                                text = { Text(layout) },
                                 onClick = {
-                                    powerUnit = unit
-                                    powerUnitExpanded = false
+                                    engineLayout = layout
+                                    engineLayoutExpanded = false
                                 }
                             )
                         }
                     }
                 }
+
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = engineSize,
+                    onValueChange = { engineSize = it },
+                    label = { Text("Engine Size (cc)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    enabled = state !is AddCarState.Pending
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = wheelbase,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) wheelbase = it },
+                        label = { Text("Wheelbase") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedTextField(
+                        value = trackWidth,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) trackWidth = it },
+                        label = { Text("Track Width") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = fuelType,
+                        onValueChange = { },
+                        readOnly = true,
+                        label = { Text("Fuel Type") },
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                "dropdown",
+                                Modifier.clickable { fuelTypeExpanded = true })
+                        }
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { fuelTypeExpanded = true }
+                    )
+                    DropdownMenu(
+                        expanded = fuelTypeExpanded,
+                        onDismissRequest = { fuelTypeExpanded = false },
+                        modifier = Modifier.fillMaxWidth(0.9f)
+                    ) {
+                        fuelTypes.forEach { type ->
+                            DropdownMenuItem(
+                                text = { Text(type) },
+                                onClick = {
+                                    fuelType = type
+                                    fuelTypeExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = fuelTankCapacity,
+                    onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) fuelTankCapacity = it },
+                    label = { Text("Fuel Tank Capacity (L)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    enabled = state !is AddCarState.Pending
+                )
             }
-
-            Spacer(Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = torque,
-                onValueChange = { if (it.all { char -> char.isDigit() }) torque = it },
-                label = { Text("Torque (Nm)") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                enabled = state !is AddCarState.Pending
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = engineCode,
-                onValueChange = { engineCode = it.uppercase() },
-                label = { Text("Engine Code") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = state !is AddCarState.Pending
-            )
 
             Spacer(Modifier.height(16.dp))
-            Text(
-                "Dimensions (mm)",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Start
-            )
-            Spacer(Modifier.height(8.dp))
 
-            Row(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = length,
-                    onValueChange = { if (it.all { char -> char.isDigit() }) length = it },
-                    label = { Text("Length") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    enabled = state !is AddCarState.Pending
-                )
-                Spacer(Modifier.width(8.dp))
-                OutlinedTextField(
-                    value = width,
-                    onValueChange = { if (it.all { char -> char.isDigit() }) width = it },
-                    label = { Text("Width") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    enabled = state !is AddCarState.Pending
-                )
-                Spacer(Modifier.width(8.dp))
-                OutlinedTextField(
-                    value = height,
-                    onValueChange = { if (it.all { char -> char.isDigit() }) height = it },
-                    label = { Text("Height") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    enabled = state !is AddCarState.Pending
-                )
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = engineSize,
-                onValueChange = { engineSize = it },
-                label = { Text("Engine Size (cc)") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = state !is AddCarState.Pending
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = fuelTankCapacity,
-                onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) fuelTankCapacity = it },
-                label = { Text("Fuel Tank Capacity (L)") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                enabled = state !is AddCarState.Pending
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            Box(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = vehicleType,
-                    onValueChange = { },
-                    readOnly = true,
-                    label = { Text("Vehicle Type") },
-                    modifier = Modifier.fillMaxWidth(),
-                    trailingIcon = {
-                        Icon(
-                            Icons.Default.ArrowDropDown,
-                            "dropdown",
-                            Modifier.clickable { vehicleTypeExpanded = true })
-                    }
-                )
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .clickable { vehicleTypeExpanded = true }
-                )
-                DropdownMenu(
-                    expanded = vehicleTypeExpanded,
-                    onDismissRequest = { vehicleTypeExpanded = false },
-                    modifier = Modifier.fillMaxWidth(0.9f).sizeIn(maxHeight = 300.dp)
-                ) {
-                    vehicleTypes.forEach { type ->
-                        DropdownMenuItem(
-                            text = { Text(type) },
-                            onClick = {
-                                vehicleType = type
-                                vehicleTypeExpanded = false
-                            }
-                        )
-                    }
+            // --- DIMENSIONS SECTION ---
+            CollapsibleSection(
+                title = "Dimensions & Chassis",
+                isExpanded = dimensionsExpanded,
+                onToggle = { dimensionsExpanded = !dimensionsExpanded }
+            ) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = length,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) length = it },
+                        label = { Text("Length") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedTextField(
+                        value = width,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) width = it },
+                        label = { Text("Width") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedTextField(
+                        value = height,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) height = it },
+                        label = { Text("Height") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = state !is AddCarState.Pending
+                    )
                 }
-            }
 
-            Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(8.dp))
 
-            Box(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = fuelType,
-                    onValueChange = { },
-                    readOnly = true,
-                    label = { Text("Fuel Type") },
-                    modifier = Modifier.fillMaxWidth(),
-                    trailingIcon = {
-                        Icon(
-                            Icons.Default.ArrowDropDown,
-                            "dropdown",
-                            Modifier.clickable { fuelTypeExpanded = true })
-                    }
-                )
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .clickable { fuelTypeExpanded = true }
-                )
-                DropdownMenu(
-                    expanded = fuelTypeExpanded,
-                    onDismissRequest = { fuelTypeExpanded = false },
-                    modifier = Modifier.fillMaxWidth(0.9f)
-                ) {
-                    fuelTypes.forEach { type ->
-                        DropdownMenuItem(
-                            text = { Text(type) },
-                            onClick = {
-                                fuelType = type
-                                fuelTypeExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            Box(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = drivetrain,
-                    onValueChange = { },
-                    readOnly = true,
-                    label = { Text("Drivetrain") },
-                    modifier = Modifier.fillMaxWidth(),
-                    trailingIcon = {
-                        Icon(
-                            Icons.Default.ArrowDropDown,
-                            "dropdown",
-                            Modifier.clickable { drivetrainExpanded = true })
-                    }
-                )
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .clickable { drivetrainExpanded = true }
-                )
-                DropdownMenu(
-                    expanded = drivetrainExpanded,
-                    onDismissRequest = { drivetrainExpanded = false },
-                    modifier = Modifier.fillMaxWidth(0.9f)
-                ) {
-                    drivetrainOptions.forEach { option ->
-                        DropdownMenuItem(
-                            text = { Text(option) },
-                            onClick = {
-                                drivetrain = option
-                                drivetrainExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            Box(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = color,
-                    onValueChange = { },
-                    readOnly = true,
-                    label = { Text("Color") },
-                    modifier = Modifier.fillMaxWidth(),
-                    trailingIcon = {
-                        Icon(
-                            Icons.Default.ArrowDropDown,
-                            "dropdown",
-                            Modifier.clickable { colorExpanded = true })
-                    }
-                )
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .clickable { colorExpanded = true }
-                )
-                DropdownMenu(
-                    expanded = colorExpanded,
-                    onDismissRequest = { colorExpanded = false },
-                    modifier = Modifier.sizeIn(maxHeight = 300.dp)
-                ) {
-                    carColors.forEach { colorOption ->
-                        DropdownMenuItem(
-                            text = { Text(colorOption) },
-                            onClick = {
-                                color = colorOption
-                                colorExpanded = false
-                            }
-                        )
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = drivetrain,
+                        onValueChange = { },
+                        readOnly = true,
+                        label = { Text("Drivetrain") },
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                "dropdown",
+                                Modifier.clickable { drivetrainExpanded = true })
+                        }
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { drivetrainExpanded = true }
+                    )
+                    DropdownMenu(
+                        expanded = drivetrainExpanded,
+                        onDismissRequest = { drivetrainExpanded = false },
+                        modifier = Modifier.fillMaxWidth(0.9f)
+                    ) {
+                        drivetrainOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    drivetrain = option
+                                    drivetrainExpanded = false
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -692,9 +843,12 @@ fun AddCarScreen(
                         powerUnit = powerUnit,
                         torque = torque,
                         engineCode = engineCode,
+                        engineLayout = engineLayout,
                         length = length,
                         width = width,
                         height = height,
+                        wheelbase = wheelbase,
+                        trackWidth = trackWidth,
                         fuelTankCapacity = fuelTankCapacity,
                         drivetrain = drivetrain,
                         vehicleType = vehicleType,
@@ -716,5 +870,44 @@ fun AddCarScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun CollapsibleSection(
+    title: String,
+    isExpanded: Boolean,
+    onToggle: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onToggle() }
+                .padding(vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.weight(1f)
+            )
+            Icon(
+                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                contentDescription = if (isExpanded) "Collapse" else "Expand",
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+        AnimatedVisibility(visible = isExpanded) {
+            Column {
+                content()
+            }
+        }
+        HorizontalDivider(
+            thickness = 0.5.dp,
+            color = MaterialTheme.colorScheme.outlineVariant
+        )
     }
 }

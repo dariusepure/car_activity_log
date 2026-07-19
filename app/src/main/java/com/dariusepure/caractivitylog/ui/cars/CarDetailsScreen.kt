@@ -192,6 +192,7 @@ fun CarDetailsScreen(
                                 "Power" to powerText,
                                 "Torque" to "${car.torque} Nm",
                                 "Engine Code" to car.engineCode,
+                                "Engine Layout" to car.engineLayout,
                                 "Engine Size" to if (car.engineSize.isNotBlank()) "${car.engineSize} cc" else "-",
                                 "Fuel" to car.fuelType,
                                 "Fuel Tank" to if (car.fuelTankCapacity > 0) "${car.fuelTankCapacity} L" else "-",
@@ -394,13 +395,14 @@ fun AddMileageDialog(
 
 @Composable
 fun AddInspectionDialog(
+    existingInspection: VehicleInspection? = null,
     onDismiss: () -> Unit,
     onConfirm: (VehicleInspection) -> Unit
 ) {
-    var km by remember { mutableStateOf("") }
-    var selectedDate by remember { mutableStateOf(Date()) }
-    var durationValue by remember { mutableStateOf("1") }
-    var durationUnit by remember { mutableStateOf(InspectionDurationUnit.YEARS) }
+    var km by remember { mutableStateOf(existingInspection?.mileage?.toInt()?.toString() ?: "") }
+    var selectedDate by remember { mutableStateOf(existingInspection?.date ?: Date()) }
+    var durationValue by remember { mutableStateOf(existingInspection?.durationValue?.toString() ?: "1") }
+    var durationUnit by remember { mutableStateOf(existingInspection?.durationUnit ?: InspectionDurationUnit.YEARS) }
     var unitExpanded by remember { mutableStateOf(false) }
 
     val context = LocalContext.current

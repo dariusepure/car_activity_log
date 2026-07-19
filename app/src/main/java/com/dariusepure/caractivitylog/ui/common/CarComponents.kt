@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.dariusepure.caractivitylog.domain.MileageLog
+import com.dariusepure.caractivitylog.domain.VehicleInspection
 
 @Composable
 fun MileageItem(
@@ -66,6 +67,51 @@ fun MileageItem(
 }
 
 @Composable
+fun InspectionItem(
+    inspection: VehicleInspection,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
+    val isExpired = CarFormatters.isInspectionExpired(inspection)
+    
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = CarFormatters.getInspectionExpiryText(inspection),
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (isExpired) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "Inspection date: ${CarFormatters.formatDate(inspection.date)} \u00B7 ${inspection.mileage.toInt()} km",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        IconButton(onClick = onEditClick) {
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = "Edit inspection",
+                tint = Color(0xFF2196F3)
+            )
+        }
+        
+        IconButton(onClick = onDeleteClick) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Delete inspection",
+                tint = Color.Red
+            )
+        }
+    }
+}
+
+@Composable
 fun SpecificationCard(specifications: List<Pair<String, String>>) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -88,8 +134,9 @@ fun SpecificationCard(specifications: List<Pair<String, String>>) {
                     Text(
                         text = value.ifBlank { "-" },
                         style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f),
-                        color = MaterialTheme.colorScheme.onSurface
+                        modifier = Modifier.weight(1.5f),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.End
                     )
                 }
                 if (index < specifications.size - 1) {

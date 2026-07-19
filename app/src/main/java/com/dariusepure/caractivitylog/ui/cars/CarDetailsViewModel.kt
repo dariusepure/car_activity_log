@@ -71,6 +71,26 @@ class CarDetailsViewModel @Inject constructor(
         }
     }
 
+    fun updateInspection(carId: String, inspection: VehicleInspection) {
+        viewModelScope.launch {
+            try {
+                carRepository.updateInspection(carId, inspection)
+            } catch (e: Exception) {
+                // handle error
+            }
+        }
+    }
+
+    fun deleteInspection(carId: String, inspectionId: String) {
+        viewModelScope.launch {
+            try {
+                carRepository.deleteInspection(carId, inspectionId)
+            } catch (e: Exception) {
+                // handle error
+            }
+        }
+    }
+
     fun addMileage(carId: String, km: Double, date: Date) {
         viewModelScope.launch {
             try {

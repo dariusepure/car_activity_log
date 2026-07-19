@@ -49,10 +49,13 @@ object CarFormatters {
     }
 
     fun formatDimensions(car: Car): String {
-        return if (car.length > 0 || car.width > 0 || car.height > 0) {
-            "${car.length} x ${car.width} x ${car.height} mm"
-        } else {
-            "-"
+        val dims = mutableListOf<String>()
+        if (car.length > 0 || car.width > 0 || car.height > 0) {
+            dims.add("${car.length} x ${car.width} x ${car.height} mm")
         }
+        if (car.wheelbase > 0) dims.add("Wheelbase: ${car.wheelbase} mm")
+        if (car.trackWidth > 0) dims.add("Track: ${car.trackWidth} mm")
+        
+        return if (dims.isEmpty()) "-" else dims.joinToString("\n")
     }
 }

@@ -37,6 +37,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dariusepure.caractivitylog.ui.common.CarFormatters
 import com.dariusepure.caractivitylog.ui.common.LoadingState
 import com.dariusepure.caractivitylog.ui.common.ErrorState
+import com.dariusepure.caractivitylog.ui.common.InspectionItem
+import com.dariusepure.caractivitylog.domain.VehicleInspection
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -51,17 +53,27 @@ fun InspectionHistoryScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
+    var editingInspection by remember { mutableStateOf<VehicleInspection?>(null) }
 
     LaunchedEffect(carId) {
         viewModel.loadCarData(carId)
     }
 
-    if (showAddDialog) {
+    if (showAddDialog || editingInspection != null) {
         AddInspectionDialog(
-            onDismiss = { showAddDialog = false },
-            onConfirm = { inspection ->
-                viewModel.addInspection(carId, inspection)
+            existingInspection = editingInspection,
+            onDismiss = { 
                 showAddDialog = false
+                editingInspection = null
+            },
+            onConfirm = { inspection ->
+                if (editingInspection != null) {
+                    viewModel.updateInspection(carId, inspection.copy(id = editingInspection!!.id))
+                } else {
+                    viewModel.addInspection(carId, inspection)
+                }
+                showAddDialog = false
+                editingInspection = null
             }
         )
     }
@@ -120,40 +132,15 @@ fun InspectionHistoryScreen(
                     } else {
                         items(s.inspections) { inspection ->
                             InspectionItem(
-                                inspection = inspection
+                                inspection = inspection,
+                                onEditClick = { editingInspection = inspection },
+                                onDeleteClick = { viewModel.deleteInspection(carId, inspection.id) }
                             )
                             HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
                         }
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun InspectionItem(
-    inspection: com.dariusepure.caractivitylog.domain.VehicleInspection
-) {
-    val isExpired = CarFormatters.isInspectionExpired(inspection)
-    
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = CarFormatters.getInspectionExpiryText(inspection),
-                style = MaterialTheme.typography.bodyLarge,
-                color = if (isExpired) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "Inspection date: ${CarFormatters.formatDate(inspection.date)} \u00B7 ${inspection.mileage.toInt()} km",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }
