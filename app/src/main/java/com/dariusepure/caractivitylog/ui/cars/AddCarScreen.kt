@@ -74,6 +74,12 @@ fun AddCarScreen(
     var fuelTypeExpanded by remember { mutableStateOf(false) }
     val fuelTypes = listOf("Petrol", "Diesel", "Electric", "Hybrid", "LPG")
 
+    var colorExpanded by remember { mutableStateOf(false) }
+    val carColors = listOf(
+        "White", "Black", "Silver", "Grey", "Blue", "Red", "Brown", 
+        "Green", "Orange", "Beige", "Yellow", "Gold", "Purple", "Pink"
+    ).sorted()
+
     var powerUnitExpanded by remember { mutableStateOf(false) }
     val powerUnits = listOf("hp", "kw")
 
@@ -204,10 +210,7 @@ fun AddCarScreen(
                     label = { Text("License Plate") },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
-                    enabled = state !is AddCarState.Pending,
-                    placeholder = { 
-                        if (selectedCountry.code == "RO") Text("B 123 ABC") 
-                    }
+                    enabled = state !is AddCarState.Pending
                 )
             }
 
@@ -216,7 +219,7 @@ fun AddCarScreen(
             OutlinedTextField(
                 value = make,
                 onValueChange = { make = it },
-                label = { Text("Make (e.g. BMW)") },
+                label = { Text("Make") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = state !is AddCarState.Pending
@@ -227,7 +230,7 @@ fun AddCarScreen(
             OutlinedTextField(
                 value = model,
                 onValueChange = { model = it },
-                label = { Text("Model (e.g. X5)") },
+                label = { Text("Model") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = state !is AddCarState.Pending
@@ -253,7 +256,7 @@ fun AddCarScreen(
                     val filtered = input.uppercase().filter { it.isLetterOrDigit() && it !in listOf('I', 'O', 'Q') }
                     if (filtered.length <= 17) vin = filtered
                 },
-                label = { Text("VIN (Optional - 17 characters)") },
+                label = { Text("VIN") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = state !is AddCarState.Pending,
@@ -265,7 +268,7 @@ fun AddCarScreen(
                                 Text("Remaining: ${17 - vin.length} characters", color = MaterialTheme.colorScheme.secondary)
                             }
                         }
-                        Text("Letters I, O, Q are not allowed in VINs", style = MaterialTheme.typography.bodySmall)
+                        Text("Letters I, O, Q are not allowed", style = MaterialTheme.typography.bodySmall)
                     }
                 },
                 isError = vin.isNotEmpty() && vin.length != 17
@@ -334,7 +337,7 @@ fun AddCarScreen(
             OutlinedTextField(
                 value = engineCode,
                 onValueChange = { engineCode = it.uppercase() },
-                label = { Text("Engine Code (e.g. B47)") },
+                label = { Text("Engine Code") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = state !is AddCarState.Pending
@@ -345,7 +348,7 @@ fun AddCarScreen(
             OutlinedTextField(
                 value = engineSize,
                 onValueChange = { engineSize = it },
-                label = { Text("Engine Size (e.g. 2.0L)") },
+                label = { Text("Engine Size") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = state !is AddCarState.Pending
@@ -391,14 +394,41 @@ fun AddCarScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            OutlinedTextField(
-                value = color,
-                onValueChange = { color = it },
-                label = { Text("Color") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = state !is AddCarState.Pending
-            )
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = color,
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text("Color") },
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        Icon(
+                            Icons.Default.ArrowDropDown,
+                            "dropdown",
+                            Modifier.clickable { colorExpanded = true })
+                    }
+                )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable { colorExpanded = true }
+                )
+                DropdownMenu(
+                    expanded = colorExpanded,
+                    onDismissRequest = { colorExpanded = false },
+                    modifier = Modifier.sizeIn(maxHeight = 300.dp)
+                ) {
+                    carColors.forEach { colorOption ->
+                        DropdownMenuItem(
+                            text = { Text(colorOption) },
+                            onClick = {
+                                color = colorOption
+                                colorExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             Spacer(Modifier.height(24.dp))
 
