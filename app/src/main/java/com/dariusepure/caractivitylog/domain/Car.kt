@@ -25,6 +25,7 @@ data class Car(
     val trackWidth: Int = 0,
     val emissionStandard: String = "",
     val fuelTankCapacity: Double = 0.0,
+    val batteryCapacity: Double = 0.0,
     val drivetrain: String = "",
     val gearboxType: String = "",
     val vehicleType: String = "",

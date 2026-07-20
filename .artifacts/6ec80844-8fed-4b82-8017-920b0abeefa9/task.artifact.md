@@ -1,6 +1,6 @@
-- [x] `[x]` Update `Car.kt` (topSpeed to Double)
-- [x] `[x]` Update `FirestoreCar.kt` (topSpeed to Double)
-- [x] `[x]` Update `AddCarViewModel.kt` (fix conversion drift)
-- [x] `[x]` Update `AddCarScreen.kt` (round for display)
-- [x] `[x]` Update `TechnicalSheetScreen.kt` (round for display)
-- [x] `[x]` Verify rounding and conversion
+- [ ] Add `batteryCapacity` to `Car` domain model
+- [ ] Add `batteryCapacity` to `FirestoreCar` data model and update mappings
+- [ ] Update `AddCarViewModel` to handle `batteryCapacity`
+- [ ] Update `AddCarScreen` with dynamic UI and state for `batteryCapacity`
+- [ ] Update `TechnicalSheetScreen` to display `batteryCapacity`
+- [ ] Verify changes and check for syntax errors

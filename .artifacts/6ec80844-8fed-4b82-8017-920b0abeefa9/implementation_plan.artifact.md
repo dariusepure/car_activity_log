@@ -1,27 +1,53 @@
-# Corecție Definitivă: Stocare Canonică și Conversie Reversibilă
+# Implement Dynamic Battery/Fuel Fields based on Fuel Type
 
-Pentru a elimina definitiv driftul (170 -> 106 -> 171) și a satisface cerința "revii la valoarea inițială", vom adopta o strategie de **Stocare Canonică în Unități Metrice** (KM, KM/H) în baza de date, realizând conversia doar pentru afișare și intrare.
+The user wants to adjust the car details input and display logic. Depending on the car's fuel type, the fields for capacity should change:
+- **Electric**: Hide `fuelTankCapacity`, show `batteryCapacity`.
+- **Hybrid**: Show both `fuelTankCapacity` and `batteryCapacity`.
+- **Other (Petrol, Diesel, LPG)**: Show `fuelTankCapacity`, hide `batteryCapacity`.
 
-## Schimbări propuse
+## Proposed Changes
 
-### [Componenta UI]
-#### [MODIFY] [AddCarViewModel.kt](file:///home/darius/StudioProjects/car_activity_log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/AddCarViewModel.kt)
-- **ELIMINARE**: Vom șterge logica de conversie "batch" a kilometrajului (`logs.forEach { ... }`) atunci când se schimbă țara. Datele din Firestore vor rămâne mereu în KM.
-- **Salvare**: Funcția `onAddOrUpdateCar` va primi valorile așa cum sunt în UI și le va converti în Metric (KM/H, L, kg, mm) înainte de salvare, bazându-se pe unitatea țării selectate.
+### Domain & Data Layer
 
-#### [MODIFY] [AddCarScreen.kt](file:///home/darius/StudioProjects/car_activity_log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/AddCarScreen.kt)
-- **Încărcare**: Când se încarcă o mașină, valorile din DB (Metric) vor fi convertite în unitatea locală pentru afișare în `OutlinedTextField` (ex: KM/H -> MPH dacă mașina e din UK).
-- **Interacțiune**: Când utilizatorul schimbă țara în dropdown, valorile din câmpurile de text se vor converti vizual pentru a reflecta noua unitate, permițând utilizatorului să vadă echivalentul instant.
+#### [MODIFY] [Car.kt](file:///D:/Car%20Activity%20Log/app/src/main/java/com/dariusepure/caractivitylog/domain/Car.kt)
+- Add `val batteryCapacity: Double = 0.0` to the `Car` data class.
 
-#### [MODIFY] [TechnicalSheetScreen.kt](file:///home/darius/StudioProjects/car_activity_log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/TechnicalSheetScreen.kt)
-- Afișarea va face conversia Metric -> Local bazat pe țara mașinii, folosind `roundToInt()` pentru prezentare.
+#### [MODIFY] [FirestoreCar.kt](file:///D:/Car%20Activity%20Log/app/src/main/java/com/dariusepure/caractivitylog/data/cars/FirestoreCar.kt)
+- Add `val batteryCapacity: Double = 0.0` to `FirestoreCar`.
+- Update `toFirebase()` and `fromFirebase()` to include the new field.
 
-#### [MODIFY] [MileageHistoryScreen.kt](file:///home/darius/StudioProjects/car_activity_log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/MileageHistoryScreen.kt)
-- Istoricul va afișa log-urile (stocate ca KM) convertite în Mile dacă țara o cere.
+### UI Layer
 
-#### [MODIFY] [CarFormatters.kt](file:///home/darius/StudioProjects/car_activity_log/app/src/main/java/com/dariusepure/caractivitylog/ui/common/CarFormatters.kt)
-- Adăugarea de funcții utilitare pentru conversia metric/imperial cu precizie `Double` și rotunjire `.5 up` pentru UI.
+#### [MODIFY] [AddCarViewModel.kt](file:///D:/Car%20Activity%20Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/AddCarViewModel.kt)
+- Update `onAddOrUpdateCar` parameter list to include `batteryCapacity: String`.
+- Update the `Car` object creation inside `onAddOrUpdateCar` to set `batteryCapacity`.
 
-## Plan de verificare
-- [ ] **Test Reversibilitate**: Salvare 170 km/h (RO) -> Schimbare în UK (Display 106) -> Salvare -> Schimbare înapoi în RO -> Verificare Display 170.
-- [ ] **Test Kilometraj**: Verificare dacă schimbarea țării nu mai modifică valorile brute în Firestore, ci doar cum sunt ele văzute în aplicație.
+#### [MODIFY] [AddCarScreen.kt](file:///D:/Car%20Activity%20Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/AddCarScreen.kt)
+- Add a new state variable `var batteryCapacity by remember { mutableStateOf("") }`.
+- Update `LaunchedEffect` to populate `batteryCapacity` when editing.
+- In the UI, conditionally show `fuelTankCapacity` field if `fuelType` is NOT "Electric".
+- In the UI, conditionally show `batteryCapacity` field if `fuelType` is "Electric" or "Hybrid".
+- Update calls to `viewModel.onAddOrUpdateCar` to include `batteryCapacity`.
+
+#### [MODIFY] [TechnicalSheetScreen.kt](file:///D:/Car%20Activity%20Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/TechnicalSheetScreen.kt)
+- Update the "Engine & Transmission" section to display `batteryCapacity` if it's greater than 0.
+- Ensure `fuelTankCapacity` is only shown if it's relevant (already handled by `if (car.fuelTankCapacity > 0)`, but could be more explicit based on `fuelType`).
+
+## Verification Plan
+
+### Automated Tests
+- Build the project to ensure no compilation errors.
+- (Optional) Run existing instrumented tests if any.
+
+### Manual Verification
+1. Open the app and go to "Add Car".
+2. Select "Electric" as fuel type:
+   - Verify `Fuel Tank Capacity` disappears.
+   - Verify `Battery Capacity` appears.
+3. Select "Hybrid" as fuel type:
+   - Verify both `Fuel Tank Capacity` and `Battery Capacity` are visible.
+4. Select "Petrol" as fuel type:
+   - Verify `Battery Capacity` disappears.
+   - Verify `Fuel Tank Capacity` is visible.
+5. Save a car with each type and verify the data is correctly displayed in the "Technical Sheet".
+6. Edit a saved car and verify the values are correctly pre-filled.
