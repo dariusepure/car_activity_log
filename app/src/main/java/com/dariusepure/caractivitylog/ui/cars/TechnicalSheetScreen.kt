@@ -112,6 +112,7 @@ fun TechnicalSheetScreen(
                                 "Power" to powerText,
                                 "Torque" to "${car.torque} Nm",
                                 "Top Speed" to topSpeedText,
+                                "Aspiration" to car.aspiration.ifBlank { "-" },
                                 "Cylinders" to if (car.numberOfCylinders > 0) car.numberOfCylinders.toString() else "-",
                                 "Valves" to valvesText,
                                 "Engine Code" to car.engineCode,
@@ -120,8 +121,11 @@ fun TechnicalSheetScreen(
                                 "Engine Size" to if (car.engineSize.isNotBlank()) "${car.engineSize} cc" else "-",
                                 "Fuel" to car.fuelType,
                                 "Fuel Tank" to if (car.fuelTankCapacity > 0) "${car.fuelTankCapacity} L" else "-",
+                                "Battery" to if (car.batteryCapacity > 0) "${car.batteryCapacity} kWh" else "-",
                                 "Gearbox" to car.gearboxType,
-                                "Drivetrain" to car.drivetrain
+                                "Drivetrain" to car.drivetrain,
+                                "Front Brakes" to car.frontBrakes.ifBlank { "-" },
+                                "Rear Brakes" to car.rearBrakes.ifBlank { "-" }
                             )
                         )
                     }

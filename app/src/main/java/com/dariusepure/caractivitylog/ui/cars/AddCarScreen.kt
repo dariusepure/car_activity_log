@@ -81,6 +81,7 @@ fun AddCarScreen(
     var engineLayout by remember { mutableStateOf("") }
     var emissionStandard by remember { mutableStateOf("") }
     var topSpeed by remember { mutableStateOf("") }
+    var aspiration by remember { mutableStateOf("") }
     var numberOfCylinders by remember { mutableStateOf("") }
     var valvesPerCylinder by remember { mutableStateOf("") }
 
@@ -97,8 +98,11 @@ fun AddCarScreen(
     var tireAspectRatio by remember { mutableStateOf("") }
     var tireDiameter by remember { mutableStateOf("") }
     var fuelTankCapacity by remember { mutableStateOf("") }
+    var batteryCapacity by remember { mutableStateOf("") }
     var drivetrain by remember { mutableStateOf("") }
     var gearboxType by remember { mutableStateOf("") }
+    var frontBrakes by remember { mutableStateOf("") }
+    var rearBrakes by remember { mutableStateOf("") }
     var vehicleType by remember { mutableStateOf("") }
     var manufacturingCountry by remember { mutableStateOf("") }
 
@@ -113,13 +117,18 @@ fun AddCarScreen(
     var fuelTypeExpanded by remember { mutableStateOf(false) }
     var engineLayoutExpanded by remember { mutableStateOf(false) }
     var emissionStandardExpanded by remember { mutableStateOf(false) }
+    var aspirationExpanded by remember { mutableStateOf(false) }
     var drivetrainExpanded by remember { mutableStateOf(false) }
     var gearboxTypeExpanded by remember { mutableStateOf(false) }
+    var frontBrakesExpanded by remember { mutableStateOf(false) }
+    var rearBrakesExpanded by remember { mutableStateOf(false) }
     var vehicleTypeExpanded by remember { mutableStateOf(false) }
     val fuelTypes = listOf("Petrol", "Diesel", "Electric", "Hybrid", "LPG")
     val engineLayouts = listOf("Transverse", "Longitudinal")
+    val aspirationOptions = listOf("Naturally Aspirated", "Turbocharged", "Supercharged", "Twin-Turbo", "Quad-Turbo", "Electric")
     val emissionStandards = listOf("Non-Euro", "Euro 1", "Euro 2", "Euro 3", "Euro 4", "Euro 5", "Euro 6")
     val gearboxTypes = listOf("Manual", "Automatic")
+    val brakeOptions = listOf("Ventilated Discs", "Solid Discs", "Drums", "Ceramic Discs")
     val drivetrainOptions = listOf("FWD", "RWD", "AWD", "4WD")
     val vehicleTypes = listOf("Saloon", "Estate", "Hatchback", "MPV", "SUV", "Coupe", "Convertible", "Van", "Pickup")
 
@@ -158,8 +167,12 @@ fun AddCarScreen(
                 wheelbase = wheelbase,
                 trackWidth = trackWidth,
                 fuelTankCapacity = fuelTankCapacity,
+                batteryCapacity = batteryCapacity,
                 drivetrain = drivetrain,
                 gearboxType = gearboxType,
+                aspiration = aspiration,
+                frontBrakes = frontBrakes,
+                rearBrakes = rearBrakes,
                 vehicleType = vehicleType,
                 manufacturingCountry = manufacturingCountry,
                 topSpeed = topSpeed,
@@ -208,6 +221,7 @@ fun AddCarScreen(
                 engineCode = car.engineCode
                 engineLayout = car.engineLayout
                 emissionStandard = car.emissionStandard
+                aspiration = car.aspiration
                 
                 val displayTopSpeed = CarFormatters.fromCanonicalSpeed(car.topSpeed, selectedCountry.usesMiles)
                 topSpeed = displayTopSpeed.takeIf { it != 0.0 }?.roundToInt()?.toString() ?: ""
@@ -229,8 +243,11 @@ fun AddCarScreen(
                 tireDiameter = car.tireDiameter.takeIf { it != 0 }?.toString() ?: ""
                 
                 fuelTankCapacity = car.fuelTankCapacity.takeIf { it != 0.0 }?.toString() ?: ""
+                batteryCapacity = car.batteryCapacity.takeIf { it != 0.0 }?.toString() ?: ""
                 drivetrain = car.drivetrain
                 gearboxType = car.gearboxType
+                frontBrakes = car.frontBrakes
+                rearBrakes = car.rearBrakes
                 vehicleType = car.vehicleType
                 manufacturingCountry = car.manufacturingCountry
             }
@@ -730,6 +747,44 @@ fun AddCarScreen(
 
                 Spacer(Modifier.height(8.dp))
 
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = aspiration,
+                        onValueChange = { },
+                        readOnly = true,
+                        label = { Text("Engine Aspiration") },
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                "dropdown",
+                                Modifier.clickable { aspirationExpanded = true })
+                        }
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { aspirationExpanded = true }
+                    )
+                    DropdownMenu(
+                        expanded = aspirationExpanded,
+                        onDismissRequest = { aspirationExpanded = false },
+                        modifier = Modifier.fillMaxWidth(0.9f)
+                    ) {
+                        aspirationOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    aspiration = option
+                                    aspirationExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
                 OutlinedTextField(
                     value = engineSize,
                     onValueChange = { engineSize = it },
@@ -851,15 +906,30 @@ fun AddCarScreen(
 
                 Spacer(Modifier.height(8.dp))
 
-                OutlinedTextField(
-                    value = fuelTankCapacity,
-                    onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) fuelTankCapacity = it },
-                    label = { Text("Fuel Tank Capacity (L)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    enabled = state !is AddCarState.Pending
-                )
+                if (fuelType == "Hybrid" || (fuelType != "Electric" && fuelType.isNotBlank())) {
+                    OutlinedTextField(
+                        value = fuelTankCapacity,
+                        onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) fuelTankCapacity = it },
+                        label = { Text("Fuel Tank Capacity (L)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        enabled = state !is AddCarState.Pending
+                    )
+                }
+
+                if (fuelType == "Hybrid" || fuelType == "Electric") {
+                    if (fuelType == "Hybrid") Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = batteryCapacity,
+                        onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) batteryCapacity = it },
+                        label = { Text("Battery Capacity (kWh)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        enabled = state !is AddCarState.Pending
+                    )
+                }
             }
 
             Spacer(Modifier.height(16.dp))
@@ -1016,6 +1086,66 @@ fun AddCarScreen(
 
                 Spacer(Modifier.height(8.dp))
 
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        OutlinedTextField(
+                            value = frontBrakes,
+                            onValueChange = { },
+                            readOnly = true,
+                            label = { Text("Front Brakes") },
+                            modifier = Modifier.fillMaxWidth(),
+                            trailingIcon = {
+                                Icon(Icons.Default.ArrowDropDown, null, Modifier.clickable { frontBrakesExpanded = true })
+                            }
+                        )
+                        Box(modifier = Modifier.matchParentSize().clickable { frontBrakesExpanded = true })
+                        DropdownMenu(
+                            expanded = frontBrakesExpanded,
+                            onDismissRequest = { frontBrakesExpanded = false }
+                        ) {
+                            brakeOptions.forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(option) },
+                                    onClick = {
+                                        frontBrakes = option
+                                        frontBrakesExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Box(modifier = Modifier.weight(1f)) {
+                        OutlinedTextField(
+                            value = rearBrakes,
+                            onValueChange = { },
+                            readOnly = true,
+                            label = { Text("Rear Brakes") },
+                            modifier = Modifier.fillMaxWidth(),
+                            trailingIcon = {
+                                Icon(Icons.Default.ArrowDropDown, null, Modifier.clickable { rearBrakesExpanded = true })
+                            }
+                        )
+                        Box(modifier = Modifier.matchParentSize().clickable { rearBrakesExpanded = true })
+                        DropdownMenu(
+                            expanded = rearBrakesExpanded,
+                            onDismissRequest = { rearBrakesExpanded = false }
+                        ) {
+                            brakeOptions.forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(option) },
+                                    onClick = {
+                                        rearBrakes = option
+                                        rearBrakesExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = drivetrain,
@@ -1081,6 +1211,7 @@ fun AddCarScreen(
                         wheelbase = wheelbase,
                         trackWidth = trackWidth,
                         fuelTankCapacity = fuelTankCapacity,
+                        batteryCapacity = batteryCapacity,
                         drivetrain = drivetrain,
                         gearboxType = gearboxType,
                         vehicleType = vehicleType,
@@ -1094,7 +1225,10 @@ fun AddCarScreen(
                         bootSpace = bootSpace,
                         tireWidth = tireWidth,
                         tireAspectRatio = tireAspectRatio,
-                        tireDiameter = tireDiameter
+                        tireDiameter = tireDiameter,
+                        aspiration = aspiration,
+                        frontBrakes = frontBrakes,
+                        rearBrakes = rearBrakes
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
