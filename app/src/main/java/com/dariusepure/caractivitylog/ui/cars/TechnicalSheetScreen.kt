@@ -120,6 +120,7 @@ fun TechnicalSheetScreen(
                                 "Engine Size" to if (car.engineSize.isNotBlank()) "${car.engineSize} cc" else "-",
                                 "Fuel" to car.fuelType,
                                 "Fuel Tank" to if (car.fuelTankCapacity > 0) "${car.fuelTankCapacity} L" else "-",
+                                "Battery" to if (car.batteryCapacity > 0) "${car.batteryCapacity} kWh" else "-",
                                 "Gearbox" to car.gearboxType,
                                 "Drivetrain" to car.drivetrain
                             )

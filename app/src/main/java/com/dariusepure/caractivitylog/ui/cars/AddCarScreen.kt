@@ -97,6 +97,7 @@ fun AddCarScreen(
     var tireAspectRatio by remember { mutableStateOf("") }
     var tireDiameter by remember { mutableStateOf("") }
     var fuelTankCapacity by remember { mutableStateOf("") }
+    var batteryCapacity by remember { mutableStateOf("") }
     var drivetrain by remember { mutableStateOf("") }
     var gearboxType by remember { mutableStateOf("") }
     var vehicleType by remember { mutableStateOf("") }
@@ -158,6 +159,7 @@ fun AddCarScreen(
                 wheelbase = wheelbase,
                 trackWidth = trackWidth,
                 fuelTankCapacity = fuelTankCapacity,
+                batteryCapacity = batteryCapacity,
                 drivetrain = drivetrain,
                 gearboxType = gearboxType,
                 vehicleType = vehicleType,
@@ -229,6 +231,7 @@ fun AddCarScreen(
                 tireDiameter = car.tireDiameter.takeIf { it != 0 }?.toString() ?: ""
                 
                 fuelTankCapacity = car.fuelTankCapacity.takeIf { it != 0.0 }?.toString() ?: ""
+                batteryCapacity = car.batteryCapacity.takeIf { it != 0.0 }?.toString() ?: ""
                 drivetrain = car.drivetrain
                 gearboxType = car.gearboxType
                 vehicleType = car.vehicleType
@@ -851,15 +854,30 @@ fun AddCarScreen(
 
                 Spacer(Modifier.height(8.dp))
 
-                OutlinedTextField(
-                    value = fuelTankCapacity,
-                    onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) fuelTankCapacity = it },
-                    label = { Text("Fuel Tank Capacity (L)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    enabled = state !is AddCarState.Pending
-                )
+                if (fuelType == "Hybrid" || (fuelType != "Electric" && fuelType.isNotBlank())) {
+                    OutlinedTextField(
+                        value = fuelTankCapacity,
+                        onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) fuelTankCapacity = it },
+                        label = { Text("Fuel Tank Capacity (L)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        enabled = state !is AddCarState.Pending
+                    )
+                }
+
+                if (fuelType == "Hybrid" || fuelType == "Electric") {
+                    if (fuelType == "Hybrid") Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = batteryCapacity,
+                        onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) batteryCapacity = it },
+                        label = { Text("Battery Capacity (kWh)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        enabled = state !is AddCarState.Pending
+                    )
+                }
             }
 
             Spacer(Modifier.height(16.dp))
@@ -1081,6 +1099,7 @@ fun AddCarScreen(
                         wheelbase = wheelbase,
                         trackWidth = trackWidth,
                         fuelTankCapacity = fuelTankCapacity,
+                        batteryCapacity = batteryCapacity,
                         drivetrain = drivetrain,
                         gearboxType = gearboxType,
                         vehicleType = vehicleType,

@@ -1,25 +1,26 @@
-# Rezumatul Modificărilor: Stocare Canonică și UI Simplificat
+# Rezumatul Modificărilor: Gestionare Baterie pentru Mașini Electrice și Hibride
 
-Am implementat stocarea canonică pentru a asigura precizia maximă a datelor și am simplificat interfața conform solicitării.
+Am implementat logica pentru a gestiona capacitatea bateriei și afișarea condiționată a câmpurilor în funcție de tipul de combustibil selectat.
 
 ## Modificări principale
 
-### 1. Eliminare Drift Conversie (Precizie Maximă)
-- **Stocare Canonică**: Toate valorile de viteză și distanță sunt acum stocate **exclusiv în unități metrice (KM/H, KM)** în baza de date Firestore.
-- **Conversie Vizuală**: Conversia în mile sau mph se face acum doar "la zbor" pentru afișarea pe ecran, fără a modifica valoarea originală. Acest lucru garantează că revenirea la o țară metrică va afișa valoarea inițială exactă, fără pierderi de rotunjire.
-- **Fără Batch Updates**: Am eliminat logica care recalcula tot istoricul de kilometri la schimbarea țării, prevenind degradarea datelor în timp.
+### 1. Model de Date (Domain & Data)
+- Adăugat câmpul `batteryCapacity` (stocat ca `Double` pentru precizie) în clasele `Car` și `FirestoreCar`.
+- Actualizat mappers-urile pentru a asigura sincronizarea corectă cu Firebase.
 
-### 2. UI Simplificat
-- **Buton "Save"**: Butoanele "Save Car" și "Update Car" au fost unite într-un singur buton numit simplu **"Save"**, oferind o experiență mai curată.
-- **Conversie În Timp Real**: În ecranul de adăugare, dacă schimbi țara mașinii, valoarea din câmpul "Top Speed" se convertește instantaneu pentru a reflecta noua unitate de măsură.
+### 2. UI Inteligent (Add Car Screen)
+- Am implementat afișarea condiționată în secțiunea "Engine & Performance":
+    - **Electric**: Câmpul "Fuel Tank" este ascuns; apare doar "Battery Capacity (kWh)".
+    - **Hybrid**: Apar ambele câmpuri ("Fuel Tank" și "Battery Capacity"), deoarece aceste mașini folosesc ambele resurse.
+    - **Altele (Petrol, Diesel etc.)**: Apare doar câmpul "Fuel Tank Capacity (L)".
 
-### 3. Corecții Afișare
-- Am actualizat ecranele **Technical Sheet**, **Mileage History** și **Inspection History** pentru a converti automat valorile din baza de date în unitatea locală a mașinii, folosind regula de rotunjire ".5 up".
+### 3. Afișare în Fișa Tehnică
+- În ecranul "Technical Sheet", capacitatea bateriei este afișată acum sub tipul de combustibil, dacă valoarea este mai mare decât 0.
 
 ## Verificare
-- [x] Test Reversibilitate: 170 km/h -> UK (106 mph) -> RO (170 km/h) - **SUCCESS**.
-- [x] Test Buton: Butonul afișează "Save" în ambele moduri (add/edit) - **SUCCESS**.
-- [x] Compilare și rulare fără erori.
+- [x] Proiectul compilează cu succes (`gradle assembleDebug`).
+- [x] Testare vizuală: Schimbarea Fuel Type în "Electric" actualizează instantaneu input-urile disponibile.
+- [x] Datele sunt persistate corect în Firestore și reîncărcate la editare.
 
-> [!TIP]
-> De acum, poți schimba țara mașinii oricât de des dorești fără teama de a pierde precizia kilometrajului sau a vitezei maxime.
+> [!NOTE]
+> Această schimbare face aplicația mult mai relevantă pentru posesorii de vehicule moderne (EV/PHEV), oferind exact câmpurile de care au nevoie.
