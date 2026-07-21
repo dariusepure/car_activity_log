@@ -1,0 +1,5 @@
+- [x] Reset Diagnosis Data Models ([DiagnosisState.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/DiagnosisState.kt))
+- [x] Clean up AI Logic ([GeminiRepository.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/data/ai/GeminiRepository.kt))
+- [x] Reset Diagnosis ViewModel ([DiagnosisViewModel.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/DiagnosisViewModel.kt))
+- [x] Rebuild Diagnosis Screen UI ([DiagnosisScreen.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/DiagnosisScreen.kt))
+- [x] Final verification of keyboard and AI responses

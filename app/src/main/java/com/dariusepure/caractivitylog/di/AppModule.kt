@@ -11,11 +11,24 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+    @Provides
+    @Singleton
+    fun provideHttpClient(): HttpClient = HttpClient(CIO) {
+        install(HttpTimeout) {
+            connectTimeoutMillis = 15000
+            socketTimeoutMillis = 15000
+            requestTimeoutMillis = 30000
+        }
+    }
+
     @Provides
     @Singleton
     fun provideFirebaseAuth(): FirebaseAuth = Firebase.auth

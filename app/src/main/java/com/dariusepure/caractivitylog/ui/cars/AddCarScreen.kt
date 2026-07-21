@@ -1,6 +1,21 @@
 package com.dariusepure.caractivitylog.ui.cars
 
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.clickable
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
+import android.os.Build
+import android.provider.MediaStore
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -62,18 +77,30 @@ fun AddCarScreen(
     viewModel: AddCarViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    val fuelTypes = listOf("Petrol", "Diesel", "Electric", "Hybrid", "LPG")
+    val engineLayouts = listOf("Transverse", "Longitudinal")
+    val aspirationOptions = listOf("Naturally Aspirated", "Turbocharged", "Supercharged", "Twin-Turbo", "Quad-Turbo", "Electric")
+    val emissionStandards = listOf("Non-Euro", "Euro 1", "Euro 2", "Euro 3", "Euro 4", "Euro 5", "Euro 6")
+    val gearboxTypes = listOf("Manual", "Automatic")
+    val brakeOptions = listOf("Ventilated Discs", "Solid Discs", "Drums", "Ceramic Discs")
+    val drivetrainOptions = listOf("FWD", "RWD", "AWD", "4WD")
+    val vehicleTypes = listOf("Saloon", "Estate", "Hatchback", "MPV", "SUV", "Coupe", "Convertible", "Van", "Pickup")
+    val carColors = listOf(
+        "White", "Black", "Silver", "Grey", "Blue", "Red", "Brown", 
+        "Green", "Orange", "Beige", "Yellow", "Gold", "Purple", "Pink", "Custom"
+    )
 
     var name by remember { mutableStateOf("") } // License Plate
     var selectedCountry by remember { mutableStateOf(europeanCountries.find { it.code == "RO" } ?: europeanCountries[0]) }
     var make by remember { mutableStateOf("") }
-    var customMake by remember { mutableStateOf("") }
     var model by remember { mutableStateOf("") }
     var vin by remember { mutableStateOf("") }
     var year by remember { mutableStateOf("") }
     var engineSize by remember { mutableStateOf("") }
-    var fuelType by remember { mutableStateOf("Petrol") }
+    var fuelType by remember { mutableStateOf("") }
     var color by remember { mutableStateOf("") }
-    var customColor by remember { mutableStateOf("") }
     var power by remember { mutableStateOf("") }
     var powerUnit by remember { mutableStateOf("hp") }
     var torque by remember { mutableStateOf("") }
@@ -101,10 +128,56 @@ fun AddCarScreen(
     var batteryCapacity by remember { mutableStateOf("") }
     var drivetrain by remember { mutableStateOf("") }
     var gearboxType by remember { mutableStateOf("") }
+    var gears by remember { mutableStateOf("") }
     var frontBrakes by remember { mutableStateOf("") }
     var rearBrakes by remember { mutableStateOf("") }
     var vehicleType by remember { mutableStateOf("") }
     var manufacturingCountry by remember { mutableStateOf("") }
+
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            val bitmap = if (Build.VERSION.SDK_INT < 28) {
+                MediaStore.Images.Media.getBitmap(context.contentResolver, it)
+            } else {
+                val source = ImageDecoder.createSource(context.contentResolver, it)
+                ImageDecoder.decodeBitmap(source)
+            }
+            viewModel.scanImage(bitmap)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.scannedDataEvent.collect { data ->
+            data.make?.let { make = it }
+            data.model?.let { model = it }
+            data.vin?.let { vin = it.uppercase() }
+            data.year?.let { year = it.toString() }
+            data.fuelType?.let { if (it in fuelTypes) fuelType = it }
+            data.engineSize?.let { engineSize = it.toString() }
+            data.power?.let { power = it.toString() }
+            data.powerUnit?.let { powerUnit = it }
+            data.torque?.let { torque = it.toString() }
+            data.color?.let { color = it }
+            data.registrationPlate?.let { name = it.uppercase() }
+            data.numberOfSeats?.let { numberOfSeats = it.toString() }
+            data.numberOfDoors?.let { numberOfDoors = it.toString() }
+            data.weight?.let { weight = it.toString() }
+            data.engineCode?.let { engineCode = it }
+            data.emissionStandard?.let { 
+                if (it in emissionStandards) emissionStandard = it 
+                else if (it.contains("Euro", ignoreCase = true)) {
+                    val standard = emissionStandards.find { s -> it.contains(s.takeLast(1)) }
+                    if (standard != null) emissionStandard = standard
+                }
+            }
+            data.gearboxType?.let { if (it in gearboxTypes) gearboxType = it }
+            data.drivetrain?.let { if (it in drivetrainOptions) drivetrain = it }
+            data.fuelTankCapacity?.let { fuelTankCapacity = it.toString() }
+            data.topSpeed?.let { topSpeed = it.roundToInt().toString() }
+        }
+    }
 
     var identityExpanded by remember { mutableStateOf(true) }
     var registrationExpanded by remember { mutableStateOf(false) }
@@ -123,38 +196,23 @@ fun AddCarScreen(
     var frontBrakesExpanded by remember { mutableStateOf(false) }
     var rearBrakesExpanded by remember { mutableStateOf(false) }
     var vehicleTypeExpanded by remember { mutableStateOf(false) }
-    val fuelTypes = listOf("Petrol", "Diesel", "Electric", "Hybrid", "LPG")
-    val engineLayouts = listOf("Transverse", "Longitudinal")
-    val aspirationOptions = listOf("Naturally Aspirated", "Turbocharged", "Supercharged", "Twin-Turbo", "Quad-Turbo", "Electric")
-    val emissionStandards = listOf("Non-Euro", "Euro 1", "Euro 2", "Euro 3", "Euro 4", "Euro 5", "Euro 6")
-    val gearboxTypes = listOf("Manual", "Automatic")
-    val brakeOptions = listOf("Ventilated Discs", "Solid Discs", "Drums", "Ceramic Discs")
-    val drivetrainOptions = listOf("FWD", "RWD", "AWD", "4WD")
-    val vehicleTypes = listOf("Saloon", "Estate", "Hatchback", "MPV", "SUV", "Coupe", "Convertible", "Van", "Pickup")
 
     var colorExpanded by remember { mutableStateOf(false) }
-    val carColors = listOf(
-        "White", "Black", "Silver", "Grey", "Blue", "Red", "Brown", 
-        "Green", "Orange", "Beige", "Yellow", "Gold", "Purple", "Pink", "Custom"
-    )
-
     var powerUnitExpanded by remember { mutableStateOf(false) }
     val powerUnits = listOf("hp", "kw")
 
     val handleBack = {
-        val finalMake = viewModel.getEffectiveMake(make, customMake)
-        val finalColor = if (color == "Custom") customColor else color
-        if (carId != null && finalMake.isNotBlank() && model.isNotBlank() && (vin.isEmpty() || vin.length == 17)) {
+        if (carId != null && make.isNotBlank() && model.isNotBlank() && (vin.isEmpty() || vin.length == 17)) {
             viewModel.onAddOrUpdateCar(
                 name = name,
                 plateCountry = selectedCountry.code,
-                make = finalMake,
+                make = make,
                 model = model,
                 vin = vin,
                 year = year,
                 engineSize = engineSize,
                 fuelType = fuelType,
-                color = finalColor,
+                color = color,
                 power = power,
                 powerUnit = powerUnit,
                 torque = torque,
@@ -170,6 +228,7 @@ fun AddCarScreen(
                 batteryCapacity = batteryCapacity,
                 drivetrain = drivetrain,
                 gearboxType = gearboxType,
+                gears = gears,
                 aspiration = aspiration,
                 frontBrakes = frontBrakes,
                 rearBrakes = rearBrakes,
@@ -201,19 +260,13 @@ fun AddCarScreen(
                 name = car.name
                 selectedCountry = europeanCountries.find { it.code == car.plateCountry } ?: europeanCountries[0]
                 
-                val isStandardBrand = carBrands.contains(car.make) && car.make != "Other"
-                make = if (isStandardBrand) car.make else "Other"
-                customMake = if (isStandardBrand) "" else car.make
-                
+                make = car.make
                 model = car.model
                 vin = car.vin
                 year = car.year.takeIf { it != 0 }?.toString() ?: ""
                 engineSize = car.engineSize
                 fuelType = car.fuelType.ifBlank { "Petrol" }
-                
-                val isStandardColor = carColors.contains(car.color) && car.color != "Custom"
-                color = if (isStandardColor) car.color else if (car.color.isNotBlank()) "Custom" else ""
-                customColor = if (isStandardColor) "" else car.color
+                color = car.color
 
                 power = car.power.takeIf { it != 0 }?.toString() ?: ""
                 powerUnit = car.powerUnit.ifBlank { "hp" }
@@ -246,6 +299,7 @@ fun AddCarScreen(
                 batteryCapacity = car.batteryCapacity.takeIf { it != 0.0 }?.toString() ?: ""
                 drivetrain = car.drivetrain
                 gearboxType = car.gearboxType
+                gears = car.gears
                 frontBrakes = car.frontBrakes
                 rearBrakes = car.rearBrakes
                 vehicleType = car.vehicleType
@@ -304,11 +358,33 @@ fun AddCarScreen(
                 isExpanded = identityExpanded,
                 onToggle = { identityExpanded = !identityExpanded }
             ) {
+                if (carId == null) {
+                    Button(
+                        onClick = { imagePicker.launch("image/*") },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        enabled = state !is AddCarState.Pending && state !is AddCarState.Scanning,
+                        contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+                    ) {
+                        if (state is AddCarState.Scanning) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Scanning...")
+                        } else {
+                            Icon(Icons.Default.AutoAwesome, null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Scan Registration Certificate (AI)")
+                        }
+                    }
+                }
+
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = make,
-                        onValueChange = { },
-                        readOnly = true,
+                        onValueChange = { make = it },
                         label = { Text("Make *") },
                         modifier = Modifier.fillMaxWidth(),
                         trailingIcon = {
@@ -319,40 +395,23 @@ fun AddCarScreen(
                         },
                         isError = state !is AddCarState.Pending && make.isBlank()
                     )
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .clickable { makeExpanded = true }
-                    )
                     DropdownMenu(
                         expanded = makeExpanded,
                         onDismissRequest = { makeExpanded = false },
                         modifier = Modifier.fillMaxWidth(0.9f).sizeIn(maxHeight = 300.dp)
                     ) {
                         carBrands.forEach { brand ->
-                            DropdownMenuItem(
-                                text = { Text(brand) },
-                                onClick = {
-                                    make = brand
-                                    if (brand != "Other") customMake = ""
-                                    makeExpanded = false
-                                }
-                            )
+                            if (brand != "Other") {
+                                DropdownMenuItem(
+                                    text = { Text(brand) },
+                                    onClick = {
+                                        make = brand
+                                        makeExpanded = false
+                                    }
+                                )
+                            }
                         }
                     }
-                }
-
-                if (make == "Other") {
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = customMake,
-                        onValueChange = { customMake = it },
-                        label = { Text("Brand Name *") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        enabled = state !is AddCarState.Pending,
-                        isError = state !is AddCarState.Pending && customMake.isBlank()
-                    )
                 }
 
                 Spacer(Modifier.height(8.dp))
@@ -422,8 +481,7 @@ fun AddCarScreen(
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = color,
-                        onValueChange = { },
-                        readOnly = true,
+                        onValueChange = { color = it },
                         label = { Text("Color") },
                         modifier = Modifier.fillMaxWidth(),
                         trailingIcon = {
@@ -433,39 +491,23 @@ fun AddCarScreen(
                                 Modifier.clickable { colorExpanded = true })
                         }
                     )
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .clickable { colorExpanded = true }
-                    )
                     DropdownMenu(
                         expanded = colorExpanded,
                         onDismissRequest = { colorExpanded = false },
                         modifier = Modifier.sizeIn(maxHeight = 300.dp)
                     ) {
                         carColors.forEach { colorOption ->
-                            DropdownMenuItem(
-                                text = { Text(colorOption) },
-                                onClick = {
-                                    color = colorOption
-                                    if (colorOption != "Custom") customColor = ""
-                                    colorExpanded = false
-                                }
-                            )
+                            if (colorOption != "Custom") {
+                                DropdownMenuItem(
+                                    text = { Text(colorOption) },
+                                    onClick = {
+                                        color = colorOption
+                                        colorExpanded = false
+                                    }
+                                )
+                            }
                         }
                     }
-                }
-
-                if (color == "Custom") {
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = customColor,
-                        onValueChange = { customColor = it },
-                        label = { Text("Color Name") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        enabled = state !is AddCarState.Pending
-                    )
                 }
 
                 Spacer(Modifier.height(8.dp))
@@ -833,8 +875,7 @@ fun AddCarScreen(
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = fuelType,
-                        onValueChange = { },
-                        readOnly = true,
+                        onValueChange = { fuelType = it },
                         label = { Text("Fuel Type") },
                         modifier = Modifier.fillMaxWidth(),
                         trailingIcon = {
@@ -843,11 +884,6 @@ fun AddCarScreen(
                                 "dropdown",
                                 Modifier.clickable { fuelTypeExpanded = true })
                         }
-                    )
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .clickable { fuelTypeExpanded = true }
                     )
                     DropdownMenu(
                         expanded = fuelTypeExpanded,
@@ -868,40 +904,45 @@ fun AddCarScreen(
 
                 Spacer(Modifier.height(8.dp))
 
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    OutlinedTextField(
-                        value = gearboxType,
-                        onValueChange = { },
-                        readOnly = true,
-                        label = { Text("Gearbox Type") },
-                        modifier = Modifier.fillMaxWidth(),
-                        trailingIcon = {
-                            Icon(
-                                Icons.Default.ArrowDropDown,
-                                "dropdown",
-                                Modifier.clickable { gearboxTypeExpanded = true })
-                        }
-                    )
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .clickable { gearboxTypeExpanded = true }
-                    )
-                    DropdownMenu(
-                        expanded = gearboxTypeExpanded,
-                        onDismissRequest = { gearboxTypeExpanded = false },
-                        modifier = Modifier.fillMaxWidth(0.9f)
-                    ) {
-                        gearboxTypes.forEach { type ->
-                            DropdownMenuItem(
-                                text = { Text(type) },
-                                onClick = {
-                                    gearboxType = type
-                                    gearboxTypeExpanded = false
-                                }
-                            )
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Box(modifier = Modifier.weight(1.5f)) {
+                        OutlinedTextField(
+                            value = gearboxType,
+                            onValueChange = { gearboxType = it },
+                            label = { Text("Gearbox Type") },
+                            modifier = Modifier.fillMaxWidth(),
+                            trailingIcon = {
+                                Icon(
+                                    Icons.Default.ArrowDropDown,
+                                    "dropdown",
+                                    Modifier.clickable { gearboxTypeExpanded = true })
+                            }
+                        )
+                        DropdownMenu(
+                            expanded = gearboxTypeExpanded,
+                            onDismissRequest = { gearboxTypeExpanded = false },
+                            modifier = Modifier.fillMaxWidth(0.9f)
+                        ) {
+                            gearboxTypes.forEach { type ->
+                                DropdownMenuItem(
+                                    text = { Text(type) },
+                                    onClick = {
+                                        gearboxType = type
+                                        gearboxTypeExpanded = false
+                                    }
+                                )
+                            }
                         }
                     }
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedTextField(
+                        value = gears,
+                        onValueChange = { gears = it },
+                        label = { Text("Gears") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        enabled = state !is AddCarState.Pending
+                    )
                 }
 
                 Spacer(Modifier.height(8.dp))
@@ -1187,18 +1228,16 @@ fun AddCarScreen(
 
             Button(
                 onClick = {
-                    val finalMake = viewModel.getEffectiveMake(make, customMake)
-                    val finalColor = if (color == "Custom") customColor else color
                     viewModel.onAddOrUpdateCar(
                         name = name,
                         plateCountry = selectedCountry.code,
-                        make = finalMake,
+                        make = make,
                         model = model,
                         vin = vin,
                         year = year,
                         engineSize = engineSize,
                         fuelType = fuelType,
-                        color = finalColor,
+                        color = color,
                         power = power,
                         powerUnit = powerUnit,
                         torque = torque,
@@ -1214,6 +1253,7 @@ fun AddCarScreen(
                         batteryCapacity = batteryCapacity,
                         drivetrain = drivetrain,
                         gearboxType = gearboxType,
+                        gears = gears,
                         vehicleType = vehicleType,
                         manufacturingCountry = manufacturingCountry,
                         topSpeed = topSpeed,
@@ -1232,7 +1272,7 @@ fun AddCarScreen(
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = viewModel.getEffectiveMake(make, customMake).isNotBlank() && 
+                enabled = make.isNotBlank() && 
                          model.isNotBlank() && state !is AddCarState.Pending
             ) {
                 if (state is AddCarState.Pending) {

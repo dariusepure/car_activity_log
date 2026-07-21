@@ -9,6 +9,7 @@ val localProperties = Properties().apply {
     if (f.exists()) f.inputStream().use { load(it) }
 }
 val webClientId: String = localProperties.getProperty("WEB_CLIENT_ID", "")
+val geminiApiKey: String = localProperties.getProperty("gemini.api.key", "")
 
 plugins {
     alias(libs.plugins.android.application)
@@ -37,6 +38,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
         buildConfigField("String", "WEB_CLIENT_ID", "\"$webClientId\"")
+        resValue("string", "gemini_api_key", geminiApiKey)
     }
 
     buildTypes {
@@ -56,6 +58,7 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        resValues = true
     }
 }
 
@@ -97,6 +100,21 @@ dependencies {
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.config)
 
+    // Google AI (Gemini)
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+
+    // Ktor Dependencies (Forțează importul corect al modulelor)
+    val ktorVersion = "2.3.12"
+    implementation("io.ktor:ktor-client-core:$ktorVersion")
+    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+    implementation("io.ktor:ktor-client-android:$ktorVersion")
+    implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-client-logging:$ktorVersion")
+    implementation("io.ktor:ktor-client-auth:$ktorVersion")
+    implementation("io.ktor:ktor-client-encoding:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+
     // Image loading
     implementation(libs.coil.compose)
 
@@ -110,12 +128,13 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
 
-// Rezolvare conflict metadate compilator Kotlin cu Hilt / KSP și forțare versiune Kotlin consistentă
+// Rezolvare conflict metadate compilator Kotlin cu Hilt / KSP și forțare versiune Ktor
 configurations.all {
     resolutionStrategy {
         eachDependency {
-            if (requested.group == "org.jetbrains.kotlin") {
-                useVersion("2.4.10")
+            if (requested.group == "io.ktor") {
+                // Forțează utilizarea versiunii stabile compatibile cu Gemini
+                useVersion("2.3.12")
             }
         }
     }

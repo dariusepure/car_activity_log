@@ -5,19 +5,18 @@ import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import com.dariusepure.caractivitylog.domain.Car
 import com.dariusepure.caractivitylog.domain.MileageLog
+import com.dariusepure.caractivitylog.ui.cars.ChatMessage
 import javax.inject.Inject
 
 class CarRepository @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
-    private val firestore: FirebaseFirestore,
-    private val storage: FirebaseStorage
+    private val firestore: FirebaseFirestore
 ) {
     val cars: Flow<List<Car>> = callbackFlow {
         val uid = firebaseAuth.currentUser?.uid ?: run {
@@ -66,10 +65,31 @@ class CarRepository @Inject constructor(
                 .document(car.id)
         }
 
-        // We don't use withTimeout here anymore. 
-        // Firestore will write to local cache immediately (latency compensation).
-        // The await() will complete once the local write is successful.
         reference.set(firestoreCar).await()
+    }
+
+    fun getCarFlow(carId: String): Flow<Car?> = callbackFlow {
+        val uid = firebaseAuth.currentUser?.uid ?: run {
+            trySend(null)
+            close()
+            return@callbackFlow
+        }
+
+        val listener = firestore.collection("users")
+            .document(uid)
+            .collection("cars")
+            .document(carId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val car = snapshot?.toObject(FirestoreCar::class.java)?.fromFirebase()
+                trySend(car)
+            }
+
+        awaitClose { listener.remove() }
     }
 
     suspend fun getCar(carId: String): Car? {
@@ -158,22 +178,6 @@ class CarRepository @Inject constructor(
             .await()
     }
 
-    suspend fun uploadCarProfileImage(carId: String, imageData: ByteArray): String {
-        val uid = firebaseAuth.currentUser?.uid ?: throw Exception("User not logged in")
-        val imageRef = storage.reference.child("users/$uid/cars/$carId/profile.jpg")
-        
-        imageRef.putBytes(imageData).await()
-        val downloadUrl = imageRef.downloadUrl.await().toString()
-        
-        firestore.collection("users")
-            .document(uid)
-            .collection("cars")
-            .document(carId)
-            .update("profileImageUrl", downloadUrl)
-            .await()
-            
-        return downloadUrl
-    }
 
     fun getInspections(carId: String): Flow<List<VehicleInspection>> = callbackFlow {
         val uid = firebaseAuth.currentUser?.uid ?: run {
@@ -220,6 +224,7 @@ class CarRepository @Inject constructor(
         addMileageLog(carId, MileageLog(km = inspection.mileage, date = inspection.date))
     }
 
+
     suspend fun updateInspection(carId: String, inspection: VehicleInspection) {
         val uid = firebaseAuth.currentUser?.uid ?: return
         firestore.collection("users")
@@ -242,5 +247,59 @@ class CarRepository @Inject constructor(
             .document(inspectionId)
             .delete()
             .await()
+    }
+
+    fun getDiagnosisMessages(carId: String): Flow<List<ChatMessage>> = callbackFlow {
+        val uid = firebaseAuth.currentUser?.uid ?: run {
+            trySend(emptyList())
+            close()
+            return@callbackFlow
+        }
+
+        val listener = firestore.collection("users")
+            .document(uid)
+            .collection("cars")
+            .document(carId)
+            .collection("diagnosis")
+            .orderBy("timestamp", Query.Direction.ASCENDING)
+            .addSnapshotListener { snapshots, exception ->
+                if (exception != null) {
+                    close(exception)
+                    return@addSnapshotListener
+                }
+
+                val results = snapshots
+                    ?.toObjects(FirestoreChatMessage::class.java)
+                    ?.map { it.toChatMessage() } ?: emptyList()
+
+                trySend(results)
+            }
+
+        awaitClose { listener.remove() }
+    }
+
+    suspend fun addDiagnosisMessage(carId: String, message: ChatMessage) {
+        val uid = firebaseAuth.currentUser?.uid ?: return
+        firestore.collection("users")
+            .document(uid)
+            .collection("cars")
+            .document(carId)
+            .collection("diagnosis")
+            .add(FirestoreChatMessage.fromChatMessage(message))
+            .await()
+    }
+
+    suspend fun clearDiagnosisMessages(carId: String) {
+        val uid = firebaseAuth.currentUser?.uid ?: return
+        val collection = firestore.collection("users")
+            .document(uid)
+            .collection("cars")
+            .document(carId)
+            .collection("diagnosis")
+        
+        val snapshots = collection.get().await()
+        firestore.runBatch { batch ->
+            snapshots.documents.forEach { batch.delete(it.reference) }
+        }.await()
     }
 }

@@ -16,6 +16,7 @@ import com.dariusepure.caractivitylog.ui.cars.MileageHistoryScreen
 import com.dariusepure.caractivitylog.ui.cars.InspectionHistoryScreen
 import com.dariusepure.caractivitylog.ui.cars.TechnicalSheetScreen
 
+import com.dariusepure.caractivitylog.ui.cars.DiagnosisScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dariusepure.caractivitylog.ui.theme.ThemeViewModel
 
@@ -38,6 +39,9 @@ sealed class Screen(val route: String) {
     }
     data object EditCar : Screen("editcar/{carId}") {
         fun createRoute(carId: String) = "editcar/$carId"
+    }
+    data object Diagnosis : Screen("diagnosis/{carId}") {
+        fun createRoute(carId: String) = "diagnosis/$carId"
     }
 }
 
@@ -109,6 +113,9 @@ fun AppNavigation(
                 },
                 onTechnicalSheetClick = {
                     navController.navigate(Screen.TechnicalSheet.createRoute(carId))
+                },
+                onDiagnosisClick = {
+                    navController.navigate(Screen.Diagnosis.createRoute(carId))
                 }
             )
         }
@@ -153,6 +160,13 @@ fun AppNavigation(
                 onBack = {
                     navController.popBackStack()
                 }
+            )
+        }
+        composable(Screen.Diagnosis.route) { backStackEntry ->
+            val carId = backStackEntry.arguments?.getString("carId") ?: return@composable
+            DiagnosisScreen(
+                carId = carId,
+                onBack = { navController.popBackStack() }
             )
         }
     }

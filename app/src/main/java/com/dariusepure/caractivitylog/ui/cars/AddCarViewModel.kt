@@ -1,5 +1,8 @@
 package com.dariusepure.caractivitylog.ui.cars
 
+import com.dariusepure.caractivitylog.data.ai.GeminiRepository
+import com.dariusepure.caractivitylog.domain.ScannedCarData
+import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dariusepure.caractivitylog.data.cars.CarRepository
@@ -21,15 +24,18 @@ import javax.inject.Inject
 @HiltViewModel
 class AddCarViewModel @Inject constructor(
     private val carRepository: CarRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val geminiRepository: GeminiRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<AddCarState>(AddCarState.Idle)
     val state = _state.asStateFlow()
 
-    // 1. Am adăugat BUFFERED pentru ca UI-ul să poată prinde evenimentul fără blocaje
     private val _navigationEvent = Channel<Unit>(Channel.BUFFERED)
     val navigationEvent = _navigationEvent.receiveAsFlow()
+
+    private val _scannedDataEvent = Channel<ScannedCarData>(Channel.BUFFERED)
+    val scannedDataEvent = _scannedDataEvent.receiveAsFlow()
 
     private val _logoutEvent = Channel<Unit>(Channel.BUFFERED)
     val logoutEvent = _logoutEvent.receiveAsFlow()
@@ -52,6 +58,20 @@ class AddCarViewModel @Inject constructor(
     }
 
     suspend fun getCarData(carId: String): Car? = carRepository.getCar(carId)
+
+    fun scanImage(bitmap: Bitmap) {
+        viewModelScope.launch {
+            _state.value = AddCarState.Scanning
+            geminiRepository.scanRegistrationCertificate(bitmap)
+                .onSuccess { data ->
+                    _state.value = AddCarState.Idle
+                    _scannedDataEvent.trySend(data)
+                }
+                .onFailure { e ->
+                    _state.value = AddCarState.Error(e.localizedMessage ?: "AI Scan failed")
+                }
+        }
+    }
 
     fun onAddOrUpdateCar(
         name: String, // License Plate
@@ -78,6 +98,7 @@ class AddCarViewModel @Inject constructor(
         batteryCapacity: String,
         drivetrain: String,
         gearboxType: String,
+        gears: String,
         aspiration: String,
         frontBrakes: String,
         rearBrakes: String,
@@ -155,6 +176,7 @@ class AddCarViewModel @Inject constructor(
                     batteryCapacity = batteryCapacity.toDoubleOrNull() ?: 0.0,
                     drivetrain = drivetrain,
                     gearboxType = gearboxType,
+                    gears = gears,
                     frontBrakes = frontBrakes,
                     rearBrakes = rearBrakes,
                     vehicleType = vehicleType,
@@ -198,9 +220,5 @@ class AddCarViewModel @Inject constructor(
     fun resetState() {
         _state.value = AddCarState.Idle
         currentCarId = null
-    }
-
-    fun getEffectiveMake(make: String, customMake: String): String {
-        return if (make == "Other") customMake else make
     }
 }

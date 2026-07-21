@@ -25,8 +25,6 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.background
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import coil.compose.AsyncImage
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.outlined.DirectionsCar
 import com.dariusepure.caractivitylog.ui.common.CarFormatters
@@ -74,30 +72,18 @@ fun CarCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (car.profileImageUrl != null) {
-                AsyncImage(
-                    model = car.profileImageUrl,
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.DirectionsCar,
                     contentDescription = null,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentScale = ContentScale.Crop
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.DirectionsCar,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
             
             Spacer(Modifier.width(16.dp))
