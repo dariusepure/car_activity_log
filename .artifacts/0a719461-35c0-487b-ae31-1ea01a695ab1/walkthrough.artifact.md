@@ -1,42 +1,37 @@
-# Walkthrough - Diagnosis & Scanning Improvements
+# Walkthrough - Split Scanning: Photo and PDF
 
-I have implemented several improvements to the AI Diagnosis and Car Scanning features as requested.
+I have implemented the requested split scanning feature, allowing you to scan registration certificates using either a photo or a PDF file. This functionality is now available in both the "Add Car" and "Edit Car" screens.
 
 ## Changes
 
-### [Component: Diagnosis Feature]
+### [Component: Data & AI]
 
-#### [Clean AI Responses]
-- Updated `DiagnosisViewModel` to include a `cleanAiResponse` function that removes `*` and `#` from AI text.
-- Applied this cleaning logic to all incoming AI messages.
+#### [GeminiRepository.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/data/ai/GeminiRepository.kt)
+- Added `scanDocument(uri: Uri, mimeType: String)` to handle generic file data (like PDFs) using `blob` parts.
+- Switched to `gemini-1.5-flash` model which provides better support for multi-modal inputs including PDFs.
+- Updated both scanning and diagnosis to use the `gemini-1.5-flash` model.
 
-#### [Chat Persistence]
-- Created `FirestoreChatMessage` DTO to handle Firestore data mapping.
-- Added `getDiagnosisMessages`, `addDiagnosisMessage`, and `clearDiagnosisMessages` to `CarRepository`.
-- `DiagnosisViewModel` now collects and saves messages to/from Firestore, ensuring conversations are preserved between sessions.
+### [Component: UI - Add/Edit Car]
 
-#### [Reset Conversation]
-- Added a "Reset" (Refresh icon) button to the `DiagnosisScreen` TopAppBar.
-- Clicking reset clears all messages for the current car in Firestore.
+#### [AddCarViewModel.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/AddCarViewModel.kt)
+- Added `scanDocument(uri: Uri, mimeType: String)` to bridge the UI with the repository.
 
-### [Component: Car Scanning & Add Car UI]
-
-#### [Simplified Field Population]
-- Refined the AI prompt in `GeminiRepository` to stop extracting `vehicleType`.
-- Modified `AddCarScreen` and `AddCarViewModel` to populate `make` and `color` directly into their primary fields, removing the "Other" and "Custom" logic.
-- `make` and `color` fields are now directly editable `OutlinedTextField`s, allowing for both manual input and dropdown selection.
-
-#### [Data Cleanup]
-- Removed `vehicleType` from `ScannedCarData`.
+#### [AddCarScreen.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/AddCarScreen.kt)
+- Replaced the single scan button with two buttons: **"Scan Photo"** and **"Scan PDF"**.
+- Added `photoPicker` for image selection (`image/*`).
+- Added `pdfPicker` for PDF selection (`application/pdf`).
+- Enabled these buttons in both "Add Car" and "Edit Car" modes (previously only available in "Add Car").
 
 ---
 
-## Verification Results
+## Verification Plan
 
 ### Automated Tests
-- Build sync successful.
-- All code references updated to match new simplified logic.
+- Build sync and compilation verify that the new `GeminiRepository` methods and UI pickers are correctly integrated.
 
 ### Manual Verification
-- **Diagnosis**: Messages are now saved and cleaned of markdown symbols. The reset button successfully clears history.
-- **Scanning**: Scanned results for brand and color now appear directly in the main text fields. `vehicleType` is no longer automatically filled.
+- **Add Car**:
+    - Verify "Scan Photo" opens the gallery and populates fields from an image.
+    - Verify "Scan PDF" opens the file picker and populates fields from a PDF.
+- **Edit Car**:
+    - Navigate to an existing car and verify both scan buttons are present and functional.

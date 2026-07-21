@@ -11,6 +11,7 @@ import android.os.Build
 import android.provider.MediaStore
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.TextButton
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -134,7 +135,7 @@ fun AddCarScreen(
     var vehicleType by remember { mutableStateOf("") }
     var manufacturingCountry by remember { mutableStateOf("") }
 
-    val imagePicker = rememberLauncherForActivityResult(
+    val photoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let {
@@ -145,6 +146,14 @@ fun AddCarScreen(
                 ImageDecoder.decodeBitmap(source)
             }
             viewModel.scanImage(bitmap)
+        }
+    }
+
+    val pdfPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            viewModel.scanDocument(it, "application/pdf")
         }
     }
 
@@ -358,12 +367,15 @@ fun AddCarScreen(
                 isExpanded = identityExpanded,
                 onToggle = { identityExpanded = !identityExpanded }
             ) {
-                if (carId == null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     Button(
-                        onClick = { imagePicker.launch("image/*") },
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        onClick = { photoPicker.launch("image/*") },
+                        modifier = Modifier.weight(1f),
                         enabled = state !is AddCarState.Pending && state !is AddCarState.Scanning,
-                        contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+                        contentPadding = PaddingValues(horizontal = 8.dp)
                     ) {
                         if (state is AddCarState.Scanning) {
                             CircularProgressIndicator(
@@ -371,12 +383,29 @@ fun AddCarScreen(
                                 strokeWidth = 2.dp,
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
-                            Spacer(Modifier.width(8.dp))
-                            Text("Scanning...")
                         } else {
                             Icon(Icons.Default.AutoAwesome, null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text("Scan Registration Certificate (AI)")
+                            Spacer(Modifier.width(4.dp))
+                            Text("Scan Photo", textAlign = TextAlign.Center)
+                        }
+                    }
+
+                    Button(
+                        onClick = { pdfPicker.launch("application/pdf") },
+                        modifier = Modifier.weight(1f),
+                        enabled = state !is AddCarState.Pending && state !is AddCarState.Scanning,
+                        contentPadding = PaddingValues(horizontal = 8.dp)
+                    ) {
+                        if (state is AddCarState.Scanning) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        } else {
+                            Icon(Icons.Default.AutoAwesome, null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("Scan PDF", textAlign = TextAlign.Center)
                         }
                     }
                 }

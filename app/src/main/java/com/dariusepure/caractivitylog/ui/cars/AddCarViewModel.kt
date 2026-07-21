@@ -3,6 +3,7 @@ package com.dariusepure.caractivitylog.ui.cars
 import com.dariusepure.caractivitylog.data.ai.GeminiRepository
 import com.dariusepure.caractivitylog.domain.ScannedCarData
 import android.graphics.Bitmap
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dariusepure.caractivitylog.data.cars.CarRepository
@@ -63,6 +64,20 @@ class AddCarViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = AddCarState.Scanning
             geminiRepository.scanRegistrationCertificate(bitmap)
+                .onSuccess { data ->
+                    _state.value = AddCarState.Idle
+                    _scannedDataEvent.trySend(data)
+                }
+                .onFailure { e ->
+                    _state.value = AddCarState.Error(e.localizedMessage ?: "AI Scan failed")
+                }
+        }
+    }
+
+    fun scanDocument(uri: Uri, mimeType: String) {
+        viewModelScope.launch {
+            _state.value = AddCarState.Scanning
+            geminiRepository.scanDocument(uri, mimeType)
                 .onSuccess { data ->
                     _state.value = AddCarState.Idle
                     _scannedDataEvent.trySend(data)
