@@ -1,37 +1,22 @@
-# Walkthrough - Split Scanning: Photo and PDF
+# Walkthrough - Detailed README.md Update
 
-I have implemented the requested split scanning feature, allowing you to scan registration certificates using either a photo or a PDF file. This functionality is now available in both the "Add Car" and "Edit Car" screens.
+I have updated the `README.md` file to include all the major features and technical improvements we've implemented together.
 
 ## Changes
 
-### [Component: Data & AI]
+### [Documentation]
 
-#### [GeminiRepository.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/data/ai/GeminiRepository.kt)
-- Added `scanDocument(uri: Uri, mimeType: String)` to handle generic file data (like PDFs) using `blob` parts.
-- Switched to `gemini-1.5-flash` model which provides better support for multi-modal inputs including PDFs.
-- Updated both scanning and diagnosis to use the `gemini-1.5-flash` model.
-
-### [Component: UI - Add/Edit Car]
-
-#### [AddCarViewModel.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/AddCarViewModel.kt)
-- Added `scanDocument(uri: Uri, mimeType: String)` to bridge the UI with the repository.
-
-#### [AddCarScreen.kt](file:///D:/Car Activity Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/AddCarScreen.kt)
-- Replaced the single scan button with two buttons: **"Scan Photo"** and **"Scan PDF"**.
-- Added `photoPicker` for image selection (`image/*`).
-- Added `pdfPicker` for PDF selection (`application/pdf`).
-- Enabled these buttons in both "Add Car" and "Edit Car" modes (previously only available in "Add Car").
+#### [README.md](file:///D:/Car Activity Log/README.md)
+- **AI Intelligence Section**: Added details about Smart Diagnosis (with persistence and reset) and AI Document Scanning (supporting Photo and PDF).
+- **Vehicle Management**: Updated to include body type, chassis, and gearbox details.
+- **Tech Stack**: Updated with Gemini SDK, Ktor Client, and Kotlinx Serialization.
+- **Configuration**: Added a section explaining how to set up the Gemini API key in `local.properties` and a brief overview of the Firestore data structure.
+- **Improved Formatting**: Used GitHub alerts and tables for better readability.
 
 ---
 
-## Verification Plan
-
-### Automated Tests
-- Build sync and compilation verify that the new `GeminiRepository` methods and UI pickers are correctly integrated.
+## Verification Results
 
 ### Manual Verification
-- **Add Car**:
-    - Verify "Scan Photo" opens the gallery and populates fields from an image.
-    - Verify "Scan PDF" opens the file picker and populates fields from a PDF.
-- **Edit Car**:
-    - Navigate to an existing car and verify both scan buttons are present and functional.
+- The `README.md` has been updated and reflects the current state of the app accurately.
+- Sensitive information remains protected in `local.properties`.

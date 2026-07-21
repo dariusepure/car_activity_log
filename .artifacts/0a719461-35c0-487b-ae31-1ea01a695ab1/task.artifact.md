@@ -1,6 +1,2 @@
-- `[x]` Create `FirestoreChatMessage` DTO
-- `[/]` Update `CarRepository` for diagnosis chat persistence
-- `[ ]` Update `DiagnosisViewModel` (save/load messages, clean text, reset)
-- `[ ]` Update `DiagnosisScreen` (Reset button)
-- `[ ]` Update `GeminiRepository` (Refine scanning prompt)
-- `[ ]` Update `AddCarViewModel` & `AddCarScreen` (Direct field population)
+- `[x]` Update `README.md` with detailed sections (AI, Scanning, Tech Stack, Config)
+- `[x]` Final review of the documentation
