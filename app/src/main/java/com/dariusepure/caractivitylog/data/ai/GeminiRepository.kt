@@ -30,7 +30,7 @@ class GeminiRepository @Inject constructor(
     }
 
     private val modelName: String
-        get() = remoteConfig.getString("gemini_model_name").ifBlank { "gemini-3.5-flash-lite" }
+        get() = remoteConfig.getString("gemini_model_name").ifBlank { "gemini-1.5-flash" }
 
     private val requestOptions: RequestOptions
         get() = RequestOptions(timeout = remoteConfig.getLong("gemini_timeout_seconds").seconds)
@@ -123,6 +123,7 @@ class GeminiRepository @Inject constructor(
 
             val prompt = """
                 Extract technical details from this vehicle document (registration certificate, invoice, insurance, or technical sheet).
+                The document might have multiple pages or be a complex PDF. Scan all visible text carefully.
                 Analyze the document and look for these fields:
                 - make, model, vin (MUST be 17 chars), year (4 digits), fuelType, engineSize (cc), power (hp or kW), torque (Nm), color, gears, registrationPlate.
                 
@@ -200,12 +201,13 @@ class GeminiRepository @Inject constructor(
     }
 
     private fun extractJson(text: String): String {
-        val start = text.indexOf('{')
-        val end = text.lastIndexOf('}')
+        val cleanedText = text.replace("```json", "").replace("```", "").trim()
+        val start = cleanedText.indexOf('{')
+        val end = cleanedText.lastIndexOf('}')
         if (start != -1 && end != -1 && end > start) {
-            return text.substring(start, end + 1)
+            return cleanedText.substring(start, end + 1)
         }
-        return text
+        return cleanedText
     }
 
 }

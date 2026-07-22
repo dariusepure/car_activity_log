@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.dariusepure.caractivitylog.data.ai.GeminiRepository
 import com.dariusepure.caractivitylog.data.cars.CarRepository
 import com.dariusepure.caractivitylog.domain.Car
+import com.dariusepure.caractivitylog.domain.displayName
 import com.google.ai.client.generativeai.type.FunctionCallPart
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +39,7 @@ class DiagnosisViewModel @Inject constructor(
                 val latestKm = mileageLogs.maxByOrNull { it.date }?.km ?: 0.0
                 
                 carContext = """
-                    Car: ${car.make} ${car.model}, Year: ${car.year}, Engine: ${car.engineSize} ${car.fuelType}
+                    Car: ${car.displayName}, Year: ${car.year}, Engine: ${car.engineSize} ${car.fuelType}
                     Specs: Power: ${car.power}${car.powerUnit}, Torque: ${car.torque}Nm, Color: ${car.color}, Gears: ${car.gears}
                     System: ${car.fuelSystem}
                     Current Mileage: $latestKm km
@@ -46,7 +47,7 @@ class DiagnosisViewModel @Inject constructor(
 
                 _state.update { it.copy(
                     isLoading = false,
-                    carName = "${car.make} ${car.model}"
+                    carName = car.displayName
                 ) }
             }
             

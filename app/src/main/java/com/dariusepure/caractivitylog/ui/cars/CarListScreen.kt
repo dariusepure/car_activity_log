@@ -52,6 +52,7 @@ import com.dariusepure.caractivitylog.ui.common.EmptyState
 import com.dariusepure.caractivitylog.ui.common.ErrorState
 import com.dariusepure.caractivitylog.ui.common.LoadingState
 import com.dariusepure.caractivitylog.ui.common.toRelativeString
+import com.dariusepure.caractivitylog.domain.displayName
 
 @Composable
 fun CarCard(
@@ -91,7 +92,7 @@ fun CarCard(
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "${car.make} ${car.model}".trim().ifBlank { car.name.ifBlank { "Unnamed car" } },
+                        text = car.displayName,
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f, fill = false)

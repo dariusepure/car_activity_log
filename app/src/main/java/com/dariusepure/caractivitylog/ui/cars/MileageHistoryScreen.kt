@@ -39,6 +39,7 @@ import com.dariusepure.caractivitylog.ui.common.CarFormatters
 import com.dariusepure.caractivitylog.ui.common.LoadingState
 import com.dariusepure.caractivitylog.ui.common.MileageItem
 import com.dariusepure.caractivitylog.ui.common.ErrorState
+import com.dariusepure.caractivitylog.domain.displayName
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -127,7 +128,7 @@ fun MileageHistoryScreen(
                     item {
                         Spacer(Modifier.height(16.dp))
                         Text(
-                            text = car.name,
+                            text = car.displayName,
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.secondary
                         )

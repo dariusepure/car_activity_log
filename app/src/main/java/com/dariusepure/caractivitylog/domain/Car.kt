@@ -6,7 +6,7 @@ data class Car(
     val id: String = "",
     val name: String = "", // Used for Car Title / Nickname
     val licensePlate: String = "",
-    val plateCountry: String = "RO", // Country code (e.g., RO, DE, IT)
+    val plateCountry: String = "", // Country code (e.g., RO, DE, IT)
     val make: String = "",
     val model: String = "",
     val vin: String = "",
@@ -53,3 +53,6 @@ data class Car(
     val activityCount: Int = 0,
     val isSynced: Boolean = true
 )
+
+val Car.displayName: String
+    get() = name.ifBlank { "$make $model".trim() }.ifBlank { "Unnamed car" }

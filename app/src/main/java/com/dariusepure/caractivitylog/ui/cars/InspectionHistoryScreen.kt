@@ -39,6 +39,7 @@ import com.dariusepure.caractivitylog.ui.common.LoadingState
 import com.dariusepure.caractivitylog.ui.common.ErrorState
 import com.dariusepure.caractivitylog.ui.common.InspectionItem
 import com.dariusepure.caractivitylog.domain.VehicleInspection
+import com.dariusepure.caractivitylog.domain.displayName
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -119,7 +120,7 @@ fun InspectionHistoryScreen(
                     item {
                         Spacer(Modifier.height(16.dp))
                         Text(
-                            text = "${car.make} ${car.model}",
+                            text = car.displayName,
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.secondary
                         )

@@ -139,7 +139,7 @@ class AddCarViewModel @Inject constructor(
             return
         }
 
-        // License Plate Validation based on selected country
+        // License Plate Validation based on selected country (only if country is selected)
         val country = europeanCountries.find { it.code == plateCountry }
         if (licensePlate.isNotBlank() && country?.plateRegex != null) {
             val regex = Regex(country.plateRegex, RegexOption.IGNORE_CASE)

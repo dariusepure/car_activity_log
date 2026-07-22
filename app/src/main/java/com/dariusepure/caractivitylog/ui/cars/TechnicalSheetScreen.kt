@@ -29,6 +29,7 @@ import com.dariusepure.caractivitylog.ui.common.CarFormatters
 import com.dariusepure.caractivitylog.ui.common.ErrorState
 import com.dariusepure.caractivitylog.ui.common.LoadingState
 import com.dariusepure.caractivitylog.ui.common.SpecificationCard
+import com.dariusepure.caractivitylog.domain.displayName
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,7 +87,7 @@ fun TechnicalSheetScreen(
                         .padding(16.dp)
                 ) {
                     Text(
-                        text = "${car.make} ${car.model}",
+                        text = car.displayName,
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -101,7 +102,7 @@ fun TechnicalSheetScreen(
                                 "Vehicle Type" to car.vehicleType,
                                 "Year" to car.year.takeIf { it != 0 }?.toString().orEmpty(),
                                 "Color" to car.color,
-                                "License Plate" to car.name,
+                                "License Plate" to car.licensePlate,
                                 "Plate Country" to (country?.name ?: car.plateCountry),
                                 "VIN" to car.vin,
                                 "Manufacturing Country" to car.manufacturingCountry

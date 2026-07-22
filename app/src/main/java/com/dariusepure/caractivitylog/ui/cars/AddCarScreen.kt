@@ -274,7 +274,7 @@ fun AddCarScreen(
             if (car != null) {
                 name = car.name
                 licensePlate = car.licensePlate
-                selectedCountry = europeanCountries.find { it.code == car.plateCountry } ?: europeanCountries[0]
+                selectedCountry = europeanCountries.find { it.code == car.plateCountry }
                 
                 make = car.make
                 model = car.model
@@ -383,7 +383,10 @@ fun AddCarScreen(
                     label = { Text("Car Title (Nickname)") },
                     modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                     singleLine = true,
-                    placeholder = { Text("Ex: My Daily Driver, The Red Beast") },
+                    placeholder = { 
+                        val fallback = "$make $model".trim()
+                        Text(if (fallback.isNotBlank()) "Ex: $fallback" else "Ex: My Daily Driver") 
+                    },
                     enabled = state !is AddCarState.Pending
                 )
 
