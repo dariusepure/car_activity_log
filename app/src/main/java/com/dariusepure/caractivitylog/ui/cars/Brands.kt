@@ -1,12 +1,12 @@
 package com.dariusepure.caractivitylog.ui.cars
 
 val carBrands = listOf(
-    "Abarth", "Acura", "Alfa Romeo", "Alpine", "Aston Martin", "Audi", "Bentley", "BMW", "Bugatti", "Buick",
-    "BYD", "Cadillac", "Caterham", "Chevrolet", "Chrysler", "Citroën", "Cupra", "Dacia", "Daewoo", "Daihatsu",
-    "Dodge", "DS", "Ferrari", "Fiat", "Ford", "Genesis", "GMC", "Honda", "Hummer", "Hyundai", "Infiniti",
-    "Isuzu", "Jaguar", "Jeep", "Kia", "Koenigsegg", "Lamborghini", "Lancia", "Land Rover", "Lexus", "Lincoln",
-    "Lotus", "Lucid", "Maserati", "Maybach", "Mazda", "McLaren", "Mercedes-Benz", "MG", "Mini", "Mitsubishi",
-    "Morgan", "Nissan", "Opel", "Pagani", "Peugeot", "Polestar", "Porsche", "Ram", "Renault", "Rimac",
-    "Rolls-Royce", "Rover", "Saab", "Seat", "Skoda", "Smart", "SsangYong", "Subaru", "Suzuki", "Tesla",
-    "Toyota", "Triumph", "TVR", "Vauxhall", "Volkswagen", "Volvo"
-).sorted() + "Other"
+    "ABARTH", "ACURA", "ALFA ROMEO", "ALPINE", "ASTON MARTIN", "AUDI", "BENTLEY", "BMW", "BUGATTI", "BUICK",
+    "BYD", "CADILLAC", "CATERHAM", "CHEVROLET", "CHRYSLER", "CITROËN", "CUPRA", "DACIA", "DAEWOO", "DAIHATSU",
+    "DODGE", "DS", "FERRARI", "FIAT", "FORD", "GENESIS", "GMC", "HONDA", "HUMMER", "HYUNDAI", "INFINITI",
+    "ISUZU", "JAGUAR", "JEEP", "KIA", "KOENIGSEGG", "LAMBORGHINI", "LANCIA", "LAND ROVER", "LEXUS", "LINCOLN",
+    "LOTUS", "LUCID", "MASERATI", "MAYBACH", "MAZDA", "MCLAREN", "MERCEDES-BENZ", "MG", "MINI", "MITSUBISHI",
+    "MORGAN", "NISSAN", "OPEL", "PAGANI", "PEUGEOT", "POLESTAR", "PORSCHE", "RAM", "RENAULT", "RIMAC",
+    "ROLLS-ROYCE", "ROVER", "SAAB", "SEAT", "SKODA", "SMART", "SSANGYONG", "SUBARU", "SUZUKI", "TESLA",
+    "TOYOTA", "TRIUMPH", "TVR", "VAUXHALL", "VOLKSWAGEN", "VOLVO"
+).sorted() + "OTHER"

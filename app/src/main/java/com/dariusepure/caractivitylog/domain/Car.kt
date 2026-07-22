@@ -12,6 +12,7 @@ data class Car(
     val year: Int = 0,
     val engineSize: String = "",
     val fuelType: String = "",
+    val fuelSystem: String = "",
     val color: String = "",
     val power: Int = 0,
     val powerUnit: String = "hp",
