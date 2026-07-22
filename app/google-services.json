@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "1050502217992-785f9nkkrgcde27upm2s0qgjbds7797h.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dariusepure.caractivitylog",
+            "certificate_hash": "0890a1564fe3ee87cb7f8954e3c66622214f1f02"
+          }
+        },
+        {
           "client_id": "1050502217992-8au5hrcl0uuu4odfm9bftfll39q6cffs.apps.googleusercontent.com",
           "client_type": 3
         }

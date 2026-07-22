@@ -90,7 +90,8 @@ fun AddCarScreen(
     val drivetrainOptions = listOf("FWD", "RWD", "AWD", "4WD")
     val vehicleTypes = listOf("Saloon", "Estate", "Hatchback", "MPV", "SUV", "Coupe", "Convertible", "Van", "Pickup")
 
-    var name by remember { mutableStateOf("") } // License Plate
+    var name by remember { mutableStateOf("") } // Car Title / Nickname
+    var licensePlate by remember { mutableStateOf("") }
     var selectedCountry by remember { mutableStateOf<Country?>(null) }
     var make by remember { mutableStateOf("") }
     var model by remember { mutableStateOf("") }
@@ -169,7 +170,7 @@ fun AddCarScreen(
             data.powerUnit?.let { powerUnit = it }
             data.torque?.let { torque = it.toString() }
             data.color?.let { color = it }
-            data.registrationPlate?.let { name = it.uppercase() }
+            data.registrationPlate?.let { licensePlate = it.uppercase() }
             data.numberOfSeats?.let { numberOfSeats = it.toString() }
             data.numberOfDoors?.let { numberOfDoors = it.toString() }
             data.weight?.let { weight = it.toString() }
@@ -212,9 +213,10 @@ fun AddCarScreen(
     val powerUnits = listOf("hp", "kw")
 
     val handleBack = {
-        if (carId != null && make.isNotBlank() && model.isNotBlank() && (vin.isEmpty() || vin.length == 17)) {
+        if (carId != null && (name.isNotBlank() || (make.isNotBlank() && model.isNotBlank())) && (vin.isEmpty() || vin.length == 17)) {
             viewModel.onAddOrUpdateCar(
                 name = name,
+                licensePlate = licensePlate,
                 plateCountry = selectedCountry?.code ?: "",
                 make = make,
                 model = model,
@@ -271,6 +273,7 @@ fun AddCarScreen(
             val car = viewModel.getCarData(carId)
             if (car != null) {
                 name = car.name
+                licensePlate = car.licensePlate
                 selectedCountry = europeanCountries.find { it.code == car.plateCountry } ?: europeanCountries[0]
                 
                 make = car.make
@@ -374,6 +377,16 @@ fun AddCarScreen(
                 isExpanded = identityExpanded,
                 onToggle = { identityExpanded = !identityExpanded }
             ) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Car Title (Nickname)") },
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    singleLine = true,
+                    placeholder = { Text("Ex: My Daily Driver, The Red Beast") },
+                    enabled = state !is AddCarState.Pending
+                )
+
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -421,15 +434,14 @@ fun AddCarScreen(
                     OutlinedTextField(
                         value = make,
                         onValueChange = { make = it },
-                        label = { Text("Make *") },
+                        label = { Text("Make") },
                         modifier = Modifier.fillMaxWidth(),
                         trailingIcon = {
                             Icon(
                                 Icons.Default.ArrowDropDown,
                                 "dropdown",
                                 Modifier.clickable { makeExpanded = true })
-                        },
-                        isError = state !is AddCarState.Pending && make.isBlank()
+                        }
                     )
                     DropdownMenu(
                         expanded = makeExpanded,
@@ -455,11 +467,10 @@ fun AddCarScreen(
                 OutlinedTextField(
                     value = model,
                     onValueChange = { model = it },
-                    label = { Text("Model *") },
+                    label = { Text("Model") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    enabled = state !is AddCarState.Pending,
-                    isError = state !is AddCarState.Pending && model.isBlank()
+                    enabled = state !is AddCarState.Pending
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -609,8 +620,8 @@ fun AddCarScreen(
                     }
                     Spacer(Modifier.width(8.dp))
                     OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it.uppercase() },
+                        value = licensePlate,
+                        onValueChange = { licensePlate = it.uppercase() },
                         label = { Text("License Plate (Optional)") },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
@@ -1355,6 +1366,7 @@ fun AddCarScreen(
                 onClick = {
                     viewModel.onAddOrUpdateCar(
                         name = name,
+                        licensePlate = licensePlate,
                         plateCountry = selectedCountry?.code ?: "",
                         make = make,
                         model = model,
@@ -1400,8 +1412,7 @@ fun AddCarScreen(
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = make.isNotBlank() && 
-                         model.isNotBlank() && state !is AddCarState.Pending
+                enabled = (name.isNotBlank() || (make.isNotBlank() && model.isNotBlank())) && state !is AddCarState.Pending
             ) {
                 if (state is AddCarState.Pending) {
                     CircularProgressIndicator(

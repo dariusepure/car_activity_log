@@ -89,7 +89,8 @@ class AddCarViewModel @Inject constructor(
     }
 
     fun onAddOrUpdateCar(
-        name: String, // License Plate
+        name: String, // Car Title / Nickname
+        licensePlate: String,
         plateCountry: String,
         make: String,
         model: String,
@@ -133,16 +134,16 @@ class AddCarViewModel @Inject constructor(
         tireAspectRatio: String,
         tireDiameter: String
     ) {
-        if (make.isBlank() || model.isBlank()) {
-            _state.value = AddCarState.Error("Make and Model are required")
+        if (name.isBlank() && (make.isBlank() || model.isBlank())) {
+            _state.value = AddCarState.Error("Please provide at least a Title or Brand & Model")
             return
         }
 
         // License Plate Validation based on selected country
         val country = europeanCountries.find { it.code == plateCountry }
-        if (name.isNotBlank() && country?.plateRegex != null) {
+        if (licensePlate.isNotBlank() && country?.plateRegex != null) {
             val regex = Regex(country.plateRegex, RegexOption.IGNORE_CASE)
-            if (!name.replace(" ", "").replace("-", "").matches(regex)) {
+            if (!licensePlate.replace(" ", "").replace("-", "").matches(regex)) {
                 _state.value = AddCarState.Error("Invalid ${country.name} license plate format (ex: ${country.plateHint})")
                 return
             }
@@ -169,7 +170,8 @@ class AddCarViewModel @Inject constructor(
 
                 val car = Car(
                     id = currentCarId ?: "",
-                    name = name.uppercase(),
+                    name = name.trim(),
+                    licensePlate = licensePlate.uppercase(),
                     plateCountry = plateCountry,
                     make = make,
                     model = model,

@@ -41,9 +41,41 @@ android {
         resValue("string", "gemini_api_key", geminiApiKey)
     }
 
+    signingConfigs {
+        val keystorePath = localProperties.getProperty("RELEASE_KEYSTORE_PATH")
+        val keystorePassword = localProperties.getProperty("RELEASE_KEYSTORE_PASSWORD")
+        val keyAlias = localProperties.getProperty("RELEASE_KEYSTORE_ALIAS")
+        val keyPassword = localProperties.getProperty("RELEASE_ALIAS_PASSWORD")
+
+        val isSigningConfigured = keystorePath != null &&
+                keystorePassword != null &&
+                keyAlias != null &&
+                keyPassword != null &&
+                file(keystorePath).exists()
+
+        if (isSigningConfigured) {
+            create("release") {
+                storeFile = file(keystorePath)
+                storePassword = keystorePassword
+                this.keyAlias = keyAlias
+                this.keyPassword = keyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = if (signingConfigs.findByName("release") != null) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
+            firebaseAppDistribution {
+                artifactType = "APK"
+                groups = "internal-testers"
+                releaseNotes = "Car Activity Log"
+            }
         }
     }
     compileOptions {
@@ -79,6 +111,7 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.fonts)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.googleid)

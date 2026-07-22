@@ -1,0 +1,6 @@
+- [x] Fix signing configuration in `app/build.gradle.kts`
+    - [x] Add safety checks for keystore existence and missing properties.
+    - [x] Ensure fallback to `debug` signing if release config is invalid.
+- [x] Verify build
+    - [x] Run `./gradlew :app:assembleRelease` to check for configuration errors.
+- [x] Create walkthrough

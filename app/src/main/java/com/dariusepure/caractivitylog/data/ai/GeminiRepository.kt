@@ -35,6 +35,12 @@ class GeminiRepository @Inject constructor(
     private val requestOptions: RequestOptions
         get() = RequestOptions(timeout = remoteConfig.getLong("gemini_timeout_seconds").seconds)
 
+    private val temperature: Float
+        get() = remoteConfig.getDouble("gemini_temperature").toFloat()
+
+    private val systemPrompt: String
+        get() = remoteConfig.getString("gemini_prompt")
+
     private val json = Json { 
         ignoreUnknownKeys = true 
         coerceInputValues = true
@@ -93,7 +99,7 @@ class GeminiRepository @Inject constructor(
                 modelName = modelName,
                 apiKey = context.getString(R.string.gemini_api_key),
                 generationConfig = generationConfig {
-                    temperature = 0.1f
+                    temperature = this@GeminiRepository.temperature
                 },
                 requestOptions = requestOptions
             )
@@ -144,7 +150,7 @@ class GeminiRepository @Inject constructor(
                 modelName = modelName,
                 apiKey = context.getString(R.string.gemini_api_key),
                 generationConfig = generationConfig {
-                    temperature = 0.1f
+                    temperature = this@GeminiRepository.temperature
                 },
                 requestOptions = requestOptions
             )
@@ -169,6 +175,9 @@ class GeminiRepository @Inject constructor(
             modelName = modelName,
             apiKey = context.getString(R.string.gemini_api_key),
             tools = listOf(updateCarTools),
+            generationConfig = generationConfig {
+                temperature = this@GeminiRepository.temperature
+            },
             requestOptions = requestOptions
         )
 
@@ -185,42 +194,9 @@ class GeminiRepository @Inject constructor(
 
         val chat = diagnosisModel.startChat(history = validatedHistory)
         
-        val systemInstruction = """
-            You are an expert car mechanic AI. You have access to the car's current specifications and mileage history.
-            CONTEXT: $carContext
-            
-            TECHNICAL STANDARDS (MUST pick from these lists for dropdown fields):
-            - fuelType: [Petrol, Diesel, Electric, Hybrid, LPG]
-            - engineLayout: [Transverse, Longitudinal]
-            - aspiration: [Naturally Aspirated, Turbocharged, Supercharged, Twin-Turbo, Quad-Turbo, Electric]
-            - emissionStandard: [Non-Euro, Euro 1, Euro 2, Euro 3, Euro 4, Euro 5, Euro 6]
-            - gearboxType: [Manual, Automatic, CVT, DCT, AMT]
-            - frontBrakes / rearBrakes: [Ventilated Discs, Solid Discs, Drums, Ceramic Discs]
-            - frontSuspension / rearSuspension: [MacPherson Strut, Double Wishbone, Multi-link, Trailing Arm, Torsion Beam, Leaf Spring, Air Suspension]
-            - drivetrain: [FWD, RWD, AWD, 4WD]
-            - vehicleType: [Saloon, Estate, Hatchback, MPV, SUV, Coupe, Convertible, Van, Pickup]
-            - fuelSystem (Petrol/LPG): [Carburetor, Multi Point Injection, Direct Injection]
-            - fuelSystem (Diesel): [Injection Pump, Pumpe Duse, Common Rail]
-            - powerUnit: [hp, kw]
-            
-            MAPPING RULES:
-            - Always map user descriptions to the CLOSEST standard value from the lists above.
-            - Do NOT invent new categories for these fields.
-            - Example: User says "MPI" -> value: "Multi Point Injection".
-            - Example: User says "rampa comuna" -> value: "Common Rail".
-            - Example: User says "tractiune fata" -> value: "FWD".
-            - Example: User says "cutie manuala" -> value: "Manual".
-            
-            YOU CAN:
-            1. Analyze the car's state based on its specs and mileage.
-            2. Suggest maintenance or fixes.
-            3. Update car specifications using 'update_car_spec'. FOR DROPDOWN FIELDS, YOU MUST USE ONE OF THE STANDARD VALUES.
-            4. Update the car's current mileage using 'update_car_mileage'.
-            
-            IMPORTANT: When calling a tool, always inform the user what you are changing or adding using the standard English terms.
-        """.trimIndent()
+        val finalizedPrompt = systemPrompt.replace("{{context}}", carContext)
 
-        return chat.sendMessage(content("user") { text("$systemInstruction\n\nUser: $prompt") })
+        return chat.sendMessage(content("user") { text("$finalizedPrompt\n\nUser: $prompt") })
     }
 
     private fun extractJson(text: String): String {
