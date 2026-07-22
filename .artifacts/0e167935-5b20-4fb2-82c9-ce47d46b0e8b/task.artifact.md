@@ -1,21 +1,17 @@
-# Tasks - Car Title & Bug Fixes
+# Tasks - Vertex AI & App Check Migration
 
-- [x] **Domain Changes**
-    - [x] Add `Car.displayName` extension in `Car.kt`
-    - [x] Change default `plateCountry` to empty string in `Car.kt`
-- [x] **Data Layer Fixes**
-    - [x] Fix model name fallback in `GeminiRepository.kt`
-    - [x] Improve PDF scanning prompt and JSON extraction in `GeminiRepository.kt`
-- [x] **Add/Edit Car Screen Improvements**
-    - [x] Move "Car Title" to top of the form in `AddCarScreen.kt`
-    - [x] Fix country defaulting behavior in `AddCarScreen.kt`
-    - [x] Update validation in `AddCarViewModel.kt` to allow empty country
-- [x] **UI Display Updates**
-    - [x] Update `CarCard` in `CarListScreen.kt` to use `displayName`
-    - [x] Update header in `CarDetailsScreen.kt`
-    - [x] Update AI context in `DiagnosisViewModel.kt`
-    - [x] Update headers in `InspectionHistoryScreen.kt`, `TechnicalSheetScreen.kt`, and `MileageHistoryScreen.kt`
-    - [x] Fix "License Plate" field in `TechnicalSheetScreen.kt` to show actual plate, not title
-- [x] **Verification**
-    - [x] Verify build
-    - [x] Manual check of Title priority and Country field behavior
+- [ ] **Dependency Updates**
+    - [x] Add `firebase-vertexai` and `firebase-appcheck` to `libs.versions.toml`
+    - [x] Update `app/build.gradle.kts` with new dependencies
+    - [ ] Remove legacy `generativeai` dependency
+- [ ] **Application Setup**
+    - [ ] Initialize App Check in `CarActivityLogApp.kt`
+- [ ] **Code Migration**
+    - [ ] Update `GeminiRepository.kt` to use `Firebase.vertexAI`
+    - [ ] Remove API key usage from `GeminiRepository.kt`
+    - [ ] Ensure `DiagnosisViewModel.kt` and `AddCarViewModel.kt` work with the new repository signature
+- [ ] **Cleanup**
+    - [ ] Remove `gemini_api_key` from `build.gradle.kts` and `local.properties`
+- [ ] **Verification**
+    - [ ] Verify build
+    - [ ] Test AI features in Debug mode (using Debug Provider)

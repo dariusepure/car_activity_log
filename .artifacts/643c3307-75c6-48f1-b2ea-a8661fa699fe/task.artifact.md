@@ -1,4 +1,0 @@
-- [ ] Add `Modifier.imePadding()` to chat input in `DiagnosisScreen.kt`
-- [ ] Implement simple markdown rendering for chat messages
-- [ ] Modernize `ChatBubble` and `InputArea` design
-- [ ] Verify keyboard behavior and UI look

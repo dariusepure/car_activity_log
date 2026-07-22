@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 @HiltViewModel
 class AddCarViewModel @Inject constructor(
@@ -69,7 +70,13 @@ class AddCarViewModel @Inject constructor(
                     _scannedDataEvent.trySend(data)
                 }
                 .onFailure { e ->
-                    _state.value = AddCarState.Error(e.localizedMessage ?: "AI Scan failed")
+                    val message = when {
+                        e.message?.contains("403") == true || e.message?.contains("PERMISSION_DENIED") == true -> {
+                            "AI Scan failed: Your API key is invalid or leaked. Please update it."
+                        }
+                        else -> e.localizedMessage ?: "AI Scan failed"
+                    }
+                    _state.value = AddCarState.Error(message)
                 }
         }
     }
@@ -83,7 +90,13 @@ class AddCarViewModel @Inject constructor(
                     _scannedDataEvent.trySend(data)
                 }
                 .onFailure { e ->
-                    _state.value = AddCarState.Error(e.localizedMessage ?: "AI Scan failed")
+                    val message = when {
+                        e.message?.contains("403") == true || e.message?.contains("PERMISSION_DENIED") == true -> {
+                            "AI Scan failed: Your API key is invalid or leaked. Please update it."
+                        }
+                        else -> e.localizedMessage ?: "AI Scan failed"
+                    }
+                    _state.value = AddCarState.Error(message)
                 }
         }
     }
@@ -164,7 +177,7 @@ class AddCarViewModel @Inject constructor(
                 val inputTopSpeed = topSpeed.toDoubleOrNull() ?: 0.0
                 val canonicalTopSpeed = CarFormatters.toCanonicalSpeed(inputTopSpeed, usesMiles)
 
-                var finalPower = power.toIntOrNull() ?: 0
+                var finalPower = power.toDoubleOrNull()?.roundToInt() ?: 0
                 // If country changed and units differ, we could convert power too? 
                 // But request was specifically for mileage conversion and country selection.
 
@@ -176,23 +189,23 @@ class AddCarViewModel @Inject constructor(
                     make = make,
                     model = model,
                     vin = vin.uppercase(),
-                    year = year.toIntOrNull() ?: 0,
+                    year = year.toDoubleOrNull()?.roundToInt() ?: 0,
                     engineSize = engineSize,
                     fuelType = fuelType,
                     fuelSystem = fuelSystem,
                     color = color,
                     power = finalPower,
                     powerUnit = powerUnit,
-                    torque = torque.toIntOrNull() ?: 0,
+                    torque = torque.toDoubleOrNull()?.roundToInt() ?: 0,
                     engineCode = engineCode,
                     engineLayout = engineLayout,
                     emissionStandard = emissionStandard,
                     aspiration = aspiration,
-                    length = length.toIntOrNull() ?: 0,
-                    width = width.toIntOrNull() ?: 0,
-                    height = height.toIntOrNull() ?: 0,
-                    wheelbase = wheelbase.toIntOrNull() ?: 0,
-                    trackWidth = trackWidth.toIntOrNull() ?: 0,
+                    length = length.toDoubleOrNull()?.roundToInt() ?: 0,
+                    width = width.toDoubleOrNull()?.roundToInt() ?: 0,
+                    height = height.toDoubleOrNull()?.roundToInt() ?: 0,
+                    wheelbase = wheelbase.toDoubleOrNull()?.roundToInt() ?: 0,
+                    trackWidth = trackWidth.toDoubleOrNull()?.roundToInt() ?: 0,
                     fuelTankCapacity = fuelTankCapacity.toDoubleOrNull() ?: 0.0,
                     batteryCapacity = batteryCapacity.toDoubleOrNull() ?: 0.0,
                     drivetrain = drivetrain,
@@ -205,15 +218,15 @@ class AddCarViewModel @Inject constructor(
                     vehicleType = vehicleType,
                     manufacturingCountry = manufacturingCountry,
                     topSpeed = canonicalTopSpeed,
-                    weight = weight.toIntOrNull() ?: 0,
-                    numberOfSeats = numberOfSeats.toIntOrNull() ?: 0,
-                    numberOfCylinders = numberOfCylinders.toIntOrNull() ?: 0,
-                    valvesPerCylinder = valvesPerCylinder.toIntOrNull() ?: 0,
-                    numberOfDoors = numberOfDoors.toIntOrNull() ?: 0,
-                    bootSpace = bootSpace.toIntOrNull() ?: 0,
-                    tireWidth = tireWidth.toIntOrNull() ?: 0,
-                    tireAspectRatio = tireAspectRatio.toIntOrNull() ?: 0,
-                    tireDiameter = tireDiameter.toIntOrNull() ?: 0,
+                    weight = weight.toDoubleOrNull()?.roundToInt() ?: 0,
+                    numberOfSeats = numberOfSeats.toDoubleOrNull()?.roundToInt() ?: 0,
+                    numberOfCylinders = numberOfCylinders.toDoubleOrNull()?.roundToInt() ?: 0,
+                    valvesPerCylinder = valvesPerCylinder.toDoubleOrNull()?.roundToInt() ?: 0,
+                    numberOfDoors = numberOfDoors.toDoubleOrNull()?.roundToInt() ?: 0,
+                    bootSpace = bootSpace.toDoubleOrNull()?.roundToInt() ?: 0,
+                    tireWidth = tireWidth.toDoubleOrNull()?.roundToInt() ?: 0,
+                    tireAspectRatio = tireAspectRatio.toDoubleOrNull()?.roundToInt() ?: 0,
+                    tireDiameter = tireDiameter.toDoubleOrNull()?.roundToInt() ?: 0,
                     updatedAt = Date()
                 )
 

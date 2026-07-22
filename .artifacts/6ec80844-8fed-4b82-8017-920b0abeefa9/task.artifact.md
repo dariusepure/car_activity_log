@@ -1,6 +1,0 @@
-- [ ] Add `batteryCapacity` to `Car` domain model
-- [ ] Add `batteryCapacity` to `FirestoreCar` data model and update mappings
-- [ ] Update `AddCarViewModel` to handle `batteryCapacity`
-- [ ] Update `AddCarScreen` with dynamic UI and state for `batteryCapacity`
-- [ ] Update `TechnicalSheetScreen` to display `batteryCapacity`
-- [ ] Verify changes and check for syntax errors

@@ -6,7 +6,7 @@ import com.dariusepure.caractivitylog.data.ai.GeminiRepository
 import com.dariusepure.caractivitylog.data.cars.CarRepository
 import com.dariusepure.caractivitylog.domain.Car
 import com.dariusepure.caractivitylog.domain.displayName
-import com.google.ai.client.generativeai.type.FunctionCallPart
+import com.google.firebase.vertexai.type.FunctionCallPart
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 @HiltViewModel
 class DiagnosisViewModel @Inject constructor(
@@ -120,8 +121,14 @@ class DiagnosisViewModel @Inject constructor(
                 _state.update { it.copy(isTyping = false) }
                 
             } catch (t: Throwable) {
+                val errorMessage = when {
+                    t.message?.contains("403") == true || t.message?.contains("PERMISSION_DENIED") == true -> {
+                        "AI Error: Access denied. Ensure your app is authorized and App Check is configured correctly."
+                    }
+                    else -> "AI Error: ${t.localizedMessage ?: "Unknown error"}"
+                }
                 _state.update { it.copy(
-                    messages = it.messages + ChatMessage("AI Error: ${t.localizedMessage}", false),
+                    messages = it.messages + ChatMessage(errorMessage, false),
                     isTyping = false
                 ) }
             }
@@ -147,21 +154,21 @@ class DiagnosisViewModel @Inject constructor(
             "make" -> car.copy(make = value)
             "model" -> car.copy(model = value)
             "vin" -> car.copy(vin = value.uppercase())
-            "year" -> car.copy(year = value.toIntOrNull() ?: car.year)
+            "year" -> car.copy(year = value.toDoubleOrNull()?.roundToInt() ?: car.year)
             "enginesize" -> car.copy(engineSize = value)
             "fueltype" -> car.copy(fuelType = value)
             "fuelsystem" -> car.copy(fuelSystem = value)
             "color" -> car.copy(color = value.uppercase())
-            "power" -> car.copy(power = value.toIntOrNull() ?: car.power)
+            "power" -> car.copy(power = value.toDoubleOrNull()?.roundToInt() ?: car.power)
             "powerunit" -> car.copy(powerUnit = value)
-            "torque" -> car.copy(torque = value.toIntOrNull() ?: car.torque)
+            "torque" -> car.copy(torque = value.toDoubleOrNull()?.roundToInt() ?: car.torque)
             "enginecode" -> car.copy(engineCode = value.uppercase())
             "enginelayout" -> car.copy(engineLayout = value)
-            "length" -> car.copy(length = value.toIntOrNull() ?: car.length)
-            "width" -> car.copy(width = value.toIntOrNull() ?: car.width)
-            "height" -> car.copy(height = value.toIntOrNull() ?: car.height)
-            "wheelbase" -> car.copy(wheelbase = value.toIntOrNull() ?: car.wheelbase)
-            "trackwidth" -> car.copy(trackWidth = value.toIntOrNull() ?: car.trackWidth)
+            "length" -> car.copy(length = value.toDoubleOrNull()?.roundToInt() ?: car.length)
+            "width" -> car.copy(width = value.toDoubleOrNull()?.roundToInt() ?: car.width)
+            "height" -> car.copy(height = value.toDoubleOrNull()?.roundToInt() ?: car.height)
+            "wheelbase" -> car.copy(wheelbase = value.toDoubleOrNull()?.roundToInt() ?: car.wheelbase)
+            "trackwidth" -> car.copy(trackWidth = value.toDoubleOrNull()?.roundToInt() ?: car.trackWidth)
             "emissionstandard" -> car.copy(emissionStandard = value)
             "aspiration" -> car.copy(aspiration = value)
             "fueltankcapacity" -> car.copy(fuelTankCapacity = value.toDoubleOrNull() ?: car.fuelTankCapacity)
@@ -176,15 +183,15 @@ class DiagnosisViewModel @Inject constructor(
             "vehicletype" -> car.copy(vehicleType = value)
             "manufacturingcountry" -> car.copy(manufacturingCountry = value)
             "topspeed" -> car.copy(topSpeed = value.toDoubleOrNull() ?: car.topSpeed)
-            "weight" -> car.copy(weight = value.toIntOrNull() ?: car.weight)
-            "numberofseats" -> car.copy(numberOfSeats = value.toIntOrNull() ?: car.numberOfSeats)
-            "numberofcylinders" -> car.copy(numberOfCylinders = value.toIntOrNull() ?: car.numberOfCylinders)
-            "valvespercylinder" -> car.copy(valvesPerCylinder = value.toIntOrNull() ?: car.valvesPerCylinder)
-            "numberofdoors" -> car.copy(numberOfDoors = value.toIntOrNull() ?: car.numberOfDoors)
-            "bootspace" -> car.copy(bootSpace = value.toIntOrNull() ?: car.bootSpace)
-            "tirewidth" -> car.copy(tireWidth = value.toIntOrNull() ?: car.tireWidth)
-            "tireaspectratio" -> car.copy(tireAspectRatio = value.toIntOrNull() ?: car.tireAspectRatio)
-            "tirediameter" -> car.copy(tireDiameter = value.toIntOrNull() ?: car.tireDiameter)
+            "weight" -> car.copy(weight = value.toDoubleOrNull()?.roundToInt() ?: car.weight)
+            "numberofseats" -> car.copy(numberOfSeats = value.toDoubleOrNull()?.roundToInt() ?: car.numberOfSeats)
+            "numberofcylinders" -> car.copy(numberOfCylinders = value.toDoubleOrNull()?.roundToInt() ?: car.numberOfCylinders)
+            "valvespercylinder" -> car.copy(valvesPerCylinder = value.toDoubleOrNull()?.roundToInt() ?: car.valvesPerCylinder)
+            "numberofdoors" -> car.copy(numberOfDoors = value.toDoubleOrNull()?.roundToInt() ?: car.numberOfDoors)
+            "bootspace" -> car.copy(bootSpace = value.toDoubleOrNull()?.roundToInt() ?: car.bootSpace)
+            "tirewidth" -> car.copy(tireWidth = value.toDoubleOrNull()?.roundToInt() ?: car.tireWidth)
+            "tireaspectratio" -> car.copy(tireAspectRatio = value.toDoubleOrNull()?.roundToInt() ?: car.tireAspectRatio)
+            "tirediameter" -> car.copy(tireDiameter = value.toDoubleOrNull()?.roundToInt() ?: car.tireDiameter)
             else -> car
         }
         

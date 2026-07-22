@@ -1,67 +1,55 @@
-# Implementation Plan - Car Title & Bug Fixes
+# Implementation Plan - Protect Gemini API with Firebase App Check
 
-Improve the visibility and usage of the "Car Title" field, fix PDF scanning issues, and refine country selection defaults.
+Protect the Gemini AI integration by migrating to **Vertex AI for Firebase** and enabling **Firebase App Check**. This ensures that only your authentic, unmodified app can access the AI services, and it removes the need to store an API key in your code.
 
 ## User Review Required
 
-> [!NOTE]
-> I will swap the display priority throughout the app. Instead of showing "Make Model" and falling back to "Nickname", I will show "Nickname" and fallback to "Make Model".
-
 > [!IMPORTANT]
-> Regarding PDF scanning: I've identified that the default model name fallback was likely incorrect (`gemini-3.5-flash-lite` doesn't exist) and the PDF prompt could be improved to handle multi-page documents better.
+> This migration requires manual configuration in the Firebase Console to work. If you don't do these steps, the AI features will stop working after the update.
+
+### Required Manual Steps in Firebase Console:
+1.  **Enable Vertex AI**:
+    *   Go to the [Firebase Console](https://console.firebase.google.com/).
+    *   Select your project.
+    *   Go to **Build > Vertex AI**.
+    *   Click **Get Started** and follow the instructions to enable the API and upgrade to the Blaze plan (if not already).
+2.  **Configure App Check**:
+    *   Go to **Build > App Check**.
+    *   Click **Get Started**.
+    *   Go to the **Apps** tab and register your Android app with **Play Integrity**.
+    *   You will need to provide the **SHA-256** fingerprint of your signing certificate (both for Debug and Release).
+3.  **Enforce Protection**:
+    *   In the App Check **APIs** tab, find **Vertex AI** and click **Enforce**.
 
 ## Proposed Changes
 
-### Domain Layer
+### Dependency Management
 
-#### [MODIFY] [Car.kt](file:///D:/Car%20Activity%20Log/app/src/main/java/com/dariusepure/caractivitylog/domain/Car.kt)
-- Add `displayName` extension.
-- Change default `plateCountry` from "RO" to "" to avoid forced defaults.
+#### [MODIFY] [libs.versions.toml](file:///D:/Car%20Activity%20Log/gradle/libs.versions.toml)
+Ensure `firebase-vertexai` and `firebase-appcheck-playintegrity` are correctly referenced.
 
-```kotlin
-val Car.displayName: String
-    get() = name.ifBlank { "$make $model".trim() }.ifBlank { "Unnamed car" }
-```
+#### [MODIFY] [build.gradle.kts](file:///D:/Car%20Activity%20Log/app/build.gradle.kts)
+- Add Vertex AI for Firebase and App Check dependencies.
+- Remove the legacy `generativeai` dependency.
 
-### Data Layer
+### Application Initialization
+
+#### [MODIFY] [CarActivityLogApp.kt](file:///D:/Car%20Activity%20Log/app/src/main/java/com/dariusepure/caractivitylog/CarActivityLogApp.kt)
+Initialize Firebase App Check with the `PlayIntegrityAppCheckProviderFactory`.
+
+### AI Repository Migration
 
 #### [MODIFY] [GeminiRepository.kt](file:///D:/Car%20Activity%20Log/app/src/main/java/com/dariusepure/caractivitylog/data/ai/GeminiRepository.kt)
-- Fix the fallback model name to `gemini-1.5-flash`.
-- Update the PDF scanning prompt to specifically mention multi-page documents.
-- Enhance `extractJson` to handle potential AI chatter better.
-
-### UI Layer - Add/Edit Car
-
-#### [MODIFY] [AddCarScreen.kt](file:///D:/Car%20Activity%20Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/AddCarScreen.kt)
-- Move "Car Title" to the top.
-- Remove the fallback to `europeanCountries[0]` when loading a car; let it be `null` if not found.
-- Ensure the save button handles the empty country case correctly.
-
-#### [MODIFY] [AddCarViewModel.kt](file:///D:/Car%20Activity%20Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/AddCarViewModel.kt)
-- Update validation to allow empty country if license plate is also empty.
-
-### UI Layer - Display
-
-#### [MODIFY] [CarListScreen.kt](file:///D:/Car%20Activity%20Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/CarListScreen.kt)
-Update `CarCard` to use `car.displayName`.
-
-#### [MODIFY] [CarDetailsScreen.kt](file:///D:/Car%20Activity%20Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/CarDetailsScreen.kt)
-Update the header to use `car.displayName`.
-
-#### [MODIFY] [DiagnosisViewModel.kt](file:///D:/Car%20Activity%20Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/DiagnosisViewModel.kt)
-Update the AI context and `carName` state to use `car.displayName`.
-
-#### [MODIFY] [InspectionHistoryScreen.kt](file:///D:/Car%20Activity%20Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/InspectionHistoryScreen.kt)
-#### [MODIFY] [TechnicalSheetScreen.kt](file:///D:/Car%20Activity%20Log/app/src/main/java/com/dariusepure/caractivitylog/ui/cars/TechnicalSheetScreen.kt)
-Update to use `car.displayName`.
+Migrate from `com.google.ai.client.generativeai` to `com.google.firebase.vertexai`.
+- Remove `apiKey` requirement (it will use the project's internal security).
+- Use `Firebase.vertexAI.generativeModel(...)`.
 
 ## Verification Plan
 
 ### Automated Tests
-- Verify code compilation.
+- Build the project to ensure all dependencies are correctly resolved.
+- Verify that the new `FirebaseVertexAI` usage compiles.
 
 ### Manual Verification
-1. **Title Priority**: Add a car with a title. Verify the title shows in the list.
-2. **Empty Title**: Add a car without a title. Verify "Make Model" shows in the list.
-3. **Country Default**: Open "Add Car". Verify country is blank. Load an existing car with no country set. Verify country remains blank.
-4. **PDF Scan**: Try scanning a multi-page PDF document. Verify data extraction works more reliably.
+- **Debug Mode**: I will include a "Debug Provider" for App Check so it works on your emulator/test device without Play Integrity enforcement during development.
+- **Verification**: Once you enable App Check in the console, try to use the "Scan Document" or "AI Diagnosis" features. If App Check is working, the requests will pass. If the app is modified or unauthorized, the requests will fail with a 403 error.

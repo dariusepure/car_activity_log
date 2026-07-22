@@ -30,15 +30,14 @@ android {
         applicationId = "com.dariusepure.caractivitylog"
         minSdk = 24
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 5
+        versionName = "1.3"
 
         multiDexEnabled = true
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
         buildConfigField("String", "WEB_CLIENT_ID", "\"$webClientId\"")
-        resValue("string", "gemini_api_key", geminiApiKey)
     }
 
     signingConfigs {
@@ -85,7 +84,6 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
-        resValues = true
     }
 }
 
@@ -132,12 +130,11 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
-    implementation(libs.firebase.ai)
+    implementation(libs.firebase.vertexai)
+    implementation(libs.firebase.appcheck.playintegrity)
+    debugImplementation(libs.firebase.appcheck.debug)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.config)
-
-    // Google AI (Gemini)
-    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 
     // Ktor Dependencies (Forțează importul corect al modulelor)
     val ktorVersion = "2.3.12"

@@ -3,15 +3,15 @@ package com.dariusepure.caractivitylog.data.ai
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
-import com.dariusepure.caractivitylog.R
 import com.dariusepure.caractivitylog.domain.ScannedCarData
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.RequestOptions
-import com.google.ai.client.generativeai.type.Schema
-import com.google.ai.client.generativeai.type.Tool
-import com.google.ai.client.generativeai.type.content
-import com.google.ai.client.generativeai.type.defineFunction
-import com.google.ai.client.generativeai.type.generationConfig
+import com.google.firebase.Firebase
+import com.google.firebase.vertexai.type.RequestOptions
+import com.google.firebase.vertexai.type.Schema
+import com.google.firebase.vertexai.type.Tool
+import com.google.firebase.vertexai.type.content
+import com.google.firebase.vertexai.type.defineFunction
+import com.google.firebase.vertexai.type.generationConfig
+import com.google.firebase.vertexai.vertexAI
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.serialization.json.Json
@@ -44,6 +44,8 @@ class GeminiRepository @Inject constructor(
     private val json = Json { 
         ignoreUnknownKeys = true 
         coerceInputValues = true
+        isLenient = true
+        allowSpecialFloatingPointValues = true
     }
 
     private val updateCarTools = Tool(
@@ -95,11 +97,10 @@ class GeminiRepository @Inject constructor(
                 text(prompt)
             }
 
-            val scanModel = GenerativeModel(
+            val scanModel = Firebase.vertexAI.generativeModel(
                 modelName = modelName,
-                apiKey = context.getString(R.string.gemini_api_key),
                 generationConfig = generationConfig {
-                    temperature = this@GeminiRepository.temperature
+                    this.temperature = this@GeminiRepository.temperature
                 },
                 requestOptions = requestOptions
             )
@@ -147,11 +148,10 @@ class GeminiRepository @Inject constructor(
                 text(prompt)
             }
 
-            val scanModel = GenerativeModel(
+            val scanModel = Firebase.vertexAI.generativeModel(
                 modelName = modelName,
-                apiKey = context.getString(R.string.gemini_api_key),
                 generationConfig = generationConfig {
-                    temperature = this@GeminiRepository.temperature
+                    this.temperature = this@GeminiRepository.temperature
                 },
                 requestOptions = requestOptions
             )
@@ -171,13 +171,12 @@ class GeminiRepository @Inject constructor(
         prompt: String,
         carContext: String,
         history: List<com.dariusepure.caractivitylog.ui.cars.ChatMessage>
-    ): com.google.ai.client.generativeai.type.GenerateContentResponse {
-        val diagnosisModel = GenerativeModel(
+    ): com.google.firebase.vertexai.type.GenerateContentResponse {
+        val diagnosisModel = Firebase.vertexAI.generativeModel(
             modelName = modelName,
-            apiKey = context.getString(R.string.gemini_api_key),
             tools = listOf(updateCarTools),
             generationConfig = generationConfig {
-                temperature = this@GeminiRepository.temperature
+                this.temperature = this@GeminiRepository.temperature
             },
             requestOptions = requestOptions
         )

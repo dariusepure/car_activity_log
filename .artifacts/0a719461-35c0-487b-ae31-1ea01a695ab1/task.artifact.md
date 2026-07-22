@@ -1,9 +1,0 @@
-- `[ ]` Add `fuelSystem` field to `Car` domain model
-- `[ ]` Update `FirestoreCar` with `fuelSystem` mapping
-- `[ ]` Uppercase all brands in `Brands.kt`
-- `[ ]` Update `AddCarViewModel` to handle `fuelSystem`
-- `[ ]` Update `AddCarScreen` UI:
-    - `[ ]` Remove default country "RO"
-    - `[ ]` Change color to manual input
-    - `[ ]` Add conditional Fuel System selection
-    - `[ ]` Pass `fuelSystem` to ViewModel on save

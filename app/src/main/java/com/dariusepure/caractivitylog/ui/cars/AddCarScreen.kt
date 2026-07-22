@@ -163,17 +163,17 @@ fun AddCarScreen(
             data.make?.let { make = it }
             data.model?.let { model = it }
             data.vin?.let { vin = it.uppercase() }
-            data.year?.let { year = it.toString() }
+            data.year?.let { year = it.roundToInt().toString() }
             data.fuelType?.let { if (it in fuelTypes) fuelType = it }
-            data.engineSize?.let { engineSize = it.toString() }
-            data.power?.let { power = it.toString() }
+            data.engineSize?.let { engineSize = it.roundToInt().toString() }
+            data.power?.let { power = it.roundToInt().toString() }
             data.powerUnit?.let { powerUnit = it }
-            data.torque?.let { torque = it.toString() }
+            data.torque?.let { torque = it.roundToInt().toString() }
             data.color?.let { color = it }
             data.registrationPlate?.let { licensePlate = it.uppercase() }
-            data.numberOfSeats?.let { numberOfSeats = it.toString() }
-            data.numberOfDoors?.let { numberOfDoors = it.toString() }
-            data.weight?.let { weight = it.toString() }
+            data.numberOfSeats?.let { numberOfSeats = it.roundToInt().toString() }
+            data.numberOfDoors?.let { numberOfDoors = it.roundToInt().toString() }
+            data.weight?.let { weight = it.roundToInt().toString() }
             data.engineCode?.let { engineCode = it }
             data.emissionStandard?.let { 
                 if (it in emissionStandards) emissionStandard = it 
