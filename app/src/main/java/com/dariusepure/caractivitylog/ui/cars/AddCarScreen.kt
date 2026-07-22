@@ -84,8 +84,9 @@ fun AddCarScreen(
     val engineLayouts = listOf("Transverse", "Longitudinal")
     val aspirationOptions = listOf("Naturally Aspirated", "Turbocharged", "Supercharged", "Twin-Turbo", "Quad-Turbo", "Electric")
     val emissionStandards = listOf("Non-Euro", "Euro 1", "Euro 2", "Euro 3", "Euro 4", "Euro 5", "Euro 6")
-    val gearboxTypes = listOf("Manual", "Automatic")
+    val gearboxTypes = listOf("Manual", "Automatic", "CVT", "DCT", "AMT")
     val brakeOptions = listOf("Ventilated Discs", "Solid Discs", "Drums", "Ceramic Discs")
+    val suspensionOptions = listOf("MacPherson Strut", "Double Wishbone", "Multi-link", "Trailing Arm", "Torsion Beam", "Leaf Spring", "Air Suspension")
     val drivetrainOptions = listOf("FWD", "RWD", "AWD", "4WD")
     val vehicleTypes = listOf("Saloon", "Estate", "Hatchback", "MPV", "SUV", "Coupe", "Convertible", "Van", "Pickup")
 
@@ -127,6 +128,8 @@ fun AddCarScreen(
     var gearboxType by remember { mutableStateOf("") }
     var gears by remember { mutableStateOf("") }
     var fuelSystem by remember { mutableStateOf("") }
+    var frontSuspension by remember { mutableStateOf("") }
+    var rearSuspension by remember { mutableStateOf("") }
     var frontBrakes by remember { mutableStateOf("") }
     var rearBrakes by remember { mutableStateOf("") }
     var vehicleType by remember { mutableStateOf("") }
@@ -201,6 +204,8 @@ fun AddCarScreen(
     var gearboxTypeExpanded by remember { mutableStateOf(false) }
     var frontBrakesExpanded by remember { mutableStateOf(false) }
     var rearBrakesExpanded by remember { mutableStateOf(false) }
+    var frontSuspensionExpanded by remember { mutableStateOf(false) }
+    var rearSuspensionExpanded by remember { mutableStateOf(false) }
     var vehicleTypeExpanded by remember { mutableStateOf(false) }
 
     var powerUnitExpanded by remember { mutableStateOf(false) }
@@ -235,6 +240,8 @@ fun AddCarScreen(
                 drivetrain = drivetrain,
                 gearboxType = gearboxType,
                 gears = gears,
+                frontSuspension = frontSuspension,
+                rearSuspension = rearSuspension,
                 aspiration = aspiration,
                 frontBrakes = frontBrakes,
                 rearBrakes = rearBrakes,
@@ -307,6 +314,8 @@ fun AddCarScreen(
                 drivetrain = car.drivetrain
                 gearboxType = car.gearboxType
                 gears = car.gears
+                frontSuspension = car.frontSuspension
+                rearSuspension = car.rearSuspension
                 frontBrakes = car.frontBrakes
                 rearBrakes = car.rearBrakes
                 vehicleType = car.vehicleType
@@ -571,7 +580,13 @@ fun AddCarScreen(
                         ) {
                             europeanCountries.forEach { country ->
                                 DropdownMenuItem(
-                                    text = { Text(country.name) },
+                                    text = { 
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(country.flag)
+                                            Spacer(Modifier.width(8.dp))
+                                            Text(country.name)
+                                        }
+                                    },
                                     onClick = {
                                         val previousUsesMiles = selectedCountry?.usesMiles ?: false
                                         selectedCountry = country
@@ -915,8 +930,8 @@ fun AddCarScreen(
                     Spacer(Modifier.height(8.dp))
                     var fuelSystemExpanded by remember { mutableStateOf(false) }
                     val fuelSystemOptions = when (fuelType) {
-                        "Petrol", "LPG" -> listOf("Carburatie", "Injectie Multipunct", "Injectie Directa")
-                        "Diesel" -> listOf("Pompa de Injectie", "Pumpe Duse", "Common Rail")
+                        "Petrol", "LPG" -> listOf("Carburetor", "Multi Point Injection", "Direct Injection")
+                        "Diesel" -> listOf("Injection Pump", "Pumpe Duse", "Common Rail")
                         else -> emptyList()
                     }
 
@@ -984,14 +999,75 @@ fun AddCarScreen(
                         }
                     }
                     Spacer(Modifier.width(8.dp))
+                    val isCvt = gearboxType == "CVT"
                     OutlinedTextField(
-                        value = gears,
-                        onValueChange = { gears = it },
+                        value = if (isCvt) "N/A" else gears,
+                        onValueChange = { if (!isCvt) gears = it },
                         label = { Text("Gears") },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
-                        enabled = state !is AddCarState.Pending
+                        enabled = state !is AddCarState.Pending && !isCvt
                     )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        OutlinedTextField(
+                            value = frontSuspension,
+                            onValueChange = { },
+                            readOnly = true,
+                            label = { Text("Front Suspension") },
+                            modifier = Modifier.fillMaxWidth(),
+                            trailingIcon = {
+                                Icon(Icons.Default.ArrowDropDown, null, Modifier.clickable { frontSuspensionExpanded = true })
+                            }
+                        )
+                        Box(modifier = Modifier.matchParentSize().clickable { frontSuspensionExpanded = true })
+                        DropdownMenu(
+                            expanded = frontSuspensionExpanded,
+                            onDismissRequest = { frontSuspensionExpanded = false }
+                        ) {
+                            suspensionOptions.forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(option) },
+                                    onClick = {
+                                        frontSuspension = option
+                                        frontSuspensionExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Box(modifier = Modifier.weight(1f)) {
+                        OutlinedTextField(
+                            value = rearSuspension,
+                            onValueChange = { },
+                            readOnly = true,
+                            label = { Text("Rear Suspension") },
+                            modifier = Modifier.fillMaxWidth(),
+                            trailingIcon = {
+                                Icon(Icons.Default.ArrowDropDown, null, Modifier.clickable { rearSuspensionExpanded = true })
+                            }
+                        )
+                        Box(modifier = Modifier.matchParentSize().clickable { rearSuspensionExpanded = true })
+                        DropdownMenu(
+                            expanded = rearSuspensionExpanded,
+                            onDismissRequest = { rearSuspensionExpanded = false }
+                        ) {
+                            suspensionOptions.forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(option) },
+                                    onClick = {
+                                        rearSuspension = option
+                                        rearSuspensionExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Spacer(Modifier.height(8.dp))
@@ -1304,6 +1380,8 @@ fun AddCarScreen(
                         drivetrain = drivetrain,
                         gearboxType = gearboxType,
                         gears = gears,
+                        frontSuspension = frontSuspension,
+                        rearSuspension = rearSuspension,
                         vehicleType = vehicleType,
                         manufacturingCountry = manufacturingCountry,
                         topSpeed = topSpeed,

@@ -93,53 +93,68 @@ fun TechnicalSheetScreen(
                     
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    TechnicalCategory(title = "Identity") {
+                    TechnicalCategory(title = "Identity & Style") {
                         SpecificationCard(
                             specifications = listOf(
                                 "Make" to car.make,
                                 "Model" to car.model,
-                                "Type" to car.vehicleType,
-                                "Year" to car.year.toString(),
+                                "Vehicle Type" to car.vehicleType,
+                                "Year" to car.year.takeIf { it != 0 }?.toString().orEmpty(),
                                 "Color" to car.color,
-                                "VIN" to car.vin
+                                "License Plate" to car.name,
+                                "Plate Country" to (country?.name ?: car.plateCountry),
+                                "VIN" to car.vin,
+                                "Manufacturing Country" to car.manufacturingCountry
                             )
                         )
                     }
 
-                    TechnicalCategory(title = "Engine & Transmission") {
+                    TechnicalCategory(title = "Engine & Performance") {
                         SpecificationCard(
                             specifications = listOf(
                                 "Power" to powerText,
-                                "Torque" to "${car.torque} Nm",
+                                "Torque" to if (car.torque > 0) "${car.torque} Nm" else "",
                                 "Top Speed" to topSpeedText,
-                                "Aspiration" to car.aspiration.ifBlank { "-" },
-                                "Cylinders" to if (car.numberOfCylinders > 0) car.numberOfCylinders.toString() else "-",
+                                "Aspiration" to car.aspiration,
+                                "Cylinders" to car.numberOfCylinders.takeIf { it != 0 }?.toString().orEmpty(),
                                 "Valves" to valvesText,
+                                "Engine Size" to if (car.engineSize.isNotBlank()) "${car.engineSize} cc" else "",
+                                "Fuel Type" to car.fuelType,
+                                "Injection System" to car.fuelSystem,
                                 "Engine Code" to car.engineCode,
                                 "Engine Layout" to car.engineLayout,
-                                "Pollution Standard" to car.emissionStandard,
-                                "Engine Size" to if (car.engineSize.isNotBlank()) "${car.engineSize} cc" else "-",
-                                "Fuel" to car.fuelType,
-                                "Fuel Tank" to if (car.fuelTankCapacity > 0) "${car.fuelTankCapacity} L" else "-",
-                                "Battery" to if (car.batteryCapacity > 0) "${car.batteryCapacity} kWh" else "-",
-                                "Gearbox" to car.gearboxType,
-                                "Drivetrain" to car.drivetrain,
-                                "Front Brakes" to car.frontBrakes.ifBlank { "-" },
-                                "Rear Brakes" to car.rearBrakes.ifBlank { "-" }
+                                "Emission Standard" to car.emissionStandard
                             )
                         )
                     }
 
-                    TechnicalCategory(title = "Dimensions & Origins") {
+                    TechnicalCategory(title = "Transmission & Chassis") {
                         SpecificationCard(
                             specifications = listOf(
-                                "Dimensions" to CarFormatters.formatDimensions(car),
-                                "Weight" to if (car.weight > 0) "${car.weight} kg" else "-",
-                                "Seats" to if (car.numberOfSeats > 0) car.numberOfSeats.toString() else "-",
-                                "Doors" to if (car.numberOfDoors > 0) car.numberOfDoors.toString() else "-",
-                                "Boot Space" to if (car.bootSpace > 0) "${car.bootSpace} L" else "-",
-                                "Tires" to tireSizeText,
-                                "Mfg. Country" to car.manufacturingCountry
+                                "Gearbox Type" to car.gearboxType,
+                                "Number of Gears" to car.gears,
+                                "Drivetrain" to car.drivetrain,
+                                "Front Suspension" to car.frontSuspension,
+                                "Rear Suspension" to car.rearSuspension,
+                                "Front Brakes" to car.frontBrakes,
+                                "Rear Brakes" to car.rearBrakes
+                            )
+                        )
+                    }
+
+                    TechnicalCategory(title = "Dimensions & Capacity") {
+                        SpecificationCard(
+                            specifications = listOf(
+                                "Dimensions (LxWxH)" to CarFormatters.formatDimensions(car),
+                                "Wheelbase" to if (car.wheelbase > 0) "${car.wheelbase} mm" else "",
+                                "Track Width" to if (car.trackWidth > 0) "${car.trackWidth} mm" else "",
+                                "Weight" to if (car.weight > 0) "${car.weight} kg" else "",
+                                "Seats" to car.numberOfSeats.takeIf { it != 0 }?.toString().orEmpty(),
+                                "Doors" to car.numberOfDoors.takeIf { it != 0 }?.toString().orEmpty(),
+                                "Boot Space" to if (car.bootSpace > 0) "${car.bootSpace} L" else "",
+                                "Fuel Tank" to if (car.fuelTankCapacity > 0) "${car.fuelTankCapacity} L" else "",
+                                "Battery Capacity" to if (car.batteryCapacity > 0) "${car.batteryCapacity} kWh" else "",
+                                "Tire Size" to tireSizeText
                             )
                         )
                     }

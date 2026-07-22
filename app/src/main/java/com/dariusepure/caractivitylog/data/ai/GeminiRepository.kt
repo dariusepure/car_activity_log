@@ -7,8 +7,12 @@ import com.dariusepure.caractivitylog.R
 import com.dariusepure.caractivitylog.domain.ScannedCarData
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.RequestOptions
+import com.google.ai.client.generativeai.type.Schema
+import com.google.ai.client.generativeai.type.Tool
 import com.google.ai.client.generativeai.type.content
+import com.google.ai.client.generativeai.type.defineFunction
 import com.google.ai.client.generativeai.type.generationConfig
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
@@ -17,47 +21,67 @@ import kotlin.time.Duration.Companion.seconds
 
 @Singleton
 class GeminiRepository @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val remoteConfig: FirebaseRemoteConfig
 ) {
 
-    private val requestOptions = RequestOptions(timeout = 30.seconds)
-    private val modelName = "gemini-3.5-flash-lite"
+    init {
+        remoteConfig.fetchAndActivate()
+    }
+
+    private val modelName: String
+        get() = remoteConfig.getString("gemini_model_name").ifBlank { "gemini-3.5-flash-lite" }
+
+    private val requestOptions: RequestOptions
+        get() = RequestOptions(timeout = remoteConfig.getLong("gemini_timeout_seconds").seconds)
 
     private val json = Json { 
         ignoreUnknownKeys = true 
         coerceInputValues = true
     }
 
+    private val updateCarTools = Tool(
+        functionDeclarations = listOf(
+            defineFunction(
+                name = "update_car_spec",
+                description = "Updates a specific technical specification of the car.",
+                parameters = listOf(
+                    Schema.str("field", "The technical field to update. Valid fields: make, model, vin, year, engineSize, fuelType, fuelSystem, color, power, torque, engineCode, engineLayout, length, width, height, wheelbase, trackWidth, emissionStandard, aspiration, fuelTankCapacity, batteryCapacity, drivetrain, gearboxType, gears, frontSuspension, rearSuspension, frontBrakes, rearBrakes, vehicleType, manufacturingCountry, topSpeed, weight, numberOfSeats, numberOfCylinders, valvesPerCylinder, numberOfDoors, bootSpace, tireWidth, tireAspectRatio, tireDiameter."),
+                    Schema.str("value", "The new value for the field. For dropdown fields, you MUST pick one of the standard English values provided in instructions.")
+                ),
+                requiredParameters = listOf("field", "value")
+            ),
+            defineFunction(
+                name = "update_car_mileage",
+                description = "Updates the car's current mileage (odometer reading).",
+                parameters = listOf(
+                    Schema.str("km", "The current mileage in kilometers.")
+                ),
+                requiredParameters = listOf("km")
+            )
+        )
+    )
+
     suspend fun scanRegistrationCertificate(bitmap: Bitmap): Result<ScannedCarData> {
         return try {
             val prompt = """
-                Extract technical details from this vehicle registration certificate (talon auto / carte identitate).
-                Look for both labels and standard EU codes:
-                - Make (Marca, D.1)
-                - Model (Varianta/Denumire comerciala, D.3)
-                - VIN (Serie sasiu, E) - MUST BE 17 CHARACTERS
-                - Year (An fabricatie, or from first registration date B)
-                - Fuel Type (Combustibil, P.3)
-                - Engine Size (Capacitate cilindrica, P.1)
-                - Power (Putere, P.2 - usually in kW, convert to hp if possible or specify)
-                - Engine Code (Serie motor, P.5)
-                - Emission Standard (Norma poluare, V.9, e.g., Euro 6)
-                - Color (Culoare, R)
-                - Registration Plate (Numar inmatriculare, A)
-                - Number of Seats (Locuri, S.1)
-                - Weight (Masa, G)
-                - Torque, Gearbox Type, Drivetrain, Fuel Tank, Top Speed (if mentioned in notes or technical specs).
+                Extract technical details from this vehicle document (registration certificate, invoice, insurance, or technical sheet).
+                Analyze the document and look for these fields:
+                - make, model, vin (MUST be 17 chars), year (4 digits), fuelType, engineSize (cc), power (hp or kW), torque (Nm), color, gears, registrationPlate.
+                
+                CRITICAL VALIDATION:
+                1. Verify VIN format: must be 17 characters, only letters and digits (excluding I, O, Q).
+                2. Verify Year: must be a realistic year (e.g., 1900-2026).
+                3. Verify Engine Size: must be in cubic centimeters (cc).
+                4. If a value is unreadable, illogical, or not found, return null for that field.
                 
                 Return ONLY a JSON object with these keys: 
                 make, model, vin, year, fuelType, engineSize, power, powerUnit, torque, color, 
                 registrationPlate, numberOfSeats, numberOfDoors, weight, engineCode, 
-                emissionStandard, gearboxType, drivetrain, fuelTankCapacity, topSpeed.
+                emissionStandard, gearboxType, gears, drivetrain, fuelTankCapacity, topSpeed.
                 
-                CRITICAL INSTRUCTIONS:
-                1. If a value is not found, use null. 
-                2. For fuelType use one of: Petrol, Diesel, Electric, Hybrid, LPG.
-                3. For numeric fields (year, engineSize, power, torque, weight, numberOfSeats, numberOfDoors, fuelTankCapacity, topSpeed), return ONLY the number (e.g., 150), never include units or text.
-                4. Standard powerUnit is 'hp'. If you find kW (P.2), multiply by 1.36 and return the result as an integer in 'power'.
+                Standard fuelType: Petrol, Diesel, Electric, Hybrid, LPG.
+                Standard powerUnit: 'hp'. If kW is found, convert to hp (kW * 1.36).
             """.trimIndent()
 
             val inputContent = content {
@@ -65,7 +89,6 @@ class GeminiRepository @Inject constructor(
                 text(prompt)
             }
 
-            // Use the model requested by the user
             val scanModel = GenerativeModel(
                 modelName = modelName,
                 apiKey = context.getString(R.string.gemini_api_key),
@@ -93,33 +116,23 @@ class GeminiRepository @Inject constructor(
                 ?: throw Exception("Could not read file")
 
             val prompt = """
-                Extract technical details from this vehicle registration certificate (talon auto / carte identitate).
-                Look for both labels and standard EU codes:
-                - Make (Marca, D.1)
-                - Model (Varianta/Denumire comerciala, D.3)
-                - VIN (Serie sasiu, E) - MUST BE 17 CHARACTERS
-                - Year (An fabricatie, or from first registration date B)
-                - Fuel Type (Combustibil, P.3)
-                - Engine Size (Capacitate cilindrica, P.1)
-                - Power (Putere, P.2 - usually in kW, convert to hp if possible or specify)
-                - Engine Code (Serie motor, P.5)
-                - Emission Standard (Norma poluare, V.9, e.g., Euro 6)
-                - Color (Culoare, R)
-                - Registration Plate (Numar inmatriculare, A)
-                - Number of Seats (Locuri, S.1)
-                - Weight (Masa, G)
-                - Torque, Gearbox Type, Drivetrain, Fuel Tank, Top Speed (if mentioned in notes or technical specs).
+                Extract technical details from this vehicle document (registration certificate, invoice, insurance, or technical sheet).
+                Analyze the document and look for these fields:
+                - make, model, vin (MUST be 17 chars), year (4 digits), fuelType, engineSize (cc), power (hp or kW), torque (Nm), color, gears, registrationPlate.
+                
+                CRITICAL VALIDATION:
+                1. Verify VIN format: must be 17 characters, only letters and digits (excluding I, O, Q).
+                2. Verify Year: must be a realistic year (e.g., 1900-2026).
+                3. Verify Engine Size: must be in cubic centimeters (cc).
+                4. If a value is unreadable, illogical, or not found, return null for that field.
                 
                 Return ONLY a JSON object with these keys: 
                 make, model, vin, year, fuelType, engineSize, power, powerUnit, torque, color, 
                 registrationPlate, numberOfSeats, numberOfDoors, weight, engineCode, 
-                emissionStandard, gearboxType, drivetrain, fuelTankCapacity, topSpeed.
+                emissionStandard, gearboxType, gears, drivetrain, fuelTankCapacity, topSpeed.
                 
-                CRITICAL INSTRUCTIONS:
-                1. If a value is not found, use null. 
-                2. For fuelType use one of: Petrol, Diesel, Electric, Hybrid, LPG.
-                3. For numeric fields (year, engineSize, power, torque, weight, numberOfSeats, numberOfDoors, fuelTankCapacity, topSpeed), return ONLY the number (e.g., 150), never include units or text.
-                4. Standard powerUnit is 'hp'. If you find kW (P.2), multiply by 1.36 and return the result as an integer in 'power'.
+                Standard fuelType: Petrol, Diesel, Electric, Hybrid, LPG.
+                Standard powerUnit: 'hp'. If kW is found, convert to hp (kW * 1.36).
             """.trimIndent()
 
             val inputContent = content {
@@ -151,37 +164,63 @@ class GeminiRepository @Inject constructor(
         prompt: String,
         carContext: String,
         history: List<com.dariusepure.caractivitylog.ui.cars.ChatMessage>
-    ): Result<String> {
-        return try {
-            val diagnosisModel = GenerativeModel(
-                modelName = modelName,
-                apiKey = context.getString(R.string.gemini_api_key),
-                requestOptions = requestOptions
-            )
+    ): com.google.ai.client.generativeai.type.GenerateContentResponse {
+        val diagnosisModel = GenerativeModel(
+            modelName = modelName,
+            apiKey = context.getString(R.string.gemini_api_key),
+            tools = listOf(updateCarTools),
+            requestOptions = requestOptions
+        )
 
-            // CRITICAL: history MUST start with user and alternate roles.
-            val validatedHistory = history
-                .dropWhile { !it.isUser } // Must start with user
-                .let { h ->
-                    // History must end with a model response for startChat(history) to work with a user sendMessage
-                    if (h.isNotEmpty() && h.size % 2 != 0) h.dropLast(1) else h
-                }
-                .map { 
-                    content(if (it.isUser) "user" else "model") { text(it.text) }
-                }
+        // CRITICAL: history MUST start with user and alternate roles.
+        val validatedHistory = history
+            .dropWhile { !it.isUser } // Must start with user
+            .let { h ->
+                // History must end with a model response for startChat(history) to work with a user sendMessage
+                if (h.isNotEmpty() && h.size % 2 != 0) h.dropLast(1) else h
+            }
+            .map { 
+                content(if (it.isUser) "user" else "model") { text(it.text) }
+            }
 
-            val chat = diagnosisModel.startChat(history = validatedHistory)
+        val chat = diagnosisModel.startChat(history = validatedHistory)
+        
+        val systemInstruction = """
+            You are an expert car mechanic AI. You have access to the car's current specifications and mileage history.
+            CONTEXT: $carContext
             
-            val fullPrompt = """
-                System: You are an expert car mechanic AI. Context: $carContext
-                User: $prompt
-            """.trimIndent()
+            TECHNICAL STANDARDS (MUST pick from these lists for dropdown fields):
+            - fuelType: [Petrol, Diesel, Electric, Hybrid, LPG]
+            - engineLayout: [Transverse, Longitudinal]
+            - aspiration: [Naturally Aspirated, Turbocharged, Supercharged, Twin-Turbo, Quad-Turbo, Electric]
+            - emissionStandard: [Non-Euro, Euro 1, Euro 2, Euro 3, Euro 4, Euro 5, Euro 6]
+            - gearboxType: [Manual, Automatic, CVT, DCT, AMT]
+            - frontBrakes / rearBrakes: [Ventilated Discs, Solid Discs, Drums, Ceramic Discs]
+            - frontSuspension / rearSuspension: [MacPherson Strut, Double Wishbone, Multi-link, Trailing Arm, Torsion Beam, Leaf Spring, Air Suspension]
+            - drivetrain: [FWD, RWD, AWD, 4WD]
+            - vehicleType: [Saloon, Estate, Hatchback, MPV, SUV, Coupe, Convertible, Van, Pickup]
+            - fuelSystem (Petrol/LPG): [Carburetor, Multi Point Injection, Direct Injection]
+            - fuelSystem (Diesel): [Injection Pump, Pumpe Duse, Common Rail]
+            - powerUnit: [hp, kw]
+            
+            MAPPING RULES:
+            - Always map user descriptions to the CLOSEST standard value from the lists above.
+            - Do NOT invent new categories for these fields.
+            - Example: User says "MPI" -> value: "Multi Point Injection".
+            - Example: User says "rampa comuna" -> value: "Common Rail".
+            - Example: User says "tractiune fata" -> value: "FWD".
+            - Example: User says "cutie manuala" -> value: "Manual".
+            
+            YOU CAN:
+            1. Analyze the car's state based on its specs and mileage.
+            2. Suggest maintenance or fixes.
+            3. Update car specifications using 'update_car_spec'. FOR DROPDOWN FIELDS, YOU MUST USE ONE OF THE STANDARD VALUES.
+            4. Update the car's current mileage using 'update_car_mileage'.
+            
+            IMPORTANT: When calling a tool, always inform the user what you are changing or adding using the standard English terms.
+        """.trimIndent()
 
-            val response = chat.sendMessage(fullPrompt)
-            Result.success(response.text ?: "No response.")
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return chat.sendMessage(content("user") { text("$systemInstruction\n\nUser: $prompt") })
     }
 
     private fun extractJson(text: String): String {

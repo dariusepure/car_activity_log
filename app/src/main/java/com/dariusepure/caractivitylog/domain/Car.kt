@@ -31,6 +31,8 @@ data class Car(
     val drivetrain: String = "",
     val gearboxType: String = "",
     val gears: String = "",
+    val frontSuspension: String = "",
+    val rearSuspension: String = "",
     val frontBrakes: String = "",
     val rearBrakes: String = "",
     val vehicleType: String = "",

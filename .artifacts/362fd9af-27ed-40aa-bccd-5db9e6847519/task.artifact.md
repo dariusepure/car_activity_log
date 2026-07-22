@@ -1,0 +1,10 @@
+- [x] Expand Technical Sheet Screen
+    - [x] Reorganize categories in `TechnicalSheetScreen.kt`
+    - [x] Map all `Car` model fields to `SpecificationCard`s
+- [x] Integrate Firebase Remote Config for Gemini
+    - [x] Add Remote Config provider in `AppModule.kt`
+    - [x] Update `GeminiRepository.kt` to use injected `FirebaseRemoteConfig`
+    - [x] Replace hardcoded model name and timeout with Remote Config values
+- [x] Verification
+    - [x] Verify build and code analysis
+    - [x] Check mapping completeness

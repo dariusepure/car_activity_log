@@ -56,10 +56,11 @@ class SignInViewModel @Inject constructor(
 
     fun onSignInWithGoogle(context: Context) {
         viewModelScope.launch {
+            _state.value = SignInState.Pending
             try {
                 authRepository.signInWithGoogle(context)
             } catch (exception: Exception) {
-                _state.value = SignInState.Error(exception.message ?: "We don't why it failed, but it did")
+                _state.value = SignInState.Error(exception.message ?: "An unexpected error occurred during Google Sign-In")
             }
         }
     }
