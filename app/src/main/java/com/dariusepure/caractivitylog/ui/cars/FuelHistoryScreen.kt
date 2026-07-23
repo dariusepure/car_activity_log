@@ -10,7 +10,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocalGasStation
+import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +23,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.dariusepure.caractivitylog.domain.MileageLog
 import com.dariusepure.caractivitylog.ui.common.CarFormatters
 import com.dariusepure.caractivitylog.ui.common.ErrorState
 import com.dariusepure.caractivitylog.ui.common.LoadingState
@@ -77,6 +80,28 @@ fun FuelHistoryScreen(
                 ) {
                     item {
                         FuelStatsCard(s.stats, distUnit, consUnit)
+                        
+                        if (s.stats.avgConsumption == null && s.logs.isNotEmpty()) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                                shape = MaterialTheme.shapes.small,
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Info, null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(20.dp))
+                                    Spacer(Modifier.width(12.dp))
+                                    Text(
+                                        text = "Add at least 2 'Full Tank' records to see average consumption.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                }
+                            }
+                        }
+
                         Spacer(Modifier.height(8.dp))
                         Text(
                             text = "Filling History",
@@ -87,7 +112,17 @@ fun FuelHistoryScreen(
 
                     if (s.logs.isEmpty()) {
                         item {
-                            Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    Icons.Outlined.DirectionsCar, 
+                                    null, 
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.outline
+                                )
+                                Spacer(Modifier.height(16.dp))
                                 Text("No records yet. Add your first filling!", color = MaterialTheme.colorScheme.secondary)
                             }
                         }
@@ -99,7 +134,7 @@ fun FuelHistoryScreen(
                             distUnit = distUnit,
                             consUnit = consUnit,
                             usesMiles = usesMiles,
-                            onDelete = { viewModel.deleteFuelLog(carId, entry.log.id) }
+                            onDelete = { viewModel.deleteFuelLog(carId, entry.log) }
                         )
                     }
                     
@@ -109,9 +144,12 @@ fun FuelHistoryScreen(
                 if (showAddDialog) {
                     AddFuelDialog(
                         unit = distUnit,
+                        usesMiles = usesMiles,
+                        existingLogs = s.mileageLogs,
                         onDismiss = { showAddDialog = false },
-                        onConfirm = { km, liters, cost, isFull, date ->
-                            viewModel.addFuelLog(carId, km, liters, cost, isFull, date)
+                        onConfirm = { kmInput, liters, cost, isFull, date ->
+                            val kmCanonical = CarFormatters.toCanonicalDistance(kmInput, usesMiles)
+                            viewModel.addFuelLog(carId, kmCanonical, liters, cost, isFull, date)
                             showAddDialog = false
                         }
                     )
@@ -132,7 +170,10 @@ fun FuelStatsCard(stats: FuelStats, distUnit: String, consUnit: String) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                StatItem("Avg Consumption", String.format(Locale.getDefault(), "%.2f %s", stats.avgConsumption, consUnit))
+                StatItem(
+                    label = "Avg Consumption", 
+                    value = stats.avgConsumption?.let { String.format(Locale.getDefault(), "%.2f %s", it, consUnit) } ?: "-- $consUnit"
+                )
                 StatItem("Total Distance", "${stats.totalDistance.roundToInt()} $distUnit")
             }
             Spacer(Modifier.height(16.dp))
@@ -207,6 +248,8 @@ fun FuelLogItem(
 @Composable
 fun AddFuelDialog(
     unit: String,
+    usesMiles: Boolean,
+    existingLogs: List<MileageLog> = emptyList(),
     onDismiss: () -> Unit,
     onConfirm: (Double, Double, Double, Boolean, Date) -> Unit
 ) {
@@ -215,6 +258,7 @@ fun AddFuelDialog(
     var cost by remember { mutableStateOf("") }
     var isFullTank by remember { mutableStateOf(true) }
     var selectedDate by remember { mutableStateOf(Date()) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     
     val context = LocalContext.current
     val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
@@ -223,8 +267,10 @@ fun AddFuelDialog(
     val datePickerDialog = DatePickerDialog(
         context,
         { _, year, month, dayOfMonth ->
-            calendar.set(year, month, dayOfMonth)
-            selectedDate = calendar.time
+            val newCalendar = Calendar.getInstance()
+            newCalendar.set(year, month, dayOfMonth)
+            selectedDate = newCalendar.time
+            errorMessage = null
         },
         calendar.get(Calendar.YEAR),
         calendar.get(Calendar.MONTH),
@@ -238,11 +284,26 @@ fun AddFuelDialog(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = km,
-                    onValueChange = { if (it.all { c -> c.isDigit() }) km = it },
+                    onValueChange = { 
+                        if (it.all { c -> c.isDigit() }) {
+                            km = it
+                            errorMessage = null
+                        }
+                    },
                     label = { Text("Mileage ($unit)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = errorMessage != null
                 )
+
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = liters,
@@ -286,8 +347,26 @@ fun AddFuelDialog(
                     val k = km.toDoubleOrNull() ?: 0.0
                     val l = liters.toDoubleOrNull() ?: 0.0
                     val c = cost.toDoubleOrNull() ?: 0.0
+                    
                     if (k > 0 && l > 0) {
-                        onConfirm(k, l, c, isFullTank, selectedDate)
+                        val canonicalInput = CarFormatters.toCanonicalDistance(k, usesMiles)
+                        
+                        val conflict = existingLogs.find { log ->
+                            val kmBackwards = selectedDate.after(log.date) && canonicalInput < log.km
+                            val dateBackwards = selectedDate.before(log.date) && canonicalInput > log.km
+                            kmBackwards || dateBackwards
+                        }
+
+                        if (conflict != null) {
+                            val conflictDisplay = CarFormatters.fromCanonicalDistance(conflict.km, usesMiles)
+                            errorMessage = if (selectedDate.after(conflict.date)) {
+                                "Mileage cannot be less than ${conflictDisplay.roundToInt()} $unit recorded on ${dateFormat.format(conflict.date)}"
+                            } else {
+                                "Mileage cannot be more than ${conflictDisplay.roundToInt()} $unit recorded on ${dateFormat.format(conflict.date)}"
+                            }
+                        } else {
+                            onConfirm(k, l, c, isFullTank, selectedDate)
+                        }
                     }
                 },
                 enabled = km.isNotBlank() && liters.isNotBlank()

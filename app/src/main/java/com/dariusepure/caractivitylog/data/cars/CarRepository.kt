@@ -335,28 +335,28 @@ class CarRepository @Inject constructor(
     suspend fun addFuelLog(carId: String, log: com.dariusepure.caractivitylog.domain.FuelLog) {
         val uid = firebaseAuth.currentUser?.uid ?: return
         
-        // 1. Add Fuel Log
-        firestore.collection("users")
-            .document(uid)
-            .collection("cars")
-            .document(carId)
-            .collection("fuel_logs")
-            .add(log.toFirebase())
-            .await()
+        val carRef = firestore.collection("users").document(uid).collection("cars").document(carId)
+        val fuelLogRef = carRef.collection("fuel_logs").document()
+        val mileageLogRef = carRef.collection("mileage").document()
 
-        // 2. Automatically update general mileage
-        addMileageLog(carId, MileageLog(km = log.km, date = log.date))
+        val mileageLog = MileageLog(id = mileageLogRef.id, km = log.km, date = log.date)
+        val fuelLog = log.copy(id = fuelLogRef.id, mileageLogId = mileageLogRef.id)
+
+        firestore.runBatch { batch ->
+            batch.set(fuelLogRef, fuelLog.toFirebase())
+            batch.set(mileageLogRef, mileageLog.toFirebase())
+        }.await()
     }
 
-    suspend fun deleteFuelLog(carId: String, logId: String) {
+    suspend fun deleteFuelLog(carId: String, log: com.dariusepure.caractivitylog.domain.FuelLog) {
         val uid = firebaseAuth.currentUser?.uid ?: return
-        firestore.collection("users")
-            .document(uid)
-            .collection("cars")
-            .document(carId)
-            .collection("fuel_logs")
-            .document(logId)
-            .delete()
-            .await()
+        val carRef = firestore.collection("users").document(uid).collection("cars").document(carId)
+        
+        firestore.runBatch { batch ->
+            batch.delete(carRef.collection("fuel_logs").document(log.id))
+            if (log.mileageLogId.isNotEmpty()) {
+                batch.delete(carRef.collection("mileage").document(log.mileageLogId))
+            }
+        }.await()
     }
 }

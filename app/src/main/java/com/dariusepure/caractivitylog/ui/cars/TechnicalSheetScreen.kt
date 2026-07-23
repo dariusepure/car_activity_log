@@ -103,9 +103,9 @@ fun TechnicalSheetScreen(
                                 "Year" to car.year.takeIf { it != 0 }?.toString().orEmpty(),
                                 "Color" to car.color,
                                 "License Plate" to car.licensePlate,
-                                "Plate Country" to (country?.name ?: car.plateCountry),
+                                "Plate Country" to (country?.let { "${it.flag} ${it.name}" } ?: car.plateCountry),
                                 "VIN" to car.vin,
-                                "Manufacturing Country" to car.manufacturingCountry
+                                "Manufacturing Country" to (europeanCountries.find { it.name == car.manufacturingCountry }?.let { "${it.flag} ${it.name}" } ?: car.manufacturingCountry)
                             )
                         )
                     }

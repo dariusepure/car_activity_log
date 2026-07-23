@@ -15,11 +15,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Sort
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.foundation.shape.CircleShape
@@ -31,6 +33,8 @@ import com.dariusepure.caractivitylog.ui.common.CarFormatters
 import com.dariusepure.caractivitylog.ui.theme.ThemeViewModel
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -41,6 +45,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,6 +55,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -181,6 +189,7 @@ fun CarListScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val sortOrder by viewModel.sortOrder.collectAsStateWithLifecycle()
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle()
     val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
     val currentDark = isDarkMode ?: systemDark
@@ -195,6 +204,8 @@ fun CarListScreen(
             onLogout()
         },
         onThemeToggle = { themeViewModel.toggleTheme(currentDark) },
+        onSortOrderChange = { viewModel.onSortOrderChanged(it) },
+        currentSortOrder = sortOrder,
         isDark = currentDark,
         state = state
     )
@@ -209,16 +220,52 @@ private fun InnerCarListScreen(
     onDeleteCar: (String) -> Unit,
     onLogoutClick: () -> Unit,
     onThemeToggle: () -> Unit,
+    onSortOrderChange: (CarSortOrder) -> Unit,
+    currentSortOrder: CarSortOrder,
     isDark: Boolean,
     state: CarListUiState,
     modifier: Modifier = Modifier,
 ) {
+    var sortMenuExpanded by remember { mutableStateOf(false) }
+
     Scaffold(
         modifier = modifier,
         topBar = {
             TopAppBar(
                 title = { Text("Your cars") },
                 actions = {
+                    Box {
+                        IconButton(onClick = { sortMenuExpanded = true }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Sort,
+                                contentDescription = "Sort cars"
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = sortMenuExpanded,
+                            onDismissRequest = { sortMenuExpanded = false }
+                        ) {
+                            CarSortOrder.entries.forEach { order ->
+                                DropdownMenuItem(
+                                    text = { 
+                                        Text(
+                                            text = order.label,
+                                            fontWeight = if (order == currentSortOrder) FontWeight.Bold else FontWeight.Normal
+                                        ) 
+                                    },
+                                    onClick = {
+                                        onSortOrderChange(order)
+                                        sortMenuExpanded = false
+                                    },
+                                    leadingIcon = {
+                                        if (order == currentSortOrder) {
+                                            Icon(Icons.Default.CheckCircle, null, Modifier.size(18.dp))
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
                     IconButton(onClick = onThemeToggle) {
                         Icon(
                             imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,

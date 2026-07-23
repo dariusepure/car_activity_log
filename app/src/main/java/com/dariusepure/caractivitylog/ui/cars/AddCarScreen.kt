@@ -479,21 +479,7 @@ fun AddCarScreen(
                         carBrands.forEach { brand ->
                             if (brand != "Other") {
                                 DropdownMenuItem(
-                                    text = { 
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            val logoRes = BrandHelper.getLogoResource(context, brand)
-                                            if (logoRes != 0) {
-                                                Icon(
-                                                    painter = painterResource(id = logoRes),
-                                                    contentDescription = null,
-                                                    modifier = Modifier.size(24.dp),
-                                                    tint = Color.Unspecified
-                                                )
-                                                Spacer(Modifier.width(12.dp))
-                                            }
-                                            Text(brand)
-                                        }
-                                    },
+                                    text = { Text(brand) },
                                     onClick = {
                                         make = brand
                                         makeExpanded = false
@@ -713,7 +699,13 @@ fun AddCarScreen(
                     ) {
                         europeanCountries.forEach { country ->
                             DropdownMenuItem(
-                                text = { Text(country.name) },
+                                text = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(country.flag)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(country.name)
+                                    }
+                                },
                                 onClick = {
                                     manufacturingCountry = country.name
                                     manufacturingCountryExpanded = false

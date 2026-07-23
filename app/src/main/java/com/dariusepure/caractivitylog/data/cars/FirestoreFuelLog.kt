@@ -10,7 +10,8 @@ data class FirestoreFuelLog(
     val km: Double = 0.0,
     val liters: Double = 0.0,
     val cost: Double = 0.0,
-    val isFullTank: Boolean = true
+    val isFullTank: Boolean = true,
+    val mileageLogId: String = ""
 )
 
 fun FuelLog.toFirebase() = FirestoreFuelLog(
@@ -19,7 +20,8 @@ fun FuelLog.toFirebase() = FirestoreFuelLog(
     km = this.km,
     liters = this.liters,
     cost = this.cost,
-    isFullTank = this.isFullTank
+    isFullTank = this.isFullTank,
+    mileageLogId = this.mileageLogId
 )
 
 fun FirestoreFuelLog.fromFirebase() = FuelLog(
@@ -28,5 +30,6 @@ fun FirestoreFuelLog.fromFirebase() = FuelLog(
     km = this.km,
     liters = this.liters,
     cost = this.cost,
-    isFullTank = this.isFullTank
+    isFullTank = this.isFullTank,
+    mileageLogId = this.mileageLogId
 )
