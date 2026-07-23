@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -115,21 +116,21 @@ fun CarDetailsScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             val logoRes = BrandHelper.getLogoResource(context, car.make)
                             if (logoRes != 0) {
-                                Icon(
+                                Image(
                                     painter = painterResource(id = logoRes),
                                     contentDescription = car.make,
-                                    modifier = Modifier.size(40.dp),
-                                    tint = Color.Unspecified
+                                    modifier = Modifier.size(64.dp), // Increased from 40dp
+                                    contentScale = ContentScale.Fit
                                 )
-                                Spacer(Modifier.width(12.dp))
+                                Spacer(Modifier.width(16.dp))
                             } else {
                                 Icon(
                                     imageVector = Icons.Outlined.DirectionsCar,
                                     contentDescription = null,
-                                    modifier = Modifier.size(40.dp),
+                                    modifier = Modifier.size(64.dp),
                                     tint = MaterialTheme.colorScheme.primary
                                 )
-                                Spacer(Modifier.width(12.dp))
+                                Spacer(Modifier.width(16.dp))
                             }
                             Text(
                                 text = car.displayName,

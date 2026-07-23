@@ -3,6 +3,12 @@ package com.dariusepure.caractivitylog.domain
 import kotlinx.serialization.Serializable
 
 @Serializable
+data class ScannedMileageEntry(
+    val km: Double,
+    val date: String? = null // Format: YYYY-MM-DD
+)
+
+@Serializable
 data class ScannedCarData(
     val make: String? = null,
     val model: String? = null,
@@ -21,7 +27,12 @@ data class ScannedCarData(
     val engineCode: String? = null,
     val emissionStandard: String? = null,
     val gearboxType: String? = null,
+    val gears: String? = null,
     val drivetrain: String? = null,
+    val engineLayout: String? = null,
+    val cylinderLayout: String? = null,
     val fuelTankCapacity: Double? = null,
-    val topSpeed: Double? = null
+    val topSpeed: Double? = null,
+    val mileage: Double? = null,
+    val mileageHistory: List<ScannedMileageEntry>? = null
 )

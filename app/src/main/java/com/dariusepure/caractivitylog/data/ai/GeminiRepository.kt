@@ -95,7 +95,9 @@ class GeminiRepository @Inject constructor(
                 Return ONLY a JSON object with these keys: 
                 make, model, vin, year, fuelType, engineSize, power, powerUnit, torque, color, 
                 registrationPlate, numberOfSeats, numberOfDoors, weight, engineCode, 
-                emissionStandard, gearboxType, gears, drivetrain, fuelTankCapacity, topSpeed.
+                emissionStandard, gearboxType, gears, drivetrain, engineLayout, cylinderLayout, 
+                fuelTankCapacity, topSpeed, mileage,
+                mileageHistory (a list of objects with 'km' and 'date' in YYYY-MM-DD format).
                 
                 Standard fuelType: Petrol, Diesel, Electric, Hybrid, LPG.
                 Standard powerUnit: 'hp'. If kW is found, convert to hp (kW * 1.36).
@@ -138,7 +140,9 @@ class GeminiRepository @Inject constructor(
                 Return ONLY a JSON object with these keys: 
                 make, model, vin, year, fuelType, engineSize, power, powerUnit, torque, color, 
                 registrationPlate, numberOfSeats, numberOfDoors, weight, engineCode, 
-                emissionStandard, gearboxType, gears, drivetrain, fuelTankCapacity, topSpeed.
+                emissionStandard, gearboxType, gears, drivetrain, engineLayout, cylinderLayout, 
+                fuelTankCapacity, topSpeed, mileage,
+                mileageHistory (a list of objects with 'km' and 'date' in YYYY-MM-DD format).
                 
                 Standard fuelType: Petrol, Diesel, Electric, Hybrid, LPG.
                 Standard powerUnit: 'hp'. If kW is found, convert to hp (kW * 1.36).

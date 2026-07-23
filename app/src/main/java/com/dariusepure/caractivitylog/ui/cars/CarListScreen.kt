@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
@@ -89,18 +90,18 @@ fun CarCard(
         ) {
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(56.dp) // Increased box size from 48dp
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
                 val logoRes = BrandHelper.getLogoResource(context, car.make)
                 if (logoRes != 0) {
-                    Icon(
+                    Image(
                         painter = painterResource(id = logoRes),
                         contentDescription = car.make,
-                        modifier = Modifier.size(32.dp),
-                        tint = Color.Unspecified
+                        modifier = Modifier.size(44.dp), // Increased logo size from 32dp
+                        contentScale = ContentScale.Fit
                     )
                 } else {
                     Icon(

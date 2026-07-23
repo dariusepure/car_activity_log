@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -69,8 +70,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material.icons.outlined.DirectionsCar
-import coil.compose.AsyncImage
 import androidx.compose.ui.res.painterResource
+import coil.compose.AsyncImage
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.AlertDialog
+import androidx.compose.ui.text.font.FontWeight
+import com.dariusepure.caractivitylog.domain.ScannedCarData
 import com.dariusepure.caractivitylog.ui.common.CarFormatters
 import kotlin.math.roundToInt
 
@@ -167,35 +175,50 @@ fun AddCarScreen(
         }
     }
 
+    var pendingScannedData by remember { mutableStateOf<ScannedCarData?>(null) }
+
     LaunchedEffect(Unit) {
         viewModel.scannedDataEvent.collect { data ->
-            data.make?.let { make = it }
-            data.model?.let { model = it }
-            data.vin?.let { vin = it.uppercase() }
-            data.year?.let { year = it.roundToInt().toString() }
-            data.fuelType?.let { if (it in fuelTypes) fuelType = it }
-            data.engineSize?.let { engineSize = it.roundToInt().toString() }
-            data.power?.let { power = it.roundToInt().toString() }
-            data.powerUnit?.let { powerUnit = it }
-            data.torque?.let { torque = it.roundToInt().toString() }
-            data.color?.let { color = it }
-            data.registrationPlate?.let { licensePlate = it.uppercase() }
-            data.numberOfSeats?.let { numberOfSeats = it.roundToInt().toString() }
-            data.numberOfDoors?.let { numberOfDoors = it.roundToInt().toString() }
-            data.weight?.let { weight = it.roundToInt().toString() }
-            data.engineCode?.let { engineCode = it }
-            data.emissionStandard?.let { 
-                if (it in emissionStandards) emissionStandard = it 
-                else if (it.contains("Euro", ignoreCase = true)) {
-                    val standard = emissionStandards.find { s -> it.contains(s.takeLast(1)) }
-                    if (standard != null) emissionStandard = standard
-                }
-            }
-            data.gearboxType?.let { if (it in gearboxTypes) gearboxType = it }
-            data.drivetrain?.let { if (it in drivetrainOptions) drivetrain = it }
-            data.fuelTankCapacity?.let { fuelTankCapacity = it.toString() }
-            data.topSpeed?.let { topSpeed = it.roundToInt().toString() }
+            pendingScannedData = data
         }
+    }
+
+    if (pendingScannedData != null) {
+        ScannedCarDataConfirmationDialog(
+            data = pendingScannedData!!,
+            onDismiss = { pendingScannedData = null },
+            onConfirm = { selectedData ->
+                selectedData.make?.let { make = it }
+                selectedData.model?.let { model = it }
+                selectedData.vin?.let { vin = it.uppercase() }
+                selectedData.year?.let { year = it.roundToInt().toString() }
+                selectedData.fuelType?.let { if (it in fuelTypes) fuelType = it }
+                selectedData.engineSize?.let { engineSize = it.roundToInt().toString() }
+                selectedData.power?.let { power = it.roundToInt().toString() }
+                selectedData.powerUnit?.let { powerUnit = it }
+                selectedData.torque?.let { torque = it.roundToInt().toString() }
+                selectedData.color?.let { color = it }
+                selectedData.registrationPlate?.let { licensePlate = it.uppercase() }
+                selectedData.numberOfSeats?.let { numberOfSeats = it.roundToInt().toString() }
+                selectedData.numberOfDoors?.let { numberOfDoors = it.roundToInt().toString() }
+                selectedData.weight?.let { weight = it.roundToInt().toString() }
+                selectedData.engineCode?.let { engineCode = it }
+                selectedData.emissionStandard?.let {
+                    if (it in emissionStandards) emissionStandard = it
+                    else if (it.contains("Euro", ignoreCase = true)) {
+                        val standard = emissionStandards.find { s -> it.contains(s.takeLast(1)) }
+                        if (standard != null) emissionStandard = standard
+                    }
+                }
+                selectedData.gearboxType?.let { if (it in gearboxTypes) gearboxType = it }
+                selectedData.drivetrain?.let { if (it in drivetrainOptions) drivetrain = it }
+                selectedData.engineLayout?.let { if (it in engineLayouts) engineLayout = it }
+                selectedData.cylinderLayout?.let { if (it in cylinderLayouts) cylinderLayout = it }
+                selectedData.fuelTankCapacity?.let { fuelTankCapacity = it.toString() }
+                selectedData.topSpeed?.let { topSpeed = it.roundToInt().toString() }
+                pendingScannedData = null
+            }
+        )
     }
 
     var identityExpanded by remember { mutableStateOf(true) }
@@ -454,11 +477,11 @@ fun AddCarScreen(
                         leadingIcon = {
                             val logoRes = BrandHelper.getLogoResource(context, make)
                             if (logoRes != 0) {
-                                Icon(
+                                Image(
                                     painter = painterResource(id = logoRes),
                                     contentDescription = null,
-                                    modifier = Modifier.size(24.dp),
-                                    tint = Color.Unspecified
+                                    modifier = Modifier.size(32.dp),
+                                    contentScale = ContentScale.Fit
                                 )
                             } else {
                                 Icon(Icons.Outlined.DirectionsCar, null, modifier = Modifier.size(24.dp))
@@ -1514,6 +1537,127 @@ fun AddCarScreen(
             }
         }
     }
+}
+
+@Composable
+fun ScannedCarDataConfirmationDialog(
+    data: ScannedCarData,
+    onDismiss: () -> Unit,
+    onConfirm: (ScannedCarData) -> Unit
+) {
+    // We create a map of keys to values and labels for easy display
+    val fields = remember(data) {
+        val list = mutableListOf<Triple<String, String, String>>() // Label, Value, Key
+        data.make?.let { list.add(Triple("Make", it, "make")) }
+        data.model?.let { list.add(Triple("Model", it, "model")) }
+        data.vin?.let { list.add(Triple("VIN", it, "vin")) }
+        data.year?.let { list.add(Triple("Year", it.roundToInt().toString(), "year")) }
+        data.fuelType?.let { list.add(Triple("Fuel Type", it, "fuelType")) }
+        data.engineSize?.let { list.add(Triple("Engine Size", "${it.roundToInt()} cc", "engineSize")) }
+        data.power?.let { list.add(Triple("Power", "${it.roundToInt()} ${data.powerUnit ?: "hp"}", "power")) }
+        data.torque?.let { list.add(Triple("Torque", "${it.roundToInt()} Nm", "torque")) }
+        data.color?.let { list.add(Triple("Color", it, "color")) }
+        data.registrationPlate?.let { list.add(Triple("License Plate", it, "registrationPlate")) }
+        data.numberOfSeats?.let { list.add(Triple("Seats", it.roundToInt().toString(), "numberOfSeats")) }
+        data.numberOfDoors?.let { list.add(Triple("Doors", it.roundToInt().toString(), "numberOfDoors")) }
+        data.weight?.let { list.add(Triple("Weight", "${it.roundToInt()} kg", "weight")) }
+        data.engineCode?.let { list.add(Triple("Engine Code", it, "engineCode")) }
+        data.emissionStandard?.let { list.add(Triple("Emission Standard", it, "emissionStandard")) }
+        data.gearboxType?.let { list.add(Triple("Gearbox", it, "gearboxType")) }
+        data.drivetrain?.let { list.add(Triple("Drivetrain", it, "drivetrain")) }
+        data.engineLayout?.let { list.add(Triple("Engine Layout", it, "engineLayout")) }
+        data.cylinderLayout?.let { list.add(Triple("Cylinder Layout", it, "cylinderLayout")) }
+        data.fuelTankCapacity?.let { list.add(Triple("Fuel Tank", "$it L", "fuelTankCapacity")) }
+        data.topSpeed?.let { list.add(Triple("Top Speed", "${it.roundToInt()}", "topSpeed")) }
+        list
+    }
+
+    var selectedKeys by remember { mutableStateOf(fields.map { it.third }.toSet()) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Confirm Scanned Data") },
+        text = {
+            Column {
+                Text(
+                    "We found the following information. Select what you want to apply to the form.",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(fields) { (label, value, key) ->
+                        val isSelected = key in selectedKeys
+                        Surface(
+                            onClick = {
+                                selectedKeys = if (isSelected) selectedKeys - key else selectedKeys + key
+                            },
+                            shape = MaterialTheme.shapes.medium,
+                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(text = label, style = MaterialTheme.typography.labelSmall)
+                                    Text(text = value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                                }
+                                Checkbox(
+                                    checked = isSelected,
+                                    onCheckedChange = null // Handled by Surface click
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    // Filter original data based on selected keys
+                    val confirmedData = ScannedCarData(
+                        make = if ("make" in selectedKeys) data.make else null,
+                        model = if ("model" in selectedKeys) data.model else null,
+                        vin = if ("vin" in selectedKeys) data.vin else null,
+                        year = if ("year" in selectedKeys) data.year else null,
+                        fuelType = if ("fuelType" in selectedKeys) data.fuelType else null,
+                        engineSize = if ("engineSize" in selectedKeys) data.engineSize else null,
+                        power = if ("power" in selectedKeys) data.power else null,
+                        powerUnit = data.powerUnit,
+                        torque = if ("torque" in selectedKeys) data.torque else null,
+                        color = if ("color" in selectedKeys) data.color else null,
+                        registrationPlate = if ("registrationPlate" in selectedKeys) data.registrationPlate else null,
+                        numberOfSeats = if ("numberOfSeats" in selectedKeys) data.numberOfSeats else null,
+                        numberOfDoors = if ("numberOfDoors" in selectedKeys) data.numberOfDoors else null,
+                        weight = if ("weight" in selectedKeys) data.weight else null,
+                        engineCode = if ("engineCode" in selectedKeys) data.engineCode else null,
+                        emissionStandard = if ("emissionStandard" in selectedKeys) data.emissionStandard else null,
+                        gearboxType = if ("gearboxType" in selectedKeys) data.gearboxType else null,
+                        drivetrain = if ("drivetrain" in selectedKeys) data.drivetrain else null,
+                        engineLayout = if ("engineLayout" in selectedKeys) data.engineLayout else null,
+                        cylinderLayout = if ("cylinderLayout" in selectedKeys) data.cylinderLayout else null,
+                        fuelTankCapacity = if ("fuelTankCapacity" in selectedKeys) data.fuelTankCapacity else null,
+                        topSpeed = if ("topSpeed" in selectedKeys) data.topSpeed else null,
+                        mileage = if ("mileage" in selectedKeys) data.mileage else null
+                    )
+                    onConfirm(confirmedData)
+                }
+            ) {
+                Text("Apply Selected")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Composable
