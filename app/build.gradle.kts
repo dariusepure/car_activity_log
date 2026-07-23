@@ -9,7 +9,6 @@ val localProperties = Properties().apply {
     if (f.exists()) f.inputStream().use { load(it) }
 }
 val webClientId: String = localProperties.getProperty("WEB_CLIENT_ID", "")
-val geminiApiKey: String = localProperties.getProperty("gemini.api.key", "")
 
 plugins {
     alias(libs.plugins.android.application)
@@ -30,14 +29,17 @@ android {
         applicationId = "com.dariusepure.caractivitylog"
         minSdk = 24
         targetSdk = 35
-        versionCode = 5
-        versionName = "1.3"
+        versionCode = 7
+        versionName = "1.4"
 
         multiDexEnabled = true
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
         buildConfigField("String", "WEB_CLIENT_ID", "\"$webClientId\"")
+        
+        val geminiKey: String = localProperties.getProperty("gemini.api.key", "")
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiKey\"")
     }
 
     signingConfigs {
@@ -130,7 +132,7 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
-    implementation(libs.firebase.vertexai)
+    implementation(libs.google.generativeai)
     implementation(libs.firebase.appcheck.playintegrity)
     debugImplementation(libs.firebase.appcheck.debug)
     implementation(libs.firebase.crashlytics)

@@ -3,21 +3,19 @@ package com.dariusepure.caractivitylog.data.ai
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
+import com.dariusepure.caractivitylog.BuildConfig
 import com.dariusepure.caractivitylog.domain.ScannedCarData
-import com.google.firebase.Firebase
-import com.google.firebase.vertexai.type.RequestOptions
-import com.google.firebase.vertexai.type.Schema
-import com.google.firebase.vertexai.type.Tool
-import com.google.firebase.vertexai.type.content
-import com.google.firebase.vertexai.type.defineFunction
-import com.google.firebase.vertexai.type.generationConfig
-import com.google.firebase.vertexai.vertexAI
+import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.FunctionDeclaration
+import com.google.ai.client.generativeai.type.Schema
+import com.google.ai.client.generativeai.type.Tool
+import com.google.ai.client.generativeai.type.content
+import com.google.ai.client.generativeai.type.generationConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.time.Duration.Companion.seconds
 
 @Singleton
 class GeminiRepository @Inject constructor(
@@ -32,9 +30,6 @@ class GeminiRepository @Inject constructor(
     private val modelName: String
         get() = remoteConfig.getString("gemini_model_name").ifBlank { "gemini-1.5-flash" }
 
-    private val requestOptions: RequestOptions
-        get() = RequestOptions(timeout = remoteConfig.getLong("gemini_timeout_seconds").seconds)
-
     private val temperature: Float
         get() = remoteConfig.getDouble("gemini_temperature").toFloat()
 
@@ -48,27 +43,41 @@ class GeminiRepository @Inject constructor(
         allowSpecialFloatingPointValues = true
     }
 
-    private val updateCarTools = Tool(
-        functionDeclarations = listOf(
-            defineFunction(
-                name = "update_car_spec",
-                description = "Updates a specific technical specification of the car.",
-                parameters = listOf(
-                    Schema.str("field", "The technical field to update. Valid fields: make, model, vin, year, engineSize, fuelType, fuelSystem, color, power, torque, engineCode, engineLayout, length, width, height, wheelbase, trackWidth, emissionStandard, aspiration, fuelTankCapacity, batteryCapacity, drivetrain, gearboxType, gears, frontSuspension, rearSuspension, frontBrakes, rearBrakes, vehicleType, manufacturingCountry, topSpeed, weight, numberOfSeats, numberOfCylinders, valvesPerCylinder, numberOfDoors, bootSpace, tireWidth, tireAspectRatio, tireDiameter."),
-                    Schema.str("value", "The new value for the field. For dropdown fields, you MUST pick one of the standard English values provided in instructions.")
+    private val updateCarTools = listOf(
+        Tool(
+            listOf(
+                FunctionDeclaration(
+                    name = "update_car_spec",
+                    description = "Updates a specific technical specification of the car.",
+                    parameters = listOf(
+                        Schema.str("field", "The technical field to update. Valid fields: make, model, vin, year, engineSize, fuelType, fuelSystem, color, power, torque, engineCode, engineLayout, length, width, height, wheelbase, trackWidth, emissionStandard, aspiration, fuelTankCapacity, batteryCapacity, drivetrain, gearboxType, gears, frontSuspension, rearSuspension, frontBrakes, rearBrakes, vehicleType, manufacturingCountry, topSpeed, weight, numberOfSeats, numberOfCylinders, valvesPerCylinder, numberOfDoors, bootSpace, tireWidth, tireAspectRatio, tireDiameter."),
+                        Schema.str("value", "The new value for the field. For dropdown fields, you MUST pick one of the standard English values provided in instructions.")
+                    ),
+                    requiredParameters = listOf("field", "value")
                 ),
-                requiredParameters = listOf("field", "value")
-            ),
-            defineFunction(
-                name = "update_car_mileage",
-                description = "Updates the car's current mileage (odometer reading).",
-                parameters = listOf(
-                    Schema.str("km", "The current mileage in kilometers.")
-                ),
-                requiredParameters = listOf("km")
+                FunctionDeclaration(
+                    name = "update_car_mileage",
+                    description = "Updates the car's current mileage (odometer reading).",
+                    parameters = listOf(
+                        Schema.str("km", "The current mileage in kilometers.")
+                    ),
+                    requiredParameters = listOf("km")
+                )
             )
         )
     )
+
+    private fun getModel(tools: List<Tool>? = null): GenerativeModel {
+        return GenerativeModel(
+            modelName = modelName,
+            apiKey = BuildConfig.GEMINI_API_KEY,
+            generationConfig = generationConfig {
+                this.temperature = this@GeminiRepository.temperature
+            },
+            tools = tools,
+            systemInstruction = if (systemPrompt.isNotEmpty()) content { text(systemPrompt) } else null
+        )
+    }
 
     suspend fun scanRegistrationCertificate(bitmap: Bitmap): Result<ScannedCarData> {
         return try {
@@ -97,19 +106,11 @@ class GeminiRepository @Inject constructor(
                 text(prompt)
             }
 
-            val scanModel = Firebase.vertexAI.generativeModel(
-                modelName = modelName,
-                generationConfig = generationConfig {
-                    this.temperature = this@GeminiRepository.temperature
-                },
-                requestOptions = requestOptions
-            )
-
+            val scanModel = getModel()
             val response = scanModel.generateContent(inputContent)
             val fullText = response.text ?: throw Exception("Empty response from AI")
             
             val jsonText = extractJson(fullText)
-            
             val data = json.decodeFromString<ScannedCarData>(jsonText)
             Result.success(data)
         } catch (e: Exception) {
@@ -148,14 +149,7 @@ class GeminiRepository @Inject constructor(
                 text(prompt)
             }
 
-            val scanModel = Firebase.vertexAI.generativeModel(
-                modelName = modelName,
-                generationConfig = generationConfig {
-                    this.temperature = this@GeminiRepository.temperature
-                },
-                requestOptions = requestOptions
-            )
-
+            val scanModel = getModel()
             val response = scanModel.generateContent(inputContent)
             val fullText = response.text ?: throw Exception("Empty response from AI")
             
@@ -171,21 +165,12 @@ class GeminiRepository @Inject constructor(
         prompt: String,
         carContext: String,
         history: List<com.dariusepure.caractivitylog.ui.cars.ChatMessage>
-    ): com.google.firebase.vertexai.type.GenerateContentResponse {
-        val diagnosisModel = Firebase.vertexAI.generativeModel(
-            modelName = modelName,
-            tools = listOf(updateCarTools),
-            generationConfig = generationConfig {
-                this.temperature = this@GeminiRepository.temperature
-            },
-            requestOptions = requestOptions
-        )
+    ): com.google.ai.client.generativeai.type.GenerateContentResponse {
+        val diagnosisModel = getModel(tools = updateCarTools)
 
-        // CRITICAL: history MUST start with user and alternate roles.
         val validatedHistory = history
-            .dropWhile { !it.isUser } // Must start with user
+            .dropWhile { !it.isUser }
             .let { h ->
-                // History must end with a model response for startChat(history) to work with a user sendMessage
                 if (h.isNotEmpty() && h.size % 2 != 0) h.dropLast(1) else h
             }
             .map { 
@@ -195,7 +180,6 @@ class GeminiRepository @Inject constructor(
         val chat = diagnosisModel.startChat(history = validatedHistory)
         
         val finalizedPrompt = systemPrompt.replace("{{context}}", carContext)
-
         return chat.sendMessage(content("user") { text("$finalizedPrompt\n\nUser: $prompt") })
     }
 
@@ -208,5 +192,4 @@ class GeminiRepository @Inject constructor(
         }
         return cleanedText
     }
-
 }

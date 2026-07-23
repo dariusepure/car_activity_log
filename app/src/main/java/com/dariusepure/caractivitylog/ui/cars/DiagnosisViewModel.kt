@@ -6,7 +6,7 @@ import com.dariusepure.caractivitylog.data.ai.GeminiRepository
 import com.dariusepure.caractivitylog.data.cars.CarRepository
 import com.dariusepure.caractivitylog.domain.Car
 import com.dariusepure.caractivitylog.domain.displayName
-import com.google.firebase.vertexai.type.FunctionCallPart
+import com.google.ai.client.generativeai.type.FunctionCallPart
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -98,8 +98,7 @@ class DiagnosisViewModel @Inject constructor(
                             }
                         }
                         "update_car_mileage" -> {
-                            val kmStr = functionCall.args["km"]
-                            val km = kmStr?.toDoubleOrNull()
+                            val km = functionCall.args["km"]?.toDoubleOrNull()
                             if (km != null) {
                                 handleUpdateCarMileage(km)
                                 toolConfirmation += "Updated mileage to $km km. "
