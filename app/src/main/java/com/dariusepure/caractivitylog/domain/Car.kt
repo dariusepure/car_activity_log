@@ -20,6 +20,7 @@ data class Car(
     val torque: Int = 0,
     val engineCode: String = "",
     val engineLayout: String = "",
+    val cylinderLayout: String = "",
     val length: Int = 0,
     val width: Int = 0,
     val height: Int = 0,

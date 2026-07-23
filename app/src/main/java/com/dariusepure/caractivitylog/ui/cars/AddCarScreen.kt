@@ -82,11 +82,13 @@ fun AddCarScreen(
 
     val fuelTypes = listOf("Petrol", "Diesel", "Electric", "Hybrid", "LPG")
     val engineLayouts = listOf("Transverse", "Longitudinal")
+    val cylinderLayouts = listOf("Inline", "V", "W", "Boxer")
     val aspirationOptions = listOf("Naturally Aspirated", "Turbocharged", "Supercharged", "Twin-Turbo", "Quad-Turbo", "Electric")
     val emissionStandards = listOf("Non-Euro", "Euro 1", "Euro 2", "Euro 3", "Euro 4", "Euro 5", "Euro 6")
     val gearboxTypes = listOf("Manual", "Automatic", "CVT", "DCT", "AMT")
     val brakeOptions = listOf("Ventilated Discs", "Solid Discs", "Drums", "Ceramic Discs")
-    val suspensionOptions = listOf("MacPherson Strut", "Double Wishbone", "Multi-link", "Trailing Arm", "Torsion Beam", "Leaf Spring", "Air Suspension")
+    val frontSuspensionOptions = listOf("MacPherson", "Double Wishbone", "Multi-link")
+    val rearSuspensionOptions = listOf("Torsion Beam", "Multi-link", "Solid Axle")
     val drivetrainOptions = listOf("FWD", "RWD", "AWD", "4WD")
     val vehicleTypes = listOf("Saloon", "Estate", "Hatchback", "MPV", "SUV", "Coupe", "Convertible", "Van", "Pickup")
 
@@ -105,6 +107,7 @@ fun AddCarScreen(
     var torque by remember { mutableStateOf("") }
     var engineCode by remember { mutableStateOf("") }
     var engineLayout by remember { mutableStateOf("") }
+    var cylinderLayout by remember { mutableStateOf("") }
     var emissionStandard by remember { mutableStateOf("") }
     var topSpeed by remember { mutableStateOf("") }
     var aspiration by remember { mutableStateOf("") }
@@ -201,6 +204,7 @@ fun AddCarScreen(
     var engineLayoutExpanded by remember { mutableStateOf(false) }
     var emissionStandardExpanded by remember { mutableStateOf(false) }
     var aspirationExpanded by remember { mutableStateOf(false) }
+    var cylinderLayoutExpanded by remember { mutableStateOf(false) }
     var drivetrainExpanded by remember { mutableStateOf(false) }
     var gearboxTypeExpanded by remember { mutableStateOf(false) }
     var frontBrakesExpanded by remember { mutableStateOf(false) }
@@ -231,6 +235,7 @@ fun AddCarScreen(
                 torque = torque,
                 engineCode = engineCode,
                 engineLayout = engineLayout,
+                cylinderLayout = cylinderLayout,
                 emissionStandard = emissionStandard,
                 length = length,
                 width = width,
@@ -290,6 +295,7 @@ fun AddCarScreen(
                 torque = car.torque.takeIf { it != 0 }?.toString() ?: ""
                 engineCode = car.engineCode
                 engineLayout = car.engineLayout
+                cylinderLayout = car.cylinderLayout
                 emissionStandard = car.emissionStandard
                 aspiration = car.aspiration
                 
@@ -572,21 +578,35 @@ fun AddCarScreen(
                 isExpanded = registrationExpanded,
                 onToggle = { registrationExpanded = !registrationExpanded }
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.width(90.dp)) {
-                        OutlinedTextField(
-                            value = selectedCountry?.code ?: "",
-                            onValueChange = { },
-                            readOnly = true,
-                            label = { Text("Country") },
-                            placeholder = { Text("RO") },
-                            modifier = Modifier.clickable { countryExpanded = true },
-                            trailingIcon = {
-                                Icon(Icons.Default.ArrowDropDown, null, Modifier.clickable { countryExpanded = true })
-                            }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Country Selection (Horizontal Layout)
+                    Row(
+                        modifier = Modifier
+                            .clickable { countryExpanded = true }
+                            .padding(vertical = 12.dp, horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = selectedCountry?.flag ?: "🌍",
+                            style = MaterialTheme.typography.headlineSmall
                         )
-                        Box(modifier = Modifier.matchParentSize().clickable { countryExpanded = true })
-                        
+                        Spacer(Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "Country",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                            Text(
+                                text = selectedCountry?.code ?: "Select",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                        Icon(Icons.Default.ArrowDropDown, null)
+
                         DropdownMenu(
                             expanded = countryExpanded,
                             onDismissRequest = { countryExpanded = false },
@@ -594,7 +614,7 @@ fun AddCarScreen(
                         ) {
                             europeanCountries.forEach { country ->
                                 DropdownMenuItem(
-                                    text = { 
+                                    text = {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Text(country.flag)
                                             Spacer(Modifier.width(8.dp))
@@ -605,14 +625,13 @@ fun AddCarScreen(
                                         val previousUsesMiles = selectedCountry?.usesMiles ?: false
                                         selectedCountry = country
                                         countryExpanded = false
-                                        
-                                        // Convert current top speed to new unit if country changed unit system
+
                                         if (previousUsesMiles != country.usesMiles && topSpeed.isNotBlank()) {
                                             val currentSpeed = topSpeed.toDoubleOrNull() ?: 0.0
                                             val converted = if (country.usesMiles) {
-                                                currentSpeed / 1.609344 // km/h to mph
+                                                currentSpeed / 1.609344
                                             } else {
-                                                currentSpeed * 1.609344 // mph to km/h
+                                                currentSpeed * 1.609344
                                             }
                                             topSpeed = converted.roundToInt().toString()
                                         }
@@ -621,7 +640,9 @@ fun AddCarScreen(
                             }
                         }
                     }
-                    Spacer(Modifier.width(8.dp))
+
+                    Spacer(Modifier.width(16.dp))
+
                     OutlinedTextField(
                         value = licensePlate,
                         onValueChange = { licensePlate = it.uppercase() },
@@ -777,6 +798,44 @@ fun AddCarScreen(
                                 onClick = {
                                     engineLayout = layout
                                     engineLayoutExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = cylinderLayout,
+                        onValueChange = { },
+                        readOnly = true,
+                        label = { Text("Cylinder Layout") },
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                "dropdown",
+                                Modifier.clickable { cylinderLayoutExpanded = true })
+                        }
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { cylinderLayoutExpanded = true }
+                    )
+                    DropdownMenu(
+                        expanded = cylinderLayoutExpanded,
+                        onDismissRequest = { cylinderLayoutExpanded = false },
+                        modifier = Modifier.fillMaxWidth(0.9f)
+                    ) {
+                        cylinderLayouts.forEach { layout ->
+                            DropdownMenuItem(
+                                text = { Text(layout) },
+                                onClick = {
+                                    cylinderLayout = layout
+                                    cylinderLayoutExpanded = false
                                 }
                             )
                         }
@@ -1043,7 +1102,7 @@ fun AddCarScreen(
                             expanded = frontSuspensionExpanded,
                             onDismissRequest = { frontSuspensionExpanded = false }
                         ) {
-                            suspensionOptions.forEach { option ->
+                            frontSuspensionOptions.forEach { option ->
                                 DropdownMenuItem(
                                     text = { Text(option) },
                                     onClick = {
@@ -1071,7 +1130,7 @@ fun AddCarScreen(
                             expanded = rearSuspensionExpanded,
                             onDismissRequest = { rearSuspensionExpanded = false }
                         ) {
-                            suspensionOptions.forEach { option ->
+                            rearSuspensionOptions.forEach { option ->
                                 DropdownMenuItem(
                                     text = { Text(option) },
                                     onClick = {
@@ -1384,6 +1443,7 @@ fun AddCarScreen(
                         torque = torque,
                         engineCode = engineCode,
                         engineLayout = engineLayout,
+                        cylinderLayout = cylinderLayout,
                         emissionStandard = emissionStandard,
                         length = length,
                         width = width,

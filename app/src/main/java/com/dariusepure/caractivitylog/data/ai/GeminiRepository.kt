@@ -50,7 +50,7 @@ class GeminiRepository @Inject constructor(
                     name = "update_car_spec",
                     description = "Updates a specific technical specification of the car.",
                     parameters = listOf(
-                        Schema.str("field", "The technical field to update. Valid fields: make, model, vin, year, engineSize, fuelType, fuelSystem, color, power, torque, engineCode, engineLayout, length, width, height, wheelbase, trackWidth, emissionStandard, aspiration, fuelTankCapacity, batteryCapacity, drivetrain, gearboxType, gears, frontSuspension, rearSuspension, frontBrakes, rearBrakes, vehicleType, manufacturingCountry, topSpeed, weight, numberOfSeats, numberOfCylinders, valvesPerCylinder, numberOfDoors, bootSpace, tireWidth, tireAspectRatio, tireDiameter."),
+                        Schema.str("field", "The technical field to update. Valid fields: make, model, vin, year, engineSize, fuelType, fuelSystem, color, power, torque, engineCode, engineLayout (Transverse, Longitudinal), cylinderLayout (Inline, V, W, Boxer), length, width, height, wheelbase, trackWidth, emissionStandard, aspiration, fuelTankCapacity, batteryCapacity, drivetrain, gearboxType, gears, frontSuspension (MacPherson, Double Wishbone, Multi-link), rearSuspension (Torsion Beam, Multi-link, Solid Axle), vehicleType, manufacturingCountry, topSpeed, weight, numberOfSeats, numberOfCylinders, valvesPerCylinder, numberOfDoors, bootSpace, tireWidth, tireAspectRatio, tireDiameter."),
                         Schema.str("value", "The new value for the field. For dropdown fields, you MUST pick one of the standard English values provided in instructions.")
                     ),
                     requiredParameters = listOf("field", "value")

@@ -124,6 +124,7 @@ fun TechnicalSheetScreen(
                                 "Injection System" to car.fuelSystem,
                                 "Engine Code" to car.engineCode,
                                 "Engine Layout" to car.engineLayout,
+                                "Cylinder Layout" to car.cylinderLayout,
                                 "Emission Standard" to car.emissionStandard
                             )
                         )

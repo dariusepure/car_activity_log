@@ -163,6 +163,7 @@ class DiagnosisViewModel @Inject constructor(
             "torque" -> car.copy(torque = value.toDoubleOrNull()?.roundToInt() ?: car.torque)
             "enginecode" -> car.copy(engineCode = value.uppercase())
             "enginelayout" -> car.copy(engineLayout = value)
+            "cylinderlayout" -> car.copy(cylinderLayout = value)
             "length" -> car.copy(length = value.toDoubleOrNull()?.roundToInt() ?: car.length)
             "width" -> car.copy(width = value.toDoubleOrNull()?.roundToInt() ?: car.width)
             "height" -> car.copy(height = value.toDoubleOrNull()?.roundToInt() ?: car.height)
