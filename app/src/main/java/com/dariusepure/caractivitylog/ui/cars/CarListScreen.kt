@@ -46,6 +46,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -65,6 +67,7 @@ fun CarCard(
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
@@ -83,15 +86,13 @@ fun CarCard(
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
-                val logoUrl = BrandHelper.getLogoUrl(car.make)
-                if (logoUrl != null) {
-                    AsyncImage(
-                        model = logoUrl,
+                val logoRes = BrandHelper.getLogoResource(context, car.make)
+                if (logoRes != 0) {
+                    Icon(
+                        painter = painterResource(id = logoRes),
                         contentDescription = car.make,
                         modifier = Modifier.size(32.dp),
-                        contentScale = ContentScale.Fit,
-                        error = rememberVectorPainter(Icons.Outlined.DirectionsCar),
-                        placeholder = rememberVectorPainter(Icons.Outlined.DirectionsCar)
+                        tint = Color.Unspecified
                     )
                 } else {
                     Icon(

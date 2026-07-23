@@ -38,6 +38,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -112,15 +113,13 @@ fun CarDetailsScreen(
                     item {
                         Spacer(Modifier.height(16.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            val logoUrl = BrandHelper.getLogoUrl(car.make)
-                            if (logoUrl != null) {
-                                AsyncImage(
-                                    model = logoUrl,
+                            val logoRes = BrandHelper.getLogoResource(context, car.make)
+                            if (logoRes != 0) {
+                                Icon(
+                                    painter = painterResource(id = logoRes),
                                     contentDescription = car.make,
                                     modifier = Modifier.size(40.dp),
-                                    contentScale = ContentScale.Fit,
-                                    error = rememberVectorPainter(Icons.Outlined.DirectionsCar),
-                                    placeholder = rememberVectorPainter(Icons.Outlined.DirectionsCar)
+                                    tint = Color.Unspecified
                                 )
                                 Spacer(Modifier.width(12.dp))
                             } else {
