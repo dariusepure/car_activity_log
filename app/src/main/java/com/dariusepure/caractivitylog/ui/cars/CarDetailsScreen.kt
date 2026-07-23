@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.AssignmentTurnedIn
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.LocalGasStation
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,11 +32,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -59,6 +62,7 @@ fun CarDetailsScreen(
     onInspectionClick: () -> Unit,
     onTechnicalSheetClick: () -> Unit,
     onDiagnosisClick: () -> Unit,
+    onFuelClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: CarDetailsViewModel = hiltViewModel()
 ) {
@@ -108,6 +112,26 @@ fun CarDetailsScreen(
                     item {
                         Spacer(Modifier.height(16.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            val logoUrl = BrandHelper.getLogoUrl(car.make)
+                            if (logoUrl != null) {
+                                AsyncImage(
+                                    model = logoUrl,
+                                    contentDescription = car.make,
+                                    modifier = Modifier.size(40.dp),
+                                    contentScale = ContentScale.Fit,
+                                    error = rememberVectorPainter(Icons.Outlined.DirectionsCar),
+                                    placeholder = rememberVectorPainter(Icons.Outlined.DirectionsCar)
+                                )
+                                Spacer(Modifier.width(12.dp))
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Outlined.DirectionsCar,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(40.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(Modifier.width(12.dp))
+                            }
                             Text(
                                 text = car.displayName,
                                 style = MaterialTheme.typography.headlineMedium,
@@ -240,6 +264,40 @@ fun CarDetailsScreen(
                             }
                         }
                         
+                        Spacer(Modifier.height(12.dp))
+
+                        Card(
+                            onClick = onFuelClick,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.LocalGasStation, 
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "Fuel Consumption",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                    Text(
+                                        text = "Track fillings and view stats",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                                    )
+                                }
+                            }
+                        }
+
                         Spacer(Modifier.height(12.dp))
                         
                         Spacer(Modifier.height(80.dp)) // Space for FAB

@@ -65,6 +65,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.animation.AnimatedVisibility
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.material.icons.outlined.DirectionsCar
+import coil.compose.AsyncImage
 import com.dariusepure.caractivitylog.ui.common.CarFormatters
 import kotlin.math.roundToInt
 
@@ -445,6 +449,21 @@ fun AddCarScreen(
                         onValueChange = { make = it },
                         label = { Text("Make") },
                         modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = {
+                            val logoUrl = BrandHelper.getLogoUrl(make)
+                            if (logoUrl != null) {
+                                AsyncImage(
+                                    model = logoUrl,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp),
+                                    contentScale = ContentScale.Fit,
+                                    error = rememberVectorPainter(Icons.Outlined.DirectionsCar),
+                                    placeholder = rememberVectorPainter(Icons.Outlined.DirectionsCar)
+                                )
+                            } else {
+                                Icon(Icons.Outlined.DirectionsCar, null, modifier = Modifier.size(24.dp))
+                            }
+                        },
                         trailingIcon = {
                             Icon(
                                 Icons.Default.ArrowDropDown,
@@ -460,7 +479,23 @@ fun AddCarScreen(
                         carBrands.forEach { brand ->
                             if (brand != "Other") {
                                 DropdownMenuItem(
-                                    text = { Text(brand) },
+                                    text = { 
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            val logoUrl = BrandHelper.getLogoUrl(brand)
+                                            if (logoUrl != null) {
+                                                AsyncImage(
+                                                    model = logoUrl,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(24.dp),
+                                                    contentScale = ContentScale.Fit,
+                                                    error = rememberVectorPainter(Icons.Outlined.DirectionsCar),
+                                                    placeholder = rememberVectorPainter(Icons.Outlined.DirectionsCar)
+                                                )
+                                                Spacer(Modifier.width(12.dp))
+                                            }
+                                            Text(brand)
+                                        }
+                                    },
                                     onClick = {
                                         make = brand
                                         makeExpanded = false

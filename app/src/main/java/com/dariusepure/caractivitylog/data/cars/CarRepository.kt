@@ -302,4 +302,61 @@ class CarRepository @Inject constructor(
             snapshots.documents.forEach { batch.delete(it.reference) }
         }.await()
     }
+
+    fun getFuelLogs(carId: String): Flow<List<com.dariusepure.caractivitylog.domain.FuelLog>> = callbackFlow {
+        val uid = firebaseAuth.currentUser?.uid ?: run {
+            trySend(emptyList())
+            close()
+            return@callbackFlow
+        }
+
+        val listener = firestore.collection("users")
+            .document(uid)
+            .collection("cars")
+            .document(carId)
+            .collection("fuel_logs")
+            .orderBy("date", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshots, exception ->
+                if (exception != null) {
+                    close(exception)
+                    return@addSnapshotListener
+                }
+
+                val results = snapshots
+                    ?.toObjects(FirestoreFuelLog::class.java)
+                    ?.map { it.fromFirebase() } ?: emptyList()
+
+                trySend(results)
+            }
+
+        awaitClose { listener.remove() }
+    }
+
+    suspend fun addFuelLog(carId: String, log: com.dariusepure.caractivitylog.domain.FuelLog) {
+        val uid = firebaseAuth.currentUser?.uid ?: return
+        
+        // 1. Add Fuel Log
+        firestore.collection("users")
+            .document(uid)
+            .collection("cars")
+            .document(carId)
+            .collection("fuel_logs")
+            .add(log.toFirebase())
+            .await()
+
+        // 2. Automatically update general mileage
+        addMileageLog(carId, MileageLog(km = log.km, date = log.date))
+    }
+
+    suspend fun deleteFuelLog(carId: String, logId: String) {
+        val uid = firebaseAuth.currentUser?.uid ?: return
+        firestore.collection("users")
+            .document(uid)
+            .collection("cars")
+            .document(carId)
+            .collection("fuel_logs")
+            .document(logId)
+            .delete()
+            .await()
+    }
 }

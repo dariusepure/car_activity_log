@@ -44,9 +44,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.dariusepure.caractivitylog.domain.Car
 import com.dariusepure.caractivitylog.ui.common.EmptyState
 import com.dariusepure.caractivitylog.ui.common.ErrorState
@@ -80,11 +83,23 @@ fun CarCard(
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.DirectionsCar,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                val logoUrl = BrandHelper.getLogoUrl(car.make)
+                if (logoUrl != null) {
+                    AsyncImage(
+                        model = logoUrl,
+                        contentDescription = car.make,
+                        modifier = Modifier.size(32.dp),
+                        contentScale = ContentScale.Fit,
+                        error = rememberVectorPainter(Icons.Outlined.DirectionsCar),
+                        placeholder = rememberVectorPainter(Icons.Outlined.DirectionsCar)
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Outlined.DirectionsCar,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             
             Spacer(Modifier.width(16.dp))
