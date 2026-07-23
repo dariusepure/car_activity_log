@@ -9,6 +9,7 @@
 - **Smart Diagnosis**: Persistent chat with an expert AI car mechanic.
   - **History Persistence**: Conversations are saved per car and synced to the cloud.
   - **Context-Aware**: The AI knows your car's specs (make, model, year, engine) to provide precise advice.
+  - **Function Calling**: The AI can perform actions like updating car specs or mileage directly through chat.
   - **Reset Option**: Clear conversation history whenever you need a fresh start.
 - **AI Document Scanning**: Extract technical data instantly from registration certificates.
   - **Dual Input**: Support for both **Photo** (Gallery/Camera) and **PDF** files.
@@ -32,8 +33,9 @@
   - **Auto-History**: Inspection mileage is automatically logged into the general mileage history.
 
 ### 🌗 Premium UI/UX
-- **Adaptive Theming**: Light Mode and **OLED Black Dark Mode**.
-- **Material 3**: Modern, clean interface following the latest Google design standards.
+- **Material Design 3 (M3)**: Modern, clean interface following the latest Google design standards with updated components and typography.
+- **Adaptive Theming**: Seamless support for Light Mode and **OLED Black Dark Mode**.
+- **Edge-to-Edge Support**: Content flows behind system bars for an immersive experience.
 - **Global Sync**: Instant theme application across all screens.
 
 ---
@@ -43,13 +45,14 @@
 | Category | Technology |
 | :--- | :--- |
 | **Language** | **Kotlin** (1.9+) |
-| **UI Framework** | **Jetpack Compose** (Declarative UI) |
-| **AI SDK** | **Google AI (Gemini 1.5 Flash)** |
+| **UI Framework** | **Jetpack Compose** with **Material 3** |
+| **AI SDK** | **Google Generative AI SDK** (Gemini 1.5 Flash) |
 | **Architecture** | **MVVM** + Clean Architecture |
 | **DI** | **Hilt** (Dagger) |
 | **Networking** | **Ktor Client** (with HttpTimeout & Logging) |
 | **Database** | **Cloud Firestore** (Real-time & Offline Persistence) |
 | **Storage** | **Firebase Storage** (Media hosting) |
+| **App Security** | **Firebase App Check** (Play Integrity / Debug) |
 | **Serialization** | **Kotlinx Serialization** |
 | **Image Loading** | **Coil** |
 
