@@ -53,7 +53,9 @@ data class FirestoreCar(
     val tireDiameter: Int = 0,
     val createdAt: Timestamp = Timestamp.now(),
     val updatedAt: Timestamp = Timestamp.now(),
-    val activityCount: Int = 0
+    val activityCount: Int = 0,
+    val deleted: Boolean = false,
+    val deletedAt: Timestamp? = null
 )
 
 fun Car.toFirebase() = FirestoreCar(
@@ -105,7 +107,9 @@ fun Car.toFirebase() = FirestoreCar(
     tireDiameter = this.tireDiameter,
     createdAt = Timestamp(this.createdAt),
     updatedAt = Timestamp(this.updatedAt),
-    activityCount = this.activityCount
+    activityCount = this.activityCount,
+    deleted = this.deleted,
+    deletedAt = this.deletedAt?.let { Timestamp(it) }
 )
 
 fun FirestoreCar.fromFirebase(isSynced: Boolean = true) = Car(
@@ -158,5 +162,7 @@ fun FirestoreCar.fromFirebase(isSynced: Boolean = true) = Car(
     createdAt = this.createdAt.toDate(),
     updatedAt = this.updatedAt.toDate(),
     activityCount = this.activityCount,
+    deleted = this.deleted,
+    deletedAt = this.deletedAt?.toDate(),
     isSynced = isSynced
 )

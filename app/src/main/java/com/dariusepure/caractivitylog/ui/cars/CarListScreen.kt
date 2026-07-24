@@ -28,6 +28,8 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.background
 import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.outlined.DirectionsCar
 import com.dariusepure.caractivitylog.ui.common.CarFormatters
@@ -184,6 +186,7 @@ fun CarListScreen(
     onCarClick: (String) -> Unit,
     onAddCarClick: () -> Unit,
     onEditCarClick: (String) -> Unit,
+    onRecycleBinClick: () -> Unit,
     onLogout: () -> Unit,
     viewModel: CarListViewModel = hiltViewModel(),
     themeViewModel: ThemeViewModel = hiltViewModel(),
@@ -199,6 +202,7 @@ fun CarListScreen(
         onCarClick = onCarClick,
         onAddCarClick = onAddCarClick,
         onEditCarClick = onEditCarClick,
+        onRecycleBinClick = onRecycleBinClick,
         onDeleteCar = { carId -> viewModel.onDeleteCar(carId) },
         onLogoutClick = {
             viewModel.signOut()
@@ -218,6 +222,7 @@ private fun InnerCarListScreen(
     onCarClick: (String) -> Unit,
     onAddCarClick: () -> Unit,
     onEditCarClick: (String) -> Unit,
+    onRecycleBinClick: () -> Unit,
     onDeleteCar: (String) -> Unit,
     onLogoutClick: () -> Unit,
     onThemeToggle: () -> Unit,
@@ -266,6 +271,12 @@ private fun InnerCarListScreen(
                                 )
                             }
                         }
+                    }
+                    IconButton(onClick = onRecycleBinClick) {
+                        Icon(
+                            imageVector = Icons.Default.DeleteForever,
+                            contentDescription = "Recycle Bin"
+                        )
                     }
                     IconButton(onClick = onThemeToggle) {
                         Icon(

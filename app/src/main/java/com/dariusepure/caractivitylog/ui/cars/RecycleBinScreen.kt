@@ -1,0 +1,194 @@
+package com.dariusepure.caractivitylog.ui.cars
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Restore
+import androidx.compose.material.icons.outlined.DirectionsCar
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.dariusepure.caractivitylog.domain.Car
+import com.dariusepure.caractivitylog.domain.displayName
+import com.dariusepure.caractivitylog.ui.common.CarFormatters
+import com.dariusepure.caractivitylog.ui.common.EmptyState
+import com.dariusepure.caractivitylog.ui.common.ErrorState
+import com.dariusepure.caractivitylog.ui.common.LoadingState
+import com.dariusepure.caractivitylog.ui.cars.BrandHelper
+import java.text.SimpleDateFormat
+import java.util.Locale
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RecycleBinScreen(
+    onBack: () -> Unit,
+    viewModel: RecycleBinViewModel = hiltViewModel()
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Recycle Bin") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+            when (state) {
+                RecycleBinUiState.Loading -> LoadingState(label = "Loading recycle bin")
+                RecycleBinUiState.Empty -> EmptyState(
+                    title = "Recycle bin is empty",
+                    subtitle = "Cars you delete will appear here.",
+                    icon = Icons.Outlined.DirectionsCar
+                )
+                is RecycleBinUiState.Success -> {
+                    val cars = (state as RecycleBinUiState.Success).cars
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(cars, key = { it.id }) { car ->
+                            DeletedCarCard(
+                                car = car,
+                                onRestore = { viewModel.onRestoreCar(car.id) },
+                                onDeletePermanently = { viewModel.onPermanentlyDeleteCar(car.id) }
+                            )
+                        }
+                    }
+                }
+                is RecycleBinUiState.Error -> ErrorState(
+                    message = (state as RecycleBinUiState.Error).message,
+                    onRetry = {}
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun DeletedCarCard(
+    car: Car,
+    onRestore: () -> Unit,
+    onDeletePermanently: () -> Unit
+) {
+    val context = LocalContext.current
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Permanently?") },
+            text = { Text("This action cannot be undone. All data for ${car.displayName} will be lost forever.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDeletePermanently()
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete Forever")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                val logoRes = BrandHelper.getLogoResource(context, car.make)
+                if (logoRes != 0) {
+                    Image(
+                        painter = painterResource(id = logoRes),
+                        contentDescription = car.make,
+                        modifier = Modifier.size(44.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Outlined.DirectionsCar,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = car.displayName,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                val deletedAtStr = car.deletedAt?.let {
+                    val df = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
+                    df.format(it)
+                } ?: "Unknown"
+
+                Text(
+                    text = "Deleted on: $deletedAtStr",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            IconButton(onClick = onRestore) {
+                Icon(
+                    imageVector = Icons.Default.Restore,
+                    contentDescription = "Restore",
+                    tint = Color(0xFF4CAF50)
+                )
+            }
+
+            IconButton(onClick = { showDeleteDialog = true }) {
+                Icon(
+                    imageVector = Icons.Default.DeleteForever,
+                    contentDescription = "Delete Permanently",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+    }
+}

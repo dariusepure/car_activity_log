@@ -52,6 +52,8 @@ data class Car(
     val createdAt: Date = Date(),
     val updatedAt: Date = Date(),
     val activityCount: Int = 0,
+    val deleted: Boolean = false,
+    val deletedAt: Date? = null,
     val isSynced: Boolean = true
 )
 

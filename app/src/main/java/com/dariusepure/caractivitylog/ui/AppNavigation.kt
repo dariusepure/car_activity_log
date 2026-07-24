@@ -18,6 +18,7 @@ import com.dariusepure.caractivitylog.ui.cars.TechnicalSheetScreen
 
 import com.dariusepure.caractivitylog.ui.cars.DiagnosisScreen
 import com.dariusepure.caractivitylog.ui.cars.FuelHistoryScreen
+import com.dariusepure.caractivitylog.ui.cars.RecycleBinScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dariusepure.caractivitylog.ui.theme.ThemeViewModel
 
@@ -47,6 +48,7 @@ sealed class Screen(val route: String) {
     data object FuelHistory : Screen("fuelhistory/{carId}") {
         fun createRoute(carId: String) = "fuelhistory/$carId"
     }
+    data object RecycleBin : Screen("recyclebin")
 }
 
 @Composable
@@ -95,6 +97,9 @@ fun AppNavigation(
                 },
                 onEditCarClick = { carId ->
                     navController.navigate(Screen.EditCar.createRoute(carId))
+                },
+                onRecycleBinClick = {
+                    navController.navigate(Screen.RecycleBin.route)
                 },
                 onLogout = {
                     navController.navigate(Screen.SignIn.route) {
@@ -180,6 +185,11 @@ fun AppNavigation(
             val carId = backStackEntry.arguments?.getString("carId") ?: return@composable
             FuelHistoryScreen(
                 carId = carId,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.RecycleBin.route) {
+            RecycleBinScreen(
                 onBack = { navController.popBackStack() }
             )
         }
